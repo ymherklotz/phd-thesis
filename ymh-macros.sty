@@ -1,0 +1,520 @@
+\RequirePackage{relsize}
+\RequirePackage{listings}
+
+%\DeclareMathAlphabet{\ymathbb}{U}{BOONDOX-ds}{m}{n}
+\DeclareMathAlphabet{\mathbb}{U}{BOONDOX-ds}{m}{n}
+\newcommand\ymathbb{\mathbb}
+% JW: I changed the above so that the BOONDOX fonts are used for uppercase and lowercase mathbb. Otherwise you get a mix of sans-serif and serif.
+
+\newif\ifCOMMENTS%
+\COMMENTStrue%
+\newcommand{\Comment}[3]{\ifCOMMENTS\textcolor{#1}{{\bf [\![#2:} #3{\bf ]\!]}}\fi}
+\newcommand\JW[1]{\Comment{red!75!black}{JW}{#1}}
+\newcommand\YH[1]{\Comment{green!50!blue}{YH}{#1}}
+\newcommand\JWcouldcut[1]{\Comment{red!75!black}{JW}{\st{#1}}}
+
+\definecolor{opcolor}{HTML}{545454}
+\definecolor{keywordcolor}{HTML}{531ab6}
+\definecolor{regcolor}{HTML}{721045}
+\definecolor{predcolor}{HTML}{005f5f}
+\definecolor{tacticcolor}{HTML}{2f3f83}
+\definecolor{terminatorcolor}{HTML}{a0132f}
+\definecolor{commentcolor}{HTML}{7f0000}
+
+\lstdefinelanguage{rtl}{
+  otherkeywords={:=,|,\&,=>,==,;,+,*,/,!},
+  classoffset=0,
+  morekeywords={:=,|,\&,=>,==,;,+,*,/,!},
+  keywordstyle={\color{opcolor}},
+  classoffset=1,
+  morekeywords={goto,if,then,else,call,tailcall,builtin,jumptable,return,let,in},
+  keywordstyle={\color{keywordcolor}},
+  classoffset=2,
+  morekeywords={r,r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15,r16,ra,rb,rd},
+  keywordstyle={\color{regcolor}\bfseries},
+  classoffset=3,
+  morekeywords={p,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,pa,pb,pn,pm},
+  keywordstyle={\color{predcolor}\bfseries},
+  classoffset=4,
+  morekeywords={E,M},
+  keywordstyle={\color{keywordcolor}\bfseries},
+  classoffset=0,
+  morecomment=[l]{//}, % l is for line comment
+  inputencoding=utf8,
+  extendedchars=true,
+  literate={ }{{~}}1,
+} %
+
+\lstset{basicstyle=\small\ttfamily,keepspaces=true,showspaces=true}
+\def\lst@visiblespace{ }
+
+\lstnewenvironment{rtllisting}
+  {\lstset{language=rtl,escapechar=~}}
+  {}
+
+\newcommand{\rtlinline}{\lstinline[language=rtl]}
+% https://tex.stackexchange.com/questions/562160/is-there-a-way-to-use-the-listings-package-together-with-mathpartirs-mathpar
+\newcommand{\mrtlinline}{\let\par\endgraf\rtlinline}
+
+\newcommand\legupnoopt{\legup{} no-opt}
+\newcommand\legupnooptchain{\legup{} no-opt no-chaining}
+\newcommand{\vericert}{Veri\-cert}
+\newcommand{\compcert}{Comp\-Cert}
+\newcommand{\legup}{Leg\-Up}
+
+\newcommand\blockbb{\ensuremath{\mathcal{S}}}
+\newcommand\parbb{\ensuremath{\mathcal{P}}}
+
+\newcommand\rtlblock{\textsc{RtlBlock}}
+\newcommand\rtlpar{\textsc{RtlPar}}
+\newcommand\rtlpath{\textsc{RtlPath}}
+\newcommand\rtl{\textsc{Rtl}}
+\newcommand\mrtl[1]{\hbox{\mrtlinline|#1|}}
+\newcommand\htl{\textsc{Htl}}
+\newcommand\abstr{\textsc{Abstr}}
+\newcommand\constr{\textsc{Constr}}
+\newcommand\ltl{\textsc{Ltl}}
+
+\newcommand\percentperfbefore{20}
+\newcommand\percentperfafter{80}
+
+\newcommand\mono[1]{\texttt{#1}}
+
+\newenvironment{rcases}{\left.\begin{aligned}}{\end{aligned}\right\rbrace}
+
+\newcommand\case[2]{#2 &\text{if}~#1}
+\newcommand\casesingle[2]{#2}
+
+\tikzset{
+blacknum/.style={
+  circle, draw=none,
+  fill=black, inner sep=0pt,
+  outer sep=0pt, minimum size=0.9em, text=white, font=\scriptsize\sffamily\bfseries}
+}
+
+\newcommand\blacknum[1]{%
+\begin{tikzpicture}[baseline=-0.3em]%
+\node[blacknum](a){#1};%
+\end{tikzpicture}%
+}
+
+\definecolor{s1col}{HTML}{7fc97f}
+\definecolor{s2col}{HTML}{beaed4}
+\definecolor{s3col}{HTML}{fdc086}
+\colorlet{s4col}{NavajoWhite!70}
+\colorlet{s4colalter}{NavajoWhite!30}
+\colorlet{s5col}{OrangeRed!50}
+\colorlet{s6col}{Thistle!50}
+\colorlet{s6colalter}{Thistle!30}
+\colorlet{s7col}{RoyalBlue!50}
+\colorlet{s7colalter}{RoyalBlue!30}
+\colorlet{s8col}{SkyBlue!50}
+\colorlet{s9col}{SpringGreen!50}
+\colorlet{s10col}{Brown!40}
+
+\newcommand*{\makedfgstate}[2]{\raisebox{-2pt}{\tikz{\node[circle,draw=black,minimum
+      size=4mm,fill=#1,scale=0.5,thick,font=\sffamily\bfseries]{#2};}}}
+\newcommand*{\makedfgstatealter}[3]{\raisebox{-2pt}{\tikz{\node[circle,draw=black,minimum
+      size=4mm,diagonal fill={#1}{#2},scale=0.5,thick,font=\sffamily\bfseries]{#3};}}}
+\newcommand*{\sI}{\makedfgstate{s1col}{1}}
+\newcommand*{\sII}{\makedfgstate{s2col}{2}}
+\newcommand*{\sIII}{\makedfgstate{s3col}{3}}
+\newcommand*{\sIV}{\makedfgstate{s4col}{4}}
+\newcommand*{\sIVa}{\makedfgstate{s4colalter}{4}}
+\newcommand*{\sV}{\makedfgstate{s5col}{5}}
+\newcommand*{\sVI}{\makedfgstate{s6col}{6}}
+\newcommand*{\sVIa}{\makedfgstate{s6colalter}{6}}
+\newcommand*{\sVII}{\makedfgstate{s7col}{8}}
+\newcommand*{\sVIIa}{\makedfgstate{s7colalter}{7}}
+\newcommand*{\sVIII}{\makedfgstate{s8col}{8}}
+\newcommand*{\sIX}{\makedfgstate{s9col}{9}}
+\newcommand*{\sX}{\makedfgstate{s10col}{10}}
+\newcommand*{\sIVc}{\makedfgstatealter{s4col}{s4colalter}{4}}
+\newcommand*{\sVIc}{\makedfgstatealter{s6col}{s6colalter}{6}}
+\newcommand*{\sVIIc}{\makedfgstatealter{s7col}{s7colalter}{7}}
+
+\newcommand*{\seI}{\makedfgstatealter{s1col}{s1col}{1}}
+\newcommand*{\seII}{\makedfgstatealter{s2col}{s2col}{2}}
+\newcommand*{\seIII}{\makedfgstatealter{s3col}{s3col}{3}}
+
+\newcommand\hooked[1]{\protect\accentset{\leftharpoonup}{#1}}
+
+% \newcommand{\defeq}{\overset{\mathrm{def}}{=\joinrel=}}
+\newcommand{\defeq}{\triangleq}
+
+\newcommand{\sep}{\mathbin{|}}
+
+% \newcommand\predicated[1]{#1~{\mono{cases}}}
+\newcommand\predicated[1]{\mathcal{S}(#1)}
+\newcommand\listt[1]{\overrightarrow{#1}}
+
+\newcommand\avar[1]{\mrtl{#1}^{0}}
+\newcommand\afvar[1]{\mrtl{#1}^{\mathrm{f}}}
+\newcommand\aadd{\mathbin{\mono{+}}}
+\newcommand\amul{\mathbin{\mono{*}}}
+\newcommand\aeq{\mathrel{\mono{==}}}
+\newcommand\adiv{\mathbin{\mono{/}}}
+\newcommand\aneq{\mathrel{\mono{!=}}}
+\newcommand\anot{\mathbin{\mono{!}}}
+\newcommand\cvar[1]{\mathrm{\mono{#1}}}
+\newcommand\cadd{\mathbin{\mono{+}}}
+\newcommand\cmul{\mathbin{\mono{*}}}
+\newcommand\ceq{\mathrel{\mono{==}}}
+\newcommand\cdiv{\mathbin{\mono{/}}}
+\newcommand\cneq{\mathrel{\mono{!=}}}
+\newcommand\casgn{\mathrel{\mono{:=}}}
+\newcommand\cimp{\mathrel{\mono{=>}}}
+\newcommand\symbolic[1]{#1^{\#}}
+\newcommand\final[1]{#1^{\mathrm{f}}}
+\newcommand\base[1]{#1^0}
+%\newcommand\some[1]{\left\lfloor #1 \right\rceil}
+\newcommand\some[1]{\mono{Some}(#1)}
+\newcommand\cnone{\mono{None}}
+\newcommand\ccok[1]{\mono{OK}(#1)}
+\newcommand\ccerror{\mono{Error}}
+\newcommand\optiontype[1]{#1^{?}}
+\newcommand{\curly}{\mathrel{\leadsto}}
+
+%\newcommand\block{l}
+\newcommand\resource{\rho}
+\newcommand\reg{r}
+\newcommand\regtype{\ymathbb{r}}
+\newcommand\predvar{p}
+\newcommand\predvartype{\ymathbb{p}}
+\newcommand\addr{d}
+\newcommand\addrtype{\ymathbb{d}}
+\newcommand\location{L}
+\newcommand\locationtype{\mathbb{L}}
+\newcommand\guard{G}
+\newcommand\guardtype{\mathbb{G}}
+\newcommand\instrtype{\mathbb{I}}
+\newcommand\instr{I}
+\newcommand\cfinstrtype{\mathbb{I}_{\mathrm{cf}}}
+\newcommand\cfinstr{I_{\mathrm{cf}}}
+\newcommand\amem{\mathrm{\mono{Amem}}}
+\newcommand\aexitres{\mathrm{\mono{Aexit}}}
+\newcommand\expr{A}
+\newcommand\exprtype{\mathbb{A}}
+\newcommand\memexpr{M}
+\newcommand\memexprtype{\mathbb{M}}
+\newcommand\mem{m}
+\newcommand\memtype{\ymathbb{m}}
+\newcommand\emptyabstrmem{\base{\mono{Mem}}}
+\newcommand\exitexpr{E}
+\newcommand\exitexprtype{\mathbb{E}}
+\newcommand\exprop{\mathit{op}_{\mathrm{a}}}
+\newcommand\condition{\mathbb{C}}
+\newcommand\condop{\mathit{op}_{\mathrm{c}}}
+%\newcommand\exproptype{\mathbb{A}_{\mathrm{op}}}
+\newcommand\exproptype{\mathbb{a}}
+%\newcommand\condoptype{\mathbb{C}_{\mathrm{op}}}
+\newcommand\condoptype{\mathbb{c}}
+\newcommand\genpred[1]{G(#1)}
+\newcommand\predexpr{B}
+\newcommand\predexprtype{\mathbb{B}}
+% \newcommand\forest{\symbolic{\text{F}}}
+\newcommand\rtlbb{H}
+\newcommand\rtlpb{H_\text{par}}
+\newcommand\forest{f}
+\newcommand\symbstate{\sigma}
+\newcommand\symbstatetype{\Sigma}
+\newcommand\symbconfig{\omega}
+\newcommand\symbconfigtype{\Omega}
+\newcommand\aop[2]{\mathrm{\mono{Aop}}(#1, #2)}
+\newcommand\aload[3]{\mathrm{\mono{Aload}}(#1, #2, #3)}
+\newcommand\anload[2]{#1 \mono{[} #2 \mono{]}}
+\newcommand\astore[4]{\mathrm{\mono{Astore}}(#1, #2, #3, #4)}
+\newcommand\anstore[3]{#1 \mono{[} #2 \mathbin{\mono{->}} #3 \mono{]}}
+\newcommand\asetpred[2]{\mono{Asetpred}(#1, #2)}
+\newcommand\aexit[1]{\mono{Aexit}(#1)}
+
+\NewDocumentCommand\exitinstr{ o m }{%
+  {\IfValueT {#1} {#1 \cimp}\mono{E}(#2)}%
+}
+
+\NewDocumentCommand\asgninstr{ o m m }{%
+  {\IfValueT {#1} {#1 \cimp} #2 \casgn #3}%
+}
+
+\newcommand\booleantrue{\mathit{true}}
+\newcommand\booleanfalse{\mathit{false}}
+\newcommand\ltrue{\mathit{true}}
+\newcommand\lfalse{\mathit{false}}
+
+\newcommand\sem[4]{#2 \vdash #3 \Downarrow_{#1} #4}
+\newcommand\smallsem[5]{#2 \vdash #3 \overset{#5}{\longrightarrow}_{#1} #4}
+%\newcommand\sem[4]{#2 \vdash #3 \Downarrow #4}
+\newcommand\context{\Gamma}
+\newcommand\seminstr[3][\context]{\sem{\instrtype}{#1}{#2}{#3}}
+\newcommand\seminstrlist[3][\context]{\sem{\mathtt{list}(\instrtype)}{#1}{#2}{#3}}
+\newcommand\semrtlblock[3][\context]{\sem{\rtlblock}{#1}{#2}{#3}}
+\newcommand\semrtlpar[3][\context]{\sem{\rtlpar}{#1}{#2}{#3}}
+\newcommand\semcfinstr[3][\context]{\sem{\cfinstrtype}{#1}{#2}{#3}}
+\newcommand\semval[3][\context]{\sem{\exprtype}{#1}{#2}{#3}}
+\newcommand\semmem[3][\context]{\sem{\memexprtype}{#1}{#2}{#3}}
+\newcommand\semvallist[3][\context]{\sem{\listt{\expr}}{#1}{#2}{#3}}
+\newcommand\sempred[3][\context]{\sem{\predexprtype}{#1}{#2}{#3}}
+\newcommand\semexit[3][\context]{\sem{\optiontype{\cfinstrtype}}{#1}{#2}{#3}}
+\newcommand\sempexpr[3][\context]{\sem{\predexprtype}{#1}{#2}{#3}}
+\newcommand\sempredexpr[4][\context]{\sem{\predicated{#2}}{#1}{#3}{#4}}
+\newcommand\semregset[3][\context]{\sem{R}{#1}{#2}{#3}}
+\newcommand\sempredset[3][\context]{\sem{P}{#1}{#2}{#3}}
+\newcommand\semconstraints[3][\context]{\sem{\mathrm{C}}{#1}{#2}{#3}}
+\newcommand\at[2]{#1\!\left[#2\right]}
+%\newcommand\eval[4]{#2 \vdash #3 \downarrow_{#1} #4}
+\newcommand\eval[4]{#2 \vdash #3 \downarrow #4}
+\newcommand\evalop[3][\context]{\eval{\mathit{op}}{#1}{#2}{#3}}
+\newcommand\evaladdr[4][\context]{\eval{\mathit{a}}{#1}{(#2, #3)}{#4}}
+\newcommand\loadv[2]{#1[#2]}
+\newcommand\frompredop[1]{f(#1)}
+%\newcommand\compare[3]{#2 \approx_{#1} #3}
+\newcommand\compare[3]{#2 \approx #3}
+\newcommand\forestcomponents[4]{\{ #1; #2; #3; #4 \}}
+\newcommand\forestregset[1]{#1_{\mathrm{R}}}
+\newcommand\forestpredset[1]{#1_{\mathrm{P}}}
+\newcommand\forestenv[1]{#1_{\environment}}
+\newcommand\forestmem[1]{#1_{\mathrm{M}}}
+\newcommand\forestexit[1]{#1_{\mathrm{E}}}
+\newcommand\foreststate[1]{#1_{\Sigma}}
+\newcommand\identity{\mathcal{I}}
+\newcommand\constraints[1]{#1_{\mathrm{C}}}
+%\newcommand\settype[1]{2^{#1}}
+\newcommand\settype[1]{\mathcal{P}(#1)}
+
+\newcommand\atforestregs[2]{\at{\forestregset{#1}}{#2}}
+\newcommand\atforestpreds[2]{\at{\forestpredset{#1}}{#2}}
+
+\newcommand\forestat[3]{#1 \mathbin{\#_{#2}} #3}
+
+\newcommand\environment{\mathrm{\textsc{Env}}}
+
+\newcommand\update{\alpha}
+\newcommand\evaluable[1]{\text{evaluable}(#1)}
+\newcommand\updateregs{\update_{\abstrexpr,\abstrmem}}
+\newcommand\updatepreds{\update_{\predexpr}}
+\newcommand\updateexit{\update_{\abstrexitexpr}}
+\newcommand\updateforest{\update_{\mathrm{\symbstate}}}
+\newcommand\updatepred{\update_{\mathrm{\guard}}}
+\newcommand\applic{\mathbin{<\kern-4pt *\kern-4pt >}}
+\newcommand\predicatedmapand{\mu}
+% \newcommand\predicatedappend[4]{\predicatedmapand\!\left( #2, #3 \right)
+%   \mathbin{++} \predicatedmapand\!\left( #1, #4 \right)}
+\newcommand\predicatedappend[3]{#2 \uplus_{#1} #3}
+
+\newcommand\llabel[1]{#1:}
+\newcommand\rlabel[1]{\textcolor{black!50}{// #1}}
+
+\newcommand\letin[1]{%
+  \mrtl{let}\ #1\ \mrtl{in}
+}
+
+\newcommand\minl{\rtllisting}
+\newcommand\synitens[3]{%
+  \mrtl{if} #1 \mrtl{then}
+  #2 \mrtl{else} #3%
+}
+\newcommand\synite[3]{%
+  \synitens{\ #1\ }{\ #2\ }{\ #3}%
+}
+\newcommand\synitealigned[3]{%
+  \begin{aligned}
+    &\synitens{\ #1\\&}{\ #2\\&}{\ #3}\\
+  \end{aligned}
+}
+
+\newcommand\syniteformulans[3]{%
+  ( #1 \rightarrow #2) \land (\neg #1 \rightarrow #3)
+}
+\newcommand\syniteformula[3]{%
+  \syniteformulans{\ #1\ }{\ #2\ }{\ #3}%
+}
+\newcommand\syniteformulaaligned[3]{%
+  \begin{aligned}[t]
+  &(#1 \rightarrow #2)\\ &{} \land (\neg #1 \rightarrow #3)
+  \end{aligned}
+}
+
+\NewDocumentCommand{\set}{o m}{%
+  % <code>
+  \IfNoValueTF{#1}
+    {\{\,#2\,\}}
+    {\{\,#1 \mid #2\,\}}%
+  % <code>
+}
+
+\newcommand{\oset}[3][0ex]{%
+  \mathrel{\mathop{#3}\limits^{
+    \vbox to#1{\kern-2\ex@
+    \hbox{$\scriptstyle#2$}\vss}}}}
+
+\tikzset{
+diagonal fill/.style 2 args={fill=#2, path picture={
+\fill[#1] (path picture bounding box.south west) -|
+                         (path picture bounding box.north east) -- cycle;}}
+}
+
+\newcommand\abstrinitialhead[2]{
+  \node[anchor=north west,abstrheader,abstrheaderextra,minimum width=0.4\linewidth] at (0,0) (leftnode)
+  {\begin{minipage}[c][0.5cm][c]{0.4\linewidth}{\centering\noindent
+        #1 \par}\end{minipage}};
+  \node[anchor=north east,abstrheader,abstrheaderextra,minimum width=0.6\linewidth] at (\linewidth,0) (rightnode)
+  {\begin{minipage}[c][0.5cm][c]{0.6\linewidth}{\centering\noindent
+        #2 \par}\end{minipage}};
+}
+
+\newcommand\abstrhead[2]{
+  \node[below=of leftnode,abstrheader,abstrheaderextra] (leftnode)
+  {\begin{minipage}[c][0.5cm][c]{0.4\linewidth}{\centering\noindent
+        #1 \par}\end{minipage}};
+  \node[below=of rightnode,abstrheader,abstrheaderextra] (rightnode)
+  {\begin{minipage}[c][0.5cm][c]{0.6\linewidth}{\centering\noindent
+        #2 \par}\end{minipage}};
+}
+
+\newenvironment{abstrenv}[3][]{\vspace{1em}\noindent\begin{tikzpicture}[node
+    distance=-2pt,abstrbox/.style={fill=Orchid!15,very
+      thick},abstrheader/.style={fill=Orchid!30,very thick},abstrheaderextra/.style={},abstrboxextra/.style={},#1]%
+\abstrinitialhead{#2}{#3}}{\end{tikzpicture}\vspace{1em}}
+
+\newenvironment{abstrleft}[1][]{\node[below=of leftnode,abstrbox,abstrboxextra]
+  (leftnode) \bgroup\begin{minipage}[c][#1][c]{0.4\linewidth}}{\end{minipage}\egroup;}
+
+\newenvironment{abstrright}[1][]{\node[below=of rightnode,abstrbox,abstrboxextra]
+    (rightnode)
+    \bgroup\begin{minipage}[c][#1][c]{0.6\linewidth}}{\end{minipage}\egroup;}
+
+\lstdefinelanguage{Coq}{
+    % Anything betweeen $ becomes LaTeX math mode
+    mathescape=true,
+    % Comments may or not include Latex commands
+    texcl=false,
+    % Vernacular commands
+    morekeywords=[1]{Section, Module, End, Require, Import, Export,
+        Variable, Variables, Parameter, Parameters, Axiom, Hypothesis,
+        Hypotheses, Notation, Local, Tactic, Reserved, Scope, Open, Close,
+        Bind, Delimit, Definition, Let, Ltac, Fixpoint, CoFixpoint, Add,
+        Morphism, Relation, Implicit, Arguments, Unset, Contextual,
+        Strict, Prenex, Implicits, Inductive, CoInductive, Record,
+        Structure, Canonical, Coercion, Context, Class, Global, Instance,
+        Program, Infix, Theorem, Lemma, Corollary, Proposition, Fact,
+        Remark, Example, Proof, Goal, Save, Qed, Defined, Hint, Resolve,
+        Rewrite, View, Search, Show, Print, Printing, All, Eval, Check,
+        Projections, inside, outside, Def},
+    % Gallina
+    morekeywords=[2]{forall, exists, exists2, fun, fix, cofix, struct,
+        match, with, end, as, in, return, let, if, is, then, else, for, of,
+        nosimpl, when},
+    % Sorts
+    morekeywords=[3]{Type, Prop, Set, true, false, option},
+    % Various tactics, some are std Coq subsumed by ssr, for the manual purpose
+    morekeywords=[4]{pose, set, move, case, elim, apply, clear, hnf,
+        intro, intros, generalize, rename, pattern, after, destruct,
+        induction, using, refine, inversion, injection, rewrite, congr,
+        unlock, compute, ring, field, fourier, replace, fold, unfold,
+        change, cutrewrite, simpl, have, suff, wlog, suffices, without,
+        loss, nat_norm, assert, cut, trivial, revert, bool_congr, nat_congr,
+        symmetry, transitivity, auto, split, left, right, autorewrite},
+    % Terminators
+    morekeywords=[5]{by, done, exact, reflexivity, tauto, romega, omega,
+        assumption, solve, contradiction, discriminate},
+    % Control
+    morekeywords=[6]{do, last, first, try, idtac, repeat},
+    % Comments delimiters, we do turn this off for the manual
+    morecomment=[s]{(*}{*)},
+    % Spaces are not displayed as a special character
+    showstringspaces=false,
+    % String delimiters
+    morestring=[b]",
+    morestring=[d],
+    % Size of tabulations
+    tabsize=3,
+    % Enables ASCII chars 128 to 255
+    extendedchars=false,
+    % Case sensitivity
+    sensitive=true,
+    % Automatic breaking of long lines
+    breaklines=false,
+    % Default style fors listings
+    basicstyle=\small,
+    % Position of captions is bottom
+    captionpos=b,
+    % flexible columns
+    columns=[l]flexible,
+    % Style for (listings') identifiers
+    identifierstyle={\ttfamily\color{black}},
+    % Style for declaration keywords
+    keywordstyle=[1]{\ttfamily\color{keywordcolor}},
+    % Style for gallina keywords
+    keywordstyle=[2]{\ttfamily\color{predcolor}},
+    % Style for sorts keywords
+    keywordstyle=[3]{\ttfamily\color{predcolor}},
+    % Style for tactics keywords
+    keywordstyle=[4]{\ttfamily\color{tacticcolor}},
+    % Style for terminators keywords
+    keywordstyle=[5]{\ttfamily\color{terminatorcolor}},
+    %Style for iterators
+    %keywordstyle=[6]{\ttfamily\color{dkpink}},
+    % Style for strings
+    stringstyle=\ttfamily,
+    % Style for comments
+    commentstyle={\ttfamily\color{commentcolor}},
+    %moredelim=**[is][\ttfamily\color{red}]{/&}{&/},
+    % literate=
+    % {\\forall}{{\color{dkgreen}{$\forall\;$}}}1
+    % {\\exists}{{$\exists\;$}}1
+    % {<-}{{$\leftarrow\;$}}1
+    % {=>}{{$\Rightarrow\;$}}1
+    % {==}{{\code{==}\;}}1
+    % {==>}{{\code{==>}\;}}1
+    % %    {:>}{{\code{:>}\;}}1
+    % {->}{{$\rightarrow\;$}}1
+    % {<->}{{$\leftrightarrow\;$}}1
+    % {<==}{{$\leq\;$}}1
+    % {\#}{{$^\star$}}1
+    % {\\o}{{$\circ\;$}}1
+    % {\@}{{$\cdot$}}1
+    % {\/\\}{{$\wedge\;$}}1
+    % {\\\/}{{$\vee\;$}}1
+    % {++}{{\code{++}}}1
+    % {~}{{\ }}1
+    % {\@\@}{{$@$}}1
+    % {\\mapsto}{{$\mapsto\;$}}1
+    % {\\hline}{{\rule{\linewidth}{0.5pt}}}1
+    %
+}[keywords,comments,strings]
+
+% Based on: https://tex.stackexchange.com/a/340843/25356
+\let\originferrule\inferrule
+\DeclareDocumentCommand \inferrule { s O {} m m }{%
+  \IfBooleanTF{#1}%
+  {%
+    \mpr@inferstar[#2]{#3}{#4}%
+  }{%
+    \mpr@inferrule[#2]{#3}{#4}%
+  }%
+  \IfValueT{#2}%
+  {%
+    \my@name@inferrule{#2}%
+  }%
+}
+\NewDocumentCommand \my@name@inferrule { m }{%
+  \def\@currentlabelname{\textsc{#1}}%
+}
+
+\definecolor{DarkSeaGreenForty}{HTML}{d2e4d2}
+\sethlcolor{DarkSeaGreenForty}
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+
+\crefname{lemma}{lemma}{lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

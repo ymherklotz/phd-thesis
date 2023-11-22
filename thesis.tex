@@ -1,0 +1,60 @@
+\documentclass[svgnames,enabledeprecatedfontcommands]{scrbook}
+
+\KOMAoptions{draft=true}
+
+\usepackage[backend=biber]{biblatex}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{textcomp}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{verbatim}
+
+\usepackage{accents}
+\usepackage{enumitem}
+\usepackage{pgfplotstable}
+\usepackage{pgfplots}
+\usepackage{soul}
+\usepackage{subcaption}
+\usepackage{tikz-timing}
+\usepackage{tikz}
+\usepackage{cleveref}
+\usepackage{mathpartir}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{tikzpagenodes}
+
+\usepackage{ymh-macros}
+
+\usetikzlibrary{arrows,arrows.meta,shapes,snakes,automata,backgrounds,petri,%
+                decorations.pathreplacing,calligraphy,patterns,%
+                patterns.meta,pgfplots.groupplots,positioning,shapes.geometric,%
+                fit,tikzmark}
+\pgfplotsset{compat=1.16}
+
+\graphicspath{{./figures/hyperblock-scheduling/}}
+
+\addbibresource{thesis-refs.bib}
+
+\begin{document}
+
+\title{Formal Verification of High-Level Synthesis}
+\author{Yann Herklotz Grave}
+
+\maketitle
+
+\include{chapters/introduction}
+
+\include{chapters/hyperblock-scheduling}
+
+\printbibliography
+
+\end{document}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
