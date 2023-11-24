@@ -1,0 +1,10 @@
+#+title: PhD Thesis Plan
+
+* Introduction
+* Background
+* Introduction to Vericert (overview of Vericert and the various translation passes, and Verilog semantics)
+* Hyperblock Scheduling (basic block generation, if-conversion and scheduling)
+* Hardware Generation (HTL generation, Memory generation and Forward substitution)
+* Evaluation (Evaluation on PolyBench vs Bambu,)
+* Conclusion
+* References
