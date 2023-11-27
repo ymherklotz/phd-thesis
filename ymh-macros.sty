@@ -1,10 +1,49 @@
 \RequirePackage{relsize}
 \RequirePackage{listings}
 
+\newif\if@ACM@newfonts
+\@ACM@newfontstrue
+
+\ifPDFTeX
+\input{glyphtounicode}
+\pdfglyphtounicode{f_f}{FB00}
+\pdfglyphtounicode{f_f_i}{FB03}
+\pdfglyphtounicode{f_f_l}{FB04}
+\pdfglyphtounicode{f_i}{FB01}
+\pdfglyphtounicode{t_t}{0074 0074}
+\pdfglyphtounicode{f_t}{0066 0074}
+\pdfglyphtounicode{T_h}{0054 0068}
+\pdfgentounicode=1
+\RequirePackage{cmap}
+\fi
+\if@ACM@newfonts
+  \RequirePackage[T1]{fontenc}
+  % Note that the order in which packages are loaded matters,
+  % and the correct order depends on the LaTeX engine used.
+  % See https://github.com/borisveytsman/acmart/issues/402
+  % and https://github.com/borisveytsman/acmart/issues/410
+  \ifxetex
+    \RequirePackage[libertine]{newtxmath}
+    \RequirePackage[tt=false]{libertine}
+    \setmonofont[Scale=MatchUppercase]{Iosevka Slab}
+  \else
+    \ifluatex
+      \RequirePackage[libertine]{newtxmath}
+      \RequirePackage[tt=false]{libertine}
+      \setmonofont[Scale=MatchUppercase]{Iosevka Slab}
+    \else
+       \RequirePackage[tt=false, type1=true]{libertine}
+       \RequirePackage[varqu]{zi4}
+       \RequirePackage[libertine]{newtxmath}
+    \fi
+  \fi
+\fi
+
 %\DeclareMathAlphabet{\ymathbb}{U}{BOONDOX-ds}{m}{n}
 \DeclareMathAlphabet{\mathbb}{U}{BOONDOX-ds}{m}{n}
 \newcommand\ymathbb{\mathbb}
-% JW: I changed the above so that the BOONDOX fonts are used for uppercase and lowercase mathbb. Otherwise you get a mix of sans-serif and serif.
+% JW: I changed the above so that the BOONDOX fonts are used for uppercase and
+% lowercase mathbb. Otherwise you get a mix of sans-serif and serif.
 
 \newif\ifCOMMENTS%
 \COMMENTStrue%
@@ -507,12 +546,33 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
+\newtheorem*{remark}{Remark}
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[chapter]
 
 \crefname{lemma}{lemma}{lemmas}
 \Crefname{lemma}{Lemma}{Lemmas}
+
+\definecolor{compcert}{HTML}{bebada}
+\definecolor{formalhls}{HTML}{8dd3c7}
+\definecolor{keywordcolour}{HTML}{8f0075}
+\definecolor{functioncolour}{HTML}{721045}
+\definecolor{constantcolour}{HTML}{0000bb}
+
+\newcommand\yhkeywordsp[1]{\;\;\texttt{\textcolor{keywordcolour}{#1}}}
+\newcommand\yhkeyword[1]{\texttt{\textcolor{keywordcolour}{#1}}}
+\newcommand\yhfunctionsp[1]{\;\;\texttt{\textcolor{functioncolour}{#1}}}
+\newcommand\yhfunction[1]{\texttt{\textcolor{functioncolour}{#1}}}
+\newcommand\yhconstant[1]{\texttt{\textcolor{constantcolour}{#1}}}
+
+\newif\ifANONYMOUS
+\ANONYMOUSfalse
+
+\newcommand{\slowdownOrig}{27}
+\newcommand{\slowdownDiv}{2}
+\newcommand{\areaIncr}{1.1}
+\def\polybench{PolyBench/C}
 
 %%% Local Variables:
 %%% mode: latex

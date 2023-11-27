@@ -1,0 +1,489 @@
+\chapter{Introduction to Vericert}
+
+This section describes the main architecture of the HLS tool, and the way in which the Verilog back end was added to \compcert{}.  This section also covers an example of converting a simple C program into hardware, expressed in the Verilog language.
+
+\subsection{Main Design Decisions}
+
+\paragraph{Choice of source language}
+C was chosen as the source language as it remains the most common source language amongst production-quality HLS tools~\cite{canis11_legup, xilinx20_vivad_high_synth, intel_hls, bambu_hls}. This, in turn, may be because it is ``[t]he starting point for the vast majority of algorithms to be implemented in hardware''~\cite{5522874}, lending a degree of practicality.
+The availability of \compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid basis for formally verified C compilation.
+%Since a lot of existing code for HLS is written in C, supporting C as an input language, rather than a custom domain-specific language, means that \vericert{} is more practical.
+%An alternative was to support LLVM IR as an input language, however, to get a full work flow from a higher level language to hardware, a front end for that language to LLVM IR would also have to be verified. \JW{Maybe save LLVM for the `Choice of implementation language'?}
+We considered Bluespec~\cite{nikhil04_blues_system_veril}, but decided that although it ``can be classed as a high-level language''~\cite{greaves_note}, it is too hardware-oriented to be suitable for traditional HLS.
+We also considered using a language with built-in parallel constructs that map well to parallel hardware, such as occam~\cite{page91_compil_occam}, Spatial~\cite{spatial} or Scala~\cite{chisel}.
+% However, this would not qualify as being HLS due to the manual parallelism that would have to be performed. \JW{I don't think the presence of parallelism stops it being proper HLS.}
+%\JP{I think I agree with Yann here, but it could be worded better. At any rate not many people have experience writing what is essentially syntactic sugar over a process calculus.}
+%\JW{I mean: there are plenty of software languages that involve parallel constructs. Anyway, perhaps we can just dismiss occam for being too obscure.}
+
+
+\paragraph{Choice of target language}
+Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an HDL that can be synthesised into logic cells which can either be placed onto a field-programmable gate array (FPGA) or turned into an application-specific integrated circuit (ASIC).  Verilog was chosen as the output language for \vericert{} because it is one of the most popular HDLs and there already exist a few formal semantics for it that could be used as a target~\cite{loow19_verif_compil_verif_proces, meredith10_veril}.  Bluespec, previously ruled out as a source language, is another possible target and there exists a formally verified translation to circuits using K\^{o}ika~\cite{bourgeat20_essen_blues}. %\JP{This needs an extra comment maybe?}\YH{Maybe about bluespec not being an ideal target language because it's quite high-level?} % but targeting this language would not be trivial as it is not meant to be targeted by an automatic tool, instead strives to a formally verified high-level hardware description language instead.
+
+%\JW{Can we mention one or two alternatives that we considered? Bluespec or Chisel or one of Adam Chlipala's languages, perhaps?}
+
+\paragraph{Choice of implementation language}
+We chose Coq as the implementation language because of its mature support for code extraction; that is, its ability to generate OCaml programs directly from the definitions used in the theorems.
+We note that other authors have had some success reasoning about the HLS process using other theorem provers such as Isabelle~\cite{ellis08}.
+\compcert{}~\cite{leroy09_formal_verif_realis_compil} was chosen as the front end because it has a well established framework for simulation proofs about intermediate languages, and it already provides a validated C parser~\cite{jourdan12_valid_lr_parser}.
+The Vellvm framework~\cite{zhao12_formal_llvm_inter_repres_verif_progr_trans} was also considered because several existing HLS tools are already LLVM-based, but additional work would be required to support a high-level language like C as input.
+The .NET framework has been used as a basis for other HLS tools, such as Kiwi~\cite{kiwi}, and LLHD~\cite{schuiki20_llhd} has been recently proposed as an intermediate language for hardware design, but neither are suitable for us because they lack formal semantics.
+
+\begin{figure}
+  \centering
+  % JW: resizebox is associated with puppies dying
+  %\resizebox{0.85\textwidth}{!}{
+  \begin{tikzpicture}
+    [language/.style={fill=white,rounded corners=3pt,minimum height=7mm},
+    continuation/.style={},
+    linecount/.style={rounded corners=3pt,dashed}]
+    \fill[compcert,rounded corners=3pt] (-1,-0.5) rectangle (9.9,2);
+    \fill[formalhls,rounded corners=3pt] (-1,-1) rectangle (9.9,-2.4);
+    %\draw[linecount] (-0.95,-0.45) rectangle (3.6,1);
+    %\draw[linecount] (4,-0.45) rectangle (7.5,1);
+    \node[language] at (-0.3,0) (clight) {Clight};
+    \node[continuation] at (1,0) (conta) {$\cdots$};
+    \node[language] at (2.7,0) (cminor) {CminorSel};
+    \node[language] at (4.7,0) (rtl) {3AC};
+    \node[language] at (6.2,0) (ltl) {LTL};
+    \node[language,anchor=west] at (8.4,0) (aarch) {aarch64};
+    \node[language,anchor=west] at (8.4,0.8) (x86) {x86};
+    \node[continuation,anchor=west] at (8.4,1.4) (backs) {$\cdots$};
+    \node[continuation] at (7.3,0) (contb) {$\cdots$};
+    \node[language] at (4.7,-1.5) (htl) {HTL};
+    \node[language] at (6.7,-1.5) (verilog) {Verilog};
+    \node[anchor=west] at (-0.9,1.6) {\textbf{\compcert{}}};
+    \node[anchor=west] at (-0.9,-1.4) {\textbf{\vericert{}}};
+    %%\node[anchor=west] at (-0.9,0.7) {\small $\sim$ 27 kloc};
+    %%\node[anchor=west] at (4.1,0.7) {\small $\sim$ 46 kloc};
+    %%\node[anchor=west] at (2,-1.5) {\small $\sim$ 17 kloc};
+    \node[align=center] at (3.2,-2) {\footnotesize RAM\\[-0.5em]\footnotesize insertion};
+    \draw[->,thick] (clight) -- (conta);
+    \draw[->,thick] (conta) -- (cminor);
+    \draw[->,thick] (cminor) -- (rtl);
+    \draw[->,thick] (rtl) -- (ltl);
+    \draw[->,thick] (ltl) -- (contb);
+    \draw[->,thick] (contb) -- (aarch);
+    \draw[->,thick] (contb) to [out=0,in=200] (x86.west);
+    \draw[->,thick] (contb) to [out=0,in=190] (backs.west);
+    \draw[->,thick] (rtl) -- (htl);
+    \draw[->,thick] (htl) -- (verilog);
+    \draw[->,thick] (htl.west) to [out=180,in=150] (4,-2.2) to [out=330,in=270] (htl.south);
+  \end{tikzpicture}%}
+%  \alt{The compilation flow of \compcert{}, showing where \vericert{} branches off.}
+  \caption{\vericert{} as a Verilog back end to \compcert{}.}%
+  \label{fig:rtlbranch}
+\end{figure}
+
+\paragraph{Architecture of \vericert{}}
+The main work flow of \vericert{} is given in Fig.~\ref{fig:rtlbranch}, which shows those parts of the translation that are performed in \compcert{}, and those that have been added.  This includes translations to two new intermediate languages added in \vericert{}, HTL and Verilog, as well as an additional optimisation pass labelled as ``RAM insertion''.
+
+\def\numcompcertlanguages{ten}
+
+\compcert{} translates Clight\footnote{A deterministic subset of C with pure expressions.} input into assembly output via a sequence of intermediate languages; we must decide which of these \numcompcertlanguages{} languages is the most suitable starting point for the HLS-specific translation stages.
+
+We select CompCert's three-address code (3AC)\footnote{This is known as register transfer language (RTL) in the \compcert{} literature. `3AC' is used in this paper instead to avoid confusion with register-transfer level (RTL), which is another name for the final hardware target of the HLS tool.} as the starting point. Branching off \emph{before} this point (at CminorSel or earlier) denies \compcert{} the opportunity to perform optimisations such as constant propagation and dead-code elimination, which, despite being designed for software compilers, have been found useful in HLS tools as well~\cite{cong+11}. And if we branch off \emph{after} this point (at LTL or later) then \compcert{} has already performed register allocation to reduce the number of registers and spill some variables to the stack; this transformation is not required in HLS because there are many more registers available, and these should be used instead of RAM whenever possible. %\JP{``\compcert{} performs register allocation during the translation to LTL, with some registers spilled onto the stack: this is unnecessary in HLS since as many registers as are required may be described in the output RTL.''} \JP{Maybe something about FPGAs being register-dense (so rarely a need to worry about the number of flops)?}
+
+3AC is also attractive because it is the closest intermediate language to LLVM IR, which is used by several existing HLS compilers. %\JP{We already ruled out LLVM as a starting point, so this seems like it needs further qualification.}\YH{Well not because it's not a good starting point, but the ecosystem in Coq isn't as good.  I think it's still OK here to say that being similar to LLVM IR is an advantage?}
+It has an unlimited number of pseudo-registers, and is represented as a control flow graph (CFG) where each instruction is a node with links to the instructions that can follow it. One difference between LLVM IR and 3AC is that 3AC includes operations that are specific to the chosen target architecture; we chose to target the x86\_32 back end because it generally produces relatively dense 3AC thanks to the availability of complex addressing modes.% reducing cycle counts in the absence of an effective scheduling approach.
+
+\subsection{An Introduction to Verilog}
+
+This section will introduce Verilog for readers who may not be familiar with the language, concentrating on the features that are used in the output of \vericert{}.  Verilog is a hardware description language (HDL) and is used to design hardware ranging from complete CPUs that are eventually produced as integrated circuits, to small application-specific accelerators that are placed on FPGAs.  Verilog is a popular language because it allows for fine-grained control over the hardware, and also provides high-level constructs to simplify development.
+
+Verilog behaves quite differently to standard software programming languages due to it having to express the parallel nature of hardware.  The basic construct to achieve this is the always-block, which is a collection of assignments that are executed every time some event occurs.  In the case of \vericert{}, this event is either a positive (rising) or a negative (falling) clock edge.  All always-blocks triggering on the same event are executed in parallel. Always-blocks can also express control-flow using if-statements and case-statements.
+%\NR{Might be useful to talk about registers must be updated only within an always-block.} \JW{That's important for Verilog programming in general, but is it necessary for understanding this paper?}\YH{Yeah, I don't think it is too important for this section.}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}{0.55\linewidth}
+\begin{minted}[linenos,xleftmargin=20pt,fontsize=\footnotesize]{verilog}
+module main(input rst, input y, input clk,
+            output reg z);
+  reg tmp, state;
+  always @(posedge clk)
+    case (state)
+      1'b0: tmp <= y;
+      1'b1: begin tmp <= 1'b0; z <= tmp; end
+    endcase
+  always @(posedge clk)
+    if (rst) state <= 1'b0;
+    else case (state)
+      1'b0: if (y) state <= 1'b1;
+            else state <= 1'b0;
+      1'b1: state <= 1'b0;
+    endcase
+endmodule
+\end{minted}
+  \end{subfigure}\hfill%
+  \begin{subfigure}{0.45\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \node[draw,circle,inner sep=6pt] (s0) at (0,0) {$S_{\mathit{start}} / \texttt{x}$};
+      \node[draw,circle,inner sep=8pt] (s1) at (1.5,-3) {$S_{1} / \texttt{1}$};
+      \node[draw,circle,inner sep=8pt] (s2) at (3,0) {$S_{0} / \texttt{1}$};
+      \node (s2s) at ($(s2.west) + (-0.3,1)$) {\texttt{00}};
+      \node (s2ss) at ($(s2.east) + (0.3,1)$) {\texttt{1x}};
+      \draw[-{Latex[length=2mm,width=1.4mm]}] ($(s0.west) + (-0.3,1)$) to [out=0,in=120] (s0);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s0)
+           to [out=-90,in=150] node[midway,left] {\texttt{01}} (s1);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s1)
+      to [out=80,in=220] node[midway,left] {\texttt{xx}} (s2);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
+      to [out=260,in=50] node[midway,right] {\texttt{01}} (s1);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
+      to [out=120,in=40] ($(s2.west) + (-0.3,0.7)$) to [out=220,in=170] (s2);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
+      to [out=60,in=130] ($(s2.east) + (0.3,0.7)$) to [out=310,in=10] (s2);
+    \end{tikzpicture}
+  \end{subfigure}
+%  \alt{Verilog code of a state machine, and its equivalent state machine diagram.}
+  \caption{A simple state machine implemented in Verilog, with its diagrammatic representation on the right. The \texttt{x} stands for ``don't care'' and each transition is labelled with the values of the inputs \texttt{rst} and \texttt{y} that trigger the transition.  The output that will be produced is shown in each state.}%
+  \label{fig:tutorial:state_machine}
+\end{figure}
+
+
+A simple state machine can be implemented as shown in Fig.~\ref{fig:tutorial:state_machine}.
+At every positive edge of the clock (\texttt{clk}), both of the always-blocks will trigger simultaneously.  The first always-block controls the values in the register \texttt{tmp} and the output \texttt{z}, while the second always-block controls the next state the state machine should go to.  When the \texttt{state} is 0, \texttt{tmp} will be assigned to the input \texttt{y} using nonblocking assignment, denoted by \texttt{<=}.  Nonblocking assignment assigns registers in parallel at the end of the clock cycle, rather than sequentially throughout the always-block. In the second always-block, the input \texttt{y} will be checked, and if it's high it will move on to the next state, otherwise it will stay in the current state.  When \texttt{state} is 1, the first always-block will reset the value of \texttt{tmp} and then set \texttt{z} to the original value of \texttt{tmp}, since nonblocking assignment does not change its value until the end of the clock cycle.  Finally, the last always-block will set the state to 0 again.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.3\linewidth}
+    \begin{subfigure}[t]{1\linewidth}
+\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+int main() {
+    int x[2] = {3, 6};
+    int i = 1;
+    return x[i];
+}
+\end{minted}
+      \caption{Example C code passed to \vericert{}.}\label{fig:accumulator_c}
+    \end{subfigure}\\\vspace{3em}
+    \begin{subfigure}[b]{1\linewidth}
+\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+main() {
+    x5 = 3
+    int32[stack(0)] = x5
+    x4 = 6
+    int32[stack(4)] = x4
+    x1 = 1
+    x3 = stack(0) (int)
+    x2 = int32[x3 + x1
+               * 4 + 0]
+    return x2
+}
+\end{minted}
+      \caption{3AC produced by the \compcert{} front-end without any optimisations.}\label{fig:accumulator_rtl}
+    \end{subfigure}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.65\linewidth}
+\begin{minted}[fontsize=\tiny,linenos,xleftmargin=20pt]{verilog}
+module main(reset, clk, finish, return_val);
+  input [0:0] reset, clk;
+  output reg [0:0] finish = 0;
+  output reg [31:0] return_val = 0;
+  reg [31:0] reg_3 = 0, addr = 0, d_in = 0, reg_5 = 0, wr_en = 0;
+  reg [0:0] en = 0, u_en = 0;
+  reg [31:0] state = 0, reg_2 = 0, reg_4 = 0, d_out = 0, reg_1 = 0;
+  reg [31:0] stack [1:0];
+  // RAM interface
+  always @(negedge clk)
+    if ({u_en != en}) begin
+      if (wr_en) stack[addr] <= d_in;
+      else d_out <= stack[addr];
+      en <= u_en;
+    end
+  // Data-path
+  always @(posedge clk)
+    case (state)
+      32'd11: reg_2 <= d_out;
+      32'd8: reg_5 <= 32'd3;
+      32'd7: begin u_en <= ( ~ u_en); wr_en <= 32'd1;
+                   d_in <= reg_5; addr <= 32'd0; end
+      32'd6: reg_4 <= 32'd6;
+      32'd5: begin u_en <= ( ~ u_en); wr_en <= 32'd1;
+                   d_in <= reg_4; addr <= 32'd1; end
+      32'd4: reg_1 <= 32'd1;
+      32'd3: reg_3 <= 32'd0;
+      32'd2: begin u_en <= ( ~ u_en); wr_en <= 32'd0;
+                   addr <= {{{reg_3 + 32'd0} + {reg_1 * 32'd4}} / 32'd4}; end
+      32'd1: begin finish = 32'd1; return_val = reg_2; end
+      default: ;
+    endcase
+  // Control logic
+  always @(posedge clk)
+    if ({reset == 32'd1}) state <= 32'd8;
+    else case (state)
+           32'd11: state <= 32'd1;        32'd4: state <= 32'd3;
+           32'd8: state <= 32'd7;         32'd3: state <= 32'd2;
+           32'd7: state <= 32'd6;         32'd2: state <= 32'd11;
+           32'd6: state <= 32'd5;         32'd1: ;
+           32'd5: state <= 32'd4;         default: ;
+         endcase
+endmodule
+\end{minted}
+\caption{Verilog produced by \vericert{}. It demonstrates the instantiation of the RAM (lines 9--15), the data-path (lines 16--32) and the control logic (lines 33--42).}\label{fig:accumulator_v}
+\end{subfigure}
+\caption{Translating a simple program from C to Verilog.}\label{fig:accumulator_c_rtl}
+% \NR{Is the default in line 41 of (c) supposed to be empty?}\YH{Yep, that's how it's generated.}
+\end{figure}
+
+\subsection{Translating C to Verilog by Example}
+Fig.~\ref{fig:accumulator_c_rtl} illustrates the translation of a simple program that stores and retrieves values from an array.
+In this section, we describe the stages of the \vericert{} translation, referring to this program as an example.
+
+\subsubsection{Translating C to 3AC}
+
+The first stage of the translation uses unmodified \compcert{} to transform the C input, shown in Fig.~\ref{fig:accumulator_c}, into a 3AC intermediate representation, shown in Fig.~\ref{fig:accumulator_rtl}.
+As part of this translation, function inlining is performed on all functions, which allows us to support function calls without having to support the \texttt{Icall} 3AC instruction.  Although the duplication of the function bodies caused by inlining can increase the area of the hardware, it can have a positive effect on latency and is therefore a common HLS optimisation~\cite{noronha17_rapid_fpga}. Inlining precludes support for recursive function calls, but this feature is not supported in most HLS tools anyway~\cite{davidthomas_asap16}.
+
+%\JW{Is that definitely true? Was discussing this with Nadesh and George recently, and I ended up not being so sure. Inlining could actually lead to \emph{reduced} resource usage because once everything has been inlined, the (big) scheduling problem could then be solved quite optimally. Certainly inlining is known to increase register pressure, but that's not really an issue here. If we're  not sure, we could just say that inlining everything leads to bloated Verilog files and the inability to support recursion, and leave it at that.}\YH{I think that is true, just because we don't do scheduling.  With scheduling I think that's true, inlining actually becomes quite good.}
+
+\subsubsection{Translating 3AC to HTL}
+
+%   + TODO Explain the main mapping in a short simple way
+
+%   + TODO Clarify connection between CFG and FSMD
+
+%   + TODO Explain how memory is mapped
+%\JW{I feel like this could use some sort of citation, but I'm not sure what. I guess this is all from "Hardware Design 101", right?}\YH{I think I found a good one actually, which goes over the basics.}
+%\JW{I think it would be worth having a sentence to explain how the C model of memory is translated to a hardware-centric model of memory. For instance, in C we have global variables/arrays, stack-allocated variables/arrays, and heap-allocated variables/arrays (anything else?). In Verilog we have registers and RAM blocks. So what's the correspondence between the two worlds? Globals and heap-allocated are not handled, stack-allocated variables become registers, and stack-allocated arrays become RAM blocks? Am I close?}\YH{Stack allocated variables become RAM as well, so that we can deal with addresses easily and take addresses of any variable.} \JW{I see, thanks. So, in short, the only registers in your hardware designs are those that store things like the current state, etc. You generate a fixed number of registers every time you synthesis -- you don't generate extra registers to store any of the program variables. Right?}
+
+The next translation is from 3AC to a new hardware translation language (HTL). %, which is one step towards being completely translated to hardware described in Verilog.
+This involves going from a CFG representation of the computation to a finite state machine with data-path (FSMD) representation~\cite{hwang99_fsmd}. The core idea of the FSMD representation is that it separates the control flow from the operations on the memory and registers. %\JP{I've become less comfortable with this term, but it's personal preference so feel free to ignore. I think `generalised finite state machine' (i.e.\ thinking of the entire `data-path' as contributing to the overall state) is more accurate.}\YH{Hmm, yes, I mainly chose FSMD because there is quite a lot of literature around it.  I think for now I'll keep it but for the final draft we could maybe change it.}
+%This means that the state transitions can be translated into a simple finite state machine (FSM) where each state contains data operations that update the memory and registers.
+Hence, an HTL program consists of two maps from states to Verilog statements: the \emph{control logic} map, which expresses state transitions, and the \emph{data-path} map, which expresses computations.
+Fig.~\ref{fig:accumulator_diagram} shows the resulting FSMD architecture. The right-hand block is the control logic that computes the next state, while the left-hand block updates all the registers and RAM based on the current program state.
+
+The HTL language was mainly introduced to simplify the proof of translation from 3AC to Verilog, as these languages have very different semantics.
+It serves as an intermediate language with similar semantics to 3AC at the top level, using maps to represents what to execute at every state, and similar semantics to Verilog at the lower level by already using Verilog statements instead of more abstract instructions.
+Compared to plain Verilog, HTL is simpler to manipulate and analyse, thereby making it easier to prove optimisations like proper RAM insertion.
+
+\begin{figure*}
+  \centering
+\definecolor{control}{HTML}{b3e2cd}
+\definecolor{data}{HTML}{fdcdac}
+\begin{tikzpicture}
+  \begin{scope}[scale=1.15]
+  \fill[control,fill opacity=1] (6.5,0) rectangle (12,5);
+  \fill[data,fill opacity=1] (0,0) rectangle (5.5,5);
+  \node at (1,4.7) {Data-path};
+  \node at (7.5,4.7) {Control Logic};
+
+  \fill[white,rounded corners=10pt] (7,0.5) rectangle (11.5,2.2);
+  \node at (8,2) {\footnotesize Next State FSM};
+  \foreach \x in {8,...,2}
+    {\pgfmathtruncatemacro{\y}{8-\x}%
+      \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s\x) at (7.5+\y/2,1.35) {\tiny \x};}
+  \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s1c) at (11,1.35) {\tiny 1};
+  \node[draw,circle,inner sep=0,minimum size=13,scale=0.8] (s1) at (s1c) {};
+  \foreach \x in {8,...,3}
+    {\pgfmathtruncatemacro{\y}{\x-1}\draw[-{Latex[length=1mm,width=0.7mm]}] (s\x) -- (s\y);}
+  \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s11) at (10.5,0.9) {\tiny 11};
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (s2) -- (s11);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (s11) -- (s1);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (7.2,1.7) to [out=0,in=100] (s8);
+
+  \node[draw,fill=white] (nextstate) at (9.25,3) {\tiny Current State};
+  \draw[-{Latex[length=1mm,width=0.7mm]}] let \p1 = (nextstate) in
+    (11.5,1.25) -| (11.75,\y1) -- (nextstate);
+  \draw let \p1 = (nextstate) in (nextstate) -- (6,\y1) |- (6,1.5);
+  \node[scale=0.5,rotate=60] at (7.5,0.75) {\texttt{clk}};
+  \node[scale=0.5,rotate=60] at (7.7,0.75) {\texttt{rst}};
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (7.65,-0.5) -- (7.65,0.5);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (7.45,-0.5) -- (7.45,0.5);
+
+  \fill[white,rounded corners=10pt] (2,0.5) rectangle (5,3);
+  \filldraw[fill=white] (0.25,0.5) rectangle (1.5,2.75);
+  \node at (2.6,2.8) {\footnotesize Update};
+  \node[align=center] at (0.875,2.55) {\footnotesize \texttt{RAM}};
+  \node[scale=0.5] at (4.7,1.5) {\texttt{state}};
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (6,1.5) -- (5,1.5);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (6,1.5) -- (7,1.5);
+  \node[scale=0.5,rotate=60] at (4.1,0.9) {\texttt{finished}};
+  \node[scale=0.5,rotate=60] at (3.9,0.95) {\texttt{return\_val}};
+  \node[scale=0.5,rotate=60] at (2.5,0.75) {\texttt{clk}};
+  \node[scale=0.5,rotate=60] at (2.7,0.75) {\texttt{rst}};
+
+  \node[scale=0.5,right,inner sep=5pt] (ram1) at (2,2.1) {\texttt{u\_en}};
+  \node[scale=0.5,right,inner sep=5pt] (ram2) at (2,1.9) {\texttt{wr\_en}};
+  \node[scale=0.5,right,inner sep=5pt] (ram3) at (2,1.7) {\texttt{addr}};
+  \node[scale=0.5,right,inner sep=5pt] (ram4) at (2,1.5) {\texttt{d\_in}};
+  \node[scale=0.5,right,inner sep=5pt] (ram5) at (2,1.3) {\texttt{d\_out}};
+
+  \node[scale=0.5,left,inner sep=5pt] (r1) at (1.5,2.1) {\texttt{u\_en}};
+  \node[scale=0.5,left,inner sep=5pt] (r2) at (1.5,1.9) {\texttt{wr\_en}};
+  \node[scale=0.5,left,inner sep=5pt] (r3) at (1.5,1.7) {\texttt{addr}};
+  \node[scale=0.5,left,inner sep=5pt] (r4) at (1.5,1.5) {\texttt{d\_in}};
+  \node[scale=0.5,left,inner sep=5pt] (r5) at (1.5,1.3) {\texttt{d\_out}};
+
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (ram1) -- (r1);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (ram2) -- (r2);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (ram3) -- (r3);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (ram4) -- (r4);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (r5) -- (ram5);
+
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (4,0.5) -- (4,-0.5);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (3.75,0.5) -- (3.75,-0.5);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (2.45,-0.5) -- (2.45,0.5);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (2.65,-0.5) -- (2.65,0.5);
+
+  \foreach \x in {0,...,1}
+  {\draw (0.25,1-0.25*\x) -- (1.5,1-0.25*\x); \node at (0.875,0.88-0.25*\x) {\tiny \x};}
+
+  %\node[scale=0.5] at (1.2,2.2) {\texttt{wr\_en}};
+  %\node[scale=0.5] at (1.2,2) {\texttt{wr\_addr}};
+  %\node[scale=0.5] at (1.2,1.8) {\texttt{wr\_data}};
+  %\node[scale=0.5] at (1.2,1.4) {\texttt{r\_addr}};
+  %\node[scale=0.5] at (1.2,1.2) {\texttt{r\_data}};
+  %
+  %\node[scale=0.5] at (2.3,2.2) {\texttt{wr\_en}};
+  %\node[scale=0.5] at (2.3,2) {\texttt{wr\_addr}};
+  %\node[scale=0.5] at (2.3,1.8) {\texttt{wr\_data}};
+  %\node[scale=0.5] at (2.3,1.4) {\texttt{r\_addr}};
+  %\node[scale=0.5] at (2.3,1.2) {\texttt{r\_data}};
+  %
+  %\draw[-{Latex[length=1mm,width=0.7mm]}] (2,2.2) -- (1.5,2.2);
+  %\draw[-{Latex[length=1mm,width=0.7mm]}] (2,2) -- (1.5,2);
+  %\draw[-{Latex[length=1mm,width=0.7mm]}] (2,1.8) -- (1.5,1.8);
+  %\draw[-{Latex[length=1mm,width=0.7mm]}] (2,1.4) -- (1.5,1.4);
+  %\draw[-{Latex[length=1mm,width=0.7mm]}] (1.5,1.2) -- (2,1.2);
+
+  \filldraw[fill=white] (2.8,3.25) rectangle (4.2,4.75);
+  \node at (3.5,4.55) {\footnotesize \texttt{Registers}};
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (2,2.4) -| (1.75,4) -- (2.8,4);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (4.2,4) -- (5.25,4) |- (5,2.4);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (5.25,2.4) -- (6.2,2.4) |- (7,1.8);
+
+  \node[scale=0.5] at (3.5,4.2) {\texttt{reg\_1}};
+  \node[scale=0.5] at (3.5,4) {\texttt{reg\_2}};
+  \node[scale=0.5] at (3.5,3.8) {\texttt{reg\_3}};
+  \node[scale=0.5] at (3.5,3.6) {\texttt{reg\_4}};
+  \node[scale=0.5] at (3.5,3.4) {\texttt{reg\_5}};
+\end{scope}
+\end{tikzpicture}
+%  \alt{Diagram displaying the data-path and its internal modules, as well as the control logic and its state machine.}
+  \caption{The FSMD for the example shown in Fig.~\ref{fig:accumulator_c_rtl}, split into a data-path and control logic for the next state calculation.  The Update block takes the current state, current values of all registers and at most one value stored in the RAM, and calculates a new value that can either be stored back in the RAM or in a register.}\label{fig:accumulator_diagram}
+\end{figure*}
+
+%\JP{Does it? Verilog has neither physical registers nor RAMs, just language constructs which the synthesiser might implement with registers and RAMs. We should be clear whether we're talking about the HDL representation, or the synthesised result: in our case these can be very different since we don't target any specific architectural features of an FPGA fabric of ASIC process.}
+\paragraph{Translating memory}
+Typically, HLS-generated hardware consists of a sea of registers and RAMs.
+This memory view is very different from the C memory model, so we perform the following translation from \compcert{}'s abstract memory model to a concrete RAM.\@
+Variables that do not have their address taken are kept in registers, which correspond to the registers in 3AC.
+All address-taken variables, arrays, and structs are kept in RAM.
+The stack of the main function becomes an unpacked array of 32-bit integers representing the RAM block.  Any loads and stores are temporarily translated to direct accesses to this array, where each address has its offset removed and is divided by four.  In a separate HTL-to-HTL conversion, these direct accesses are then translated to proper loads and stores that use a RAM interface to communicate with the RAM, shown on lines 21, 24 and 28 of Fig.~\ref{fig:accumulator_v}.  This pass inserts a RAM block with the interface around the unpacked array.  Without this interface and without the RAM block, the synthesis tool processing the Verilog hardware description would not identify the array as a RAM, and would instead implement it using many registers.  This interface is shown on lines 9--15 in the Verilog code in Fig.~\ref{fig:accumulator_v}.
+A high-level overview of the architecture and of the RAM interface can be seen in Fig.~\ref{fig:accumulator_diagram}.
+
+\paragraph{Translating instructions}
+
+Most 3AC instructions correspond to hardware constructs.
+%Each 3AC instruction either corresponds to a hardware construct or does not have to be handled by the translation, such as function calls (because of inlining). \JW{Are function calls the only 3AC instruction that we ignore? (And I guess return statements too for the same reason.)}\YH{Actually, return instructions are translated (because you can return from main whenever), so call instructions (Icall, Ibuiltin and Itailcall) are the only functions that are not handled.}
+% JW: Thanks; please check proposed new text.
+For example, line 2 in Fig.~\ref{fig:accumulator_rtl} shows a 32-bit register \texttt{x5} being initialised to 3, after which the control flow moves execution to line 3. This initialisation is also encoded in the Verilog generated from HTL at state 8 in both the control logic and data-path always-blocks, shown at lines 33 and 16 respectively in Fig.~\ref{fig:accumulator_v}.  Simple operator instructions are translated in a similar way.  For example, the add instruction is just translated to the built-in add operator, similarly for the multiply operator.  All 32-bit instructions can be translated in this way, but some special instructions require extra care. One such instruction is the \texttt{Oshrximm} instruction, which is discussed further in Section~\ref{sec:algorithm:optimisation:oshrximm}. Another is the \texttt{Oshldimm} instruction, which is a left rotate instruction that has no Verilog equivalent and therefore has to be implemented in terms of other operations and proven to be equivalent.
+% In addition to any non-32-bit operations, the remaining
+The only 32-bit instructions that we do not translate are case-statements (\texttt{Ijumptable}) and those instructions related to function calls (\texttt{Icall}, \texttt{Ibuiltin}, and \texttt{Itailcall}), because we enable inlining by default.
+
+\subsubsection{Translating HTL to Verilog}
+
+Finally, we have to translate the HTL code into proper Verilog. % and prove that it behaves the same as the 3AC according to the Verilog semantics.
+The challenge here is to translate our FSMD representation into a Verilog AST.  However, as all the instructions in HTL are already expressed as Verilog statements, only the top-level data-path and control logic maps need to be translated to valid Verilog case-statements.  We also require declarations for all the variables in the program, as well as declarations of the inputs and outputs to the module, so that the module can be used inside a larger hardware design.  In addition to translating the maps of Verilog statements, an always-block that will behave like the RAM also has to be created, which is only modelled abstractly at the HTL level.
+Fig.~\ref{fig:accumulator_v} shows the final Verilog output that is generated for our example.
+
+Although this translation seems quite straight\-forward, proving that this translation is correct is complex.
+All the implicit assumptions that were made in HTL need to be translated explicitly to Verilog statements and it needs to be shown that these explicit behaviours are equivalent to the assumptions made in the HTL semantics.  One main example of this is proving that the specification of the RAM in HTL does indeed behave in the same as its Verilog implementation.
+We discuss these proofs in upcoming sections.
+
+ %In general, the generated Verilog structure has similar to that of the HTL code.
+%The key difference is that the control and datapath maps become Verilog case-statements.
+%Other additions are the initialisation of all the variables in the code to the correct bitwidths and the declaration of the inputs and outputs to the module, so that the module can be used inside a larger hardware design.
+
+\subsection{Optimisations}
+
+Although we would not claim that \vericert{} is a proper `optimising' HLS compiler yet, we have nonetheless made several design choices that aim to improve the quality of the hardware designs it produces.
+
+\subsubsection{Byte- and Word-Addressable Memories}
+
+One big difference between C and Verilog is how memory is represented.  Although Verilog arrays use similar syntax to C arrays, they must be treated quite differently. To make loads and stores as efficient as possible, the RAM needs to be word-addressable, which means that an entire integer can be loaded or stored in one clock cycle.
+However, the memory model that \compcert{} uses for its intermediate languages is byte-addre\-ssa\-ble~\cite{blazy05_formal_verif_memor_model_c}.  If a byte-addressable memory was used in the target hardware, which is closer to \compcert{}'s memory model, then a load and store would instead take four clock cycles, because a RAM can only perform one read and write per clock cycle.  It therefore has to be proven that the byte-addressable memory behaves in the same way as the word-addressable memory in hardware.  Any modifications of the bytes in the \compcert{} memory model also have to be shown to modify the word-addressable memory in the same way.  Since only integer loads and stores are currently supported in \vericert{}, it follows that the addresses given to the loads and stores will be multiples of four.  Translating from byte-addressed memory to word-addressed memory can then be done by dividing the address by four.
+
+\subsubsection{Implementation of RAM Interface}\label{sec:algorithm:optimisation:ram}
+The simplest way to implement loads and stores in \vericert{} would be to access the Verilog array directly from within the data-path (i.e., inside the always-block on lines 16--32 of Fig.~\ref{fig:accumulator_v}). This would be correct, but when a Verilog array is accessed at several program points, the synthesis tool is unlikely to detect that it can be implemented as a RAM block, and will resort to using lots of registers instead, ruining the circuit's area and performance.  To avert this, we arrange that the data-path does not access memory directly, but simply sets the address it wishes to access and then toggles the \texttt{u\_en} flag. This activates the RAM interface (lines 9--15 of Fig.~\ref{fig:accumulator_v}) on the next falling clock edge, which performs the requested load or store. By factoring all the memory accesses out into a separate interface, we ensure that the underlying array is only accessed from a single program point in the Verilog code, and thus ensure that the synthesis tool will correctly infer a RAM block.\footnote{Interestingly, the Verilog code shown for the RAM interface must not be modified, because the synthesis tool will only generate a RAM when the code matches a small set of specific patterns.}
+%\JW{I tweaked this slightly in an attempt to clarify; please check.} %\NR{Bring forward this sentence to help with flow.}
+
+%\JW{I think the following sentence could be cut as we've said this kind of thing a couple of times already.} Without the interface, the array would be implemented using registers, which would increase the size of the hardware considerably.
+
+Therefore, an extra compiler pass is added from HTL to HTL to extract all the direct accesses to the Verilog array and replace them by signals that access the RAM interface in a separate always-block. The translation is performed by going through all the instructions and replacing each load and store expression in turn.  Stores can simply be replaced by the necessary wires directly. Loads are a little more subtle: loads that use the RAM interface take two clock cycles where a direct load from an array takes only one, so this pass inserts an extra state after each load.
+
+%\JW{I've called that negedge always-block the `RAM driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
+%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a RAM, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to HTL converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from HTL to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
+
+There are two interesting parts to the inserted RAM interface.  Firstly, the memory updates are triggered on the negative (falling) edge of the clock, out of phase with the rest of the design which is triggered on the positive (rising) edge of the clock.  The advantage of this is that instead of loads and stores taking three clock cycles and two clock cycles respectively, they only take two clock cycles and one clock cycle instead, greatly improving their performance. %\JW{Is this a standard `trick' in hardware design? If so it might be nice to cite it.}\YH{Hmm, not really, because it has the downside of kind of halving your available clock period. However, RAMs normally come in both forms on the FPGA (Page 12, Fig. 2, \url{https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/ug_ram_rom.pdf})}
+% JW: thanks!
+Using the negative edge of the clock is widely supported by synthesis tools, and does not affect the maximum frequency of the final design.
+
+Secondly, the logic in the enable signal of the RAM (\texttt{en != u\_en}) is also atypical in hardware designs.  Enable signals are normally manually controlled and inserted into the appropriate states, by using a check like the following in the RAM:\@ \texttt{en == 1}.  This means that the RAM only turns on when the enable signal is set.  However, to make the proof simpler and avoid reasoning about possible side effects introduced by the RAM being enabled but not used, a RAM which disables itself after every use would be ideal.  One method for implementing this would be to insert an extra state after each load or store that disables the RAM, but this extra state would eliminate the speed advantage of the negative-edge-triggered RAM. Another method would be to determine the next state after each load or store and disable the RAM in that state, but this could quickly become complicated, especially in the case where the next state also contains a memory operation, and hence the disable signal should not be added. The method we ultimately chose was to have the RAM become enabled not when the enable signal is high, but when it \emph{toggles} its value.  This can be arranged by keeping track of the old value of the enable signal in \texttt{en} and comparing it to the current value \texttt{u\_en} set by the data-path.  When the values are different, the RAM gets enabled, and then \texttt{en} is set to the value of \texttt{u\_en}. This ensures that the RAM will always be disabled straight after it was used, without having to insert or modify any other states.
+
+%We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the RAM to be equal to the value that the user set.  This means that the RAM should be enabled whenever the two signals are different, and disabled otherwise.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.48\linewidth}
+    \begin{tikztimingtable}[timing/d/background/.style={fill=white}]
+      \small clk & 2L 3{6C} \\
+      \small u\_en & 2D{u\_en} 18D{$\overline{\text{u\_en}}$}\\
+      \small addr & 2U 18D{3} \\
+      \small wr\_en & 2U 18L \\
+      \small en & 8D{u\_en} 12D{$\overline{\text{u\_en}}$}\\
+      \small d\_out & 8U 12D{0xDEADBEEF} \\
+      \small r & 14U 6D{0xDEADBEEF} \\
+      \extracode
+      \node[help lines] at (2,2.25) {\tiny 1};
+      \node[help lines] at (8,2.25) {\tiny 2};
+      \node[help lines] at (14,2.25) {\tiny 3};
+      \begin{pgfonlayer}{background}
+        \vertlines[help lines]{2,8,14}
+      \end{pgfonlayer}
+    \end{tikztimingtable}
+    \caption{Timing diagram for loads. At time 1, the \texttt{u\_en} signal is toggled to enable the RAM. At time 2, \texttt{d\_out} is set to the value stored at the address in the RAM, which is finally assigned to the register \texttt{r} at time 3.}\label{fig:ram_load}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.48\linewidth}
+    \begin{tikztimingtable}[timing/d/background/.style={fill=white}]
+      \small clk & 2L 2{7C} \\
+      \small u\_en & 2D{u\_en} 14D{$\overline{\text{u\_en}}$}\\
+      \small addr & 2U 14D{3} \\
+      \small wr\_en & 2U 14H \\
+      \small d\_in & 2U 14D{0xDEADBEEF} \\
+      \small en & 9D{u\_en} 7D{$\overline{\text{u\_en}}$}\\
+      \small stack[addr] & 9U 7D{0xDEADBEEF} \\
+      \extracode
+      \node[help lines] at (2,2.25) {\tiny 1};
+      \node[help lines] at (9,2.25) {\tiny 2};
+      \begin{pgfonlayer}{background}
+        \vertlines[help lines]{2,9}
+      \end{pgfonlayer}
+    \end{tikztimingtable}
+    \caption{Timing diagram for stores. At time 1, the \texttt{u\_en} signal is toggled to enable the RAM, and the address \texttt{addr} and the data to store \texttt{d\_in} are set. On the negative edge at time 2, the data is stored into the RAM.}\label{fig:ram_store}
+  \end{subfigure}
+%  \alt{Timing diagrams of loads and stores, showing which signals are modified at which time step.}
+  \caption{Timing diagrams showing the execution of loads and stores over multiple clock cycles.}\label{fig:ram_load_store}
+\end{figure}
+
+Fig.~\ref{fig:ram_load_store} gives an example of how the RAM interface behaves when values are loaded and stored.
+
+\subsubsection{Implementing the \texttt{Oshrximm} Instruction}\label{sec:algorithm:optimisation:oshrximm}
+
+% Mention that this optimisation is not performed sometimes (clang -03).
+
+Many of the \compcert{} instructions map well to hardware, but \texttt{Oshrximm} (efficient signed division by a power of two using a logical shift) is expensive if implemented na\"ively. The problem is that in \compcert{} it is specified as a signed division:
+\begin{equation*}
+  \texttt{Oshrximm } x\ y = \text{round\_towards\_zero}\left(\frac{x}{2^{y}}\right)
+\end{equation*}
+(where $x, y \in \mathbb{Z}$, $0 \leq y < 31$, and $-2^{31} \leq x < 2^{31}$) and instantiating divider circuits in hardware is well known to cripple performance. Moreover, since \vericert{} requires the result of a divide operation to be ready within a single clock cycle, the divide circuit needs to be entirely combinational. This is inefficient in terms of area, but also in terms of latency, because it means that the maximum frequency of the hardware must be reduced dramatically so that the divide circuit has enough time to finish.  It should therefore be implemented using a sequence of shifts.
+
+\compcert{} eventually performs a translation from this representation into assembly code which uses shifts to implement the division, however, the specification of the instruction in 3AC itself still uses division instead of shifts, meaning this proof of the translation cannot be reused.  In \vericert{}, the equivalence of the representation in terms of divisions and shifts is proven over the integers and the specification, thereby making it simpler to prove the correctness of the Verilog implementation in terms of shifts.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../thesis"
+%%% TeX-engine: luatex
+%%% End:

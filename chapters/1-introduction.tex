@@ -1,0 +1,64 @@
+\chapter{Introduction}
+
+\section{Introduction}
+\label{sec:intro}
+
+%% Motivation for why HLS might be needed
+
+%\JW{A few high-level comments: \begin{enumerate} \item Create more tension from the start by making the reader doubt whether existing HLS tools are trustworthy. \item The intro currently draws quite a bit of motivation from Lidbury et al. 2015, but we should also now lean on our FPGA submission too. \item I wonder whether the paragraph `To mitigate the problems...' should be demoted to a `related work' discussion (perhaps as a subsection towards the end of the introduction). It outlines (and nicely dismisses) some existing attempts to tackle the problem, which is certainly useful motivation for your work, especially for readers already familiar with HLS, but I feel that it's not really on the critical path for understanding the paper.\end{enumerate}}
+
+%\NR{I couldn't have subsections in comments so I have appended my writing to the bottom of this file.}\YH{The original intro is in the archive, we can maybe merge them in the future a bit.}
+
+\paragraph{Can you trust your high-level synthesis tool?}
+
+As latency, throughput, and energy efficiency become increasingly important, custom hardware accelerators are being designed for numerous applications. %\NR{Not sure if we discussed this before, but doesn't this claim require some references?} % JW: For me, it's a suitably obvious fact that it doesn't need a reference.
+Alas, designing these accelerators can be a tedious and error-prone process using a hardware description language (HDL) such as Verilog.
+An attractive alternative is \emph{high-level synthesis} (HLS), in which hardware designs are automatically compiled from software written in a high-level language like C.
+Modern HLS tools such as \legup{}~\cite{canis11_legup}, Vivado HLS~\cite{xilinx20_vivad_high_synth}, Intel i++~\cite{intel_hls}, and Bambu HLS~\cite{bambu_hls} promise designs with comparable performance and energy-efficiency to those hand-written in an HDL~\cite{homsirikamol+14, silexicahlshdl, 7818341}, while offering the convenient abstractions and rich ecosystems of software development.
+But existing HLS tools cannot always guarantee that the hardware designs they produce are equivalent to the software they were given, and this undermines any reasoning conducted at the software level.
+
+Indeed, there are reasons to doubt that HLS tools actually \emph{do} always preserve equivalence.
+%Some of these reasons are general: HLS tools are large pieces of software, they perform a series of complex analyses and transformations, and the HDL output they produce has superficial syntactic similarities to a software language but a subtly different semantics.
+%Hence, the premise of this work is: Can we trust these compilers to translate high-level languages like C/C++ to HDL correctly?
+%Other reasons are more specific:
+For instance, Vivado HLS has been shown to apply pipelining optimisations incorrectly\footnote{\url{https://bit.ly/vivado-hls-pipeline-bug}} or to silently generate wrong code should the programmer stray outside the fragment of C that it supports.\footnote{\url{https://bit.ly/vivado-hls-pointer-bug}}
+Meanwhile, \textcite{lidbury15_many_core_compil_fuzzin} had to abandon their attempt to fuzz-test Altera's (now Intel's) OpenCL compiler since it ``either crashed or emitted an internal compiler error'' on so many of their test inputs.
+More recently, \textcite{herklotz21_empir_study_reliab_high_level_synth_tools} fuzz-tested three commercial HLS tools using Csmith~\cite{yang11_findin_under_bugs_c_compil}, and despite restricting the generated programs to the C fragment explicitly supported by all the tools, they still found that on average 2.5\% of test-cases were compiled to designs that behaved incorrectly. %\NR{The word `input' here made me think of I/Os. `input software' or just `software' is better. I think it is worth being consistent across the article on the word used to describe the software description provided to the HLS tool. Actually, we can even signpost it like: `From here on we used the word bla to refer to the input software that is provided to an HLS tool.'} %JW: thanks, done.
+
+\paragraph{Existing workarounds}
+
+Aware of the reliability shortcomings of HLS tools, hardware designers routinely check the generated hardware for functional correctness. This is commonly done by simulating the generated design against a large test-bench. But unless the test-bench covers all inputs exhaustively -- which is often infeasible -- there is a risk that bugs remain.
+
+One alternative is to use \emph{translation validation}~\cite{pnueli98_trans} to prove equivalence between the input program and the output design. Translation validation has been successfully applied to several HLS optimisations~\cite{kim04_autom_fsmd,karfa06_formal_verif_method_sched_high_synth,chouksey20_verif_sched_condit_behav_high_level_synth,banerjee14_verif_code_motion_techn_using_value_propag,chouksey19_trans_valid_code_motion_trans_invol_loops}.
+Nevertheless, it is an expensive task, especially for large designs, and it must be repeated every time the compiler is invoked.
+For example, the translation validation for Catapult C~\cite{mentor20_catap_high_level_synth} may require several rounds of expert `adjustments'~\cite[p.~3]{slec_whitepaper} to the input C program before validation succeeds. And even when it succeeds, translation validation does not provide watertight guarantees unless the validator itself has been mechanically proven correct~\cite[e.g.][]{tristan08_formal_verif_trans_valid}, which has not been the case in HLS tools to date.
+%\NR{There is also use of the word `input' in this paragraph for a different context.} %JW: Yes it was used in two different ways in two consecutive paragraphs. Thanks, fixed now.
+
+%\JW{Having nuanced our discussion of TV above, I feel like the text below belongs more in a `future directions' paragraph at the end of the paper than in an `existing workarounds' section.} Nevertheless translation validation has many benefits in a mechanically verified setting as well to simplify the proofs to depend less on the exact implementation of the optimisation.  It has also already been used to prove certain passes in \compcert{} correct.  The main issue with the translation validation methods applied in HLS tools normally is that they \NR{\sout{try and}} generalise over all optimisations that are performed and \NR{\sout{try to}} compare the generated hardware directly to the high-level input. \NR{The word input used here again.}  However, verification requires optimisations to be proven correct incrementally and separately, making translation validation more viable.  By proving specific optimisations with a constraint on the kinds of transformations it can perform, it is possible to write a verified validator that is also believed to be complete and should not fail on valid transformations unless bugs are present.
+
+Our position is that none of the above workarounds are necessary if the HLS tool can simply be trusted to work correctly. %\NR{Perhaps, we can add something like: `... and our efforts are the first step towards building this trust within HLS tools.'.} %JW: I think that would be over-egging the cake.
+
+\paragraph{Our solution}
+We have designed a new HLS tool in the Coq theorem prover and proved that any output design it produces always has the same behaviour as its input program. Our tool, called \vericert{},\ifANONYMOUS\footnote{Tool name has been changed for blind review.}\fi{} is automatically extracted to an OCaml program from Coq, which ensures that the object of the proof is the same as the implementation of the tool. \vericert{} is built by extending the \compcert{} verified C compiler~\cite{leroy09_formal_verif_realis_compil} with a new hardware-specific intermediate language and a Verilog back end. It supports most C constructs, including integer operations, function calls (which are all inlined), local arrays, structs, unions, and general control-flow statements, but currently excludes support for case statements, function pointers, recursive function calls, non-32-bit integers, floats, and global variables.
+
+\paragraph{Contributions and Outline}
+The contributions of this paper are as follows:
+
+\begin{itemize}
+  \item We present \vericert{}, the first mechanically verified HLS tool that compiles C to Verilog. In Section~\ref{sec:design}, we describe the design of \vericert{}, including certain optimisations related to memory accesses and division.
+  \item We state the correctness theorem of \vericert{} with respect to an existing semantics for Verilog due to \textcite{loow19_proof_trans_veril_devel_hol}. In Section~\ref{sec:verilog}, we describe how we extended this semantics to make it suitable as an HLS target.  We also describe how the Verilog semantics is integrated into CompCert's language execution model and its framework for performing simulation proofs. A mapping of CompCert's infinite memory model onto a finite Verilog array is also described.
+  \item In Section~\ref{sec:proof}, we describe how we proved the correctness theorem. The proof follows standard \compcert{} techniques -- forward simulations, intermediate specifications, and determinism results -- but we encountered several challenges peculiar to our hardware-oriented setting. %\NR{`specific' is better than `peculiar'?} %JW: I think this is a nice use of peculiar. Note that it means `distinctive' here, not `weird' -- the third meaning at https://www.dictionary.com/browse/peculiar
+  These include handling discrepancies between the byte-addressed memory assumed by the input software and the word-addressed memory that we implement in the output hardware,  different handling of unsigned comparisons between C and Verilog, and carefully implementing memory reads and writes so that these behave properly as a RAM in hardware.
+  %\JW{Not sure `rearranging' is quite the right word. Sounds like you're rearranging independent reads/writes w.r.t. each other. Maybe change `correctly rearranging' to `carefully implementing'?}
+  \item In Section~\ref{sec:evaluation}, we evaluate \vericert{} on the \polybench{} benchmark suite~\cite{polybench}, and compare the performance of our generated hardware against an existing, unverified HLS tool called \legup{}~\cite{canis11_legup}. We show that \vericert{} generates hardware that is \slowdownOrig$\times$ slower (\slowdownDiv$\times$ slower in the absence of division) and \areaIncr$\times$ larger than that generated by \legup{}. This performance gap can be largely attributed to \vericert{}'s current lack of support for instruction-level parallelism and the absence of an efficient, pipelined division operator. We intend to close this gap in the future by introducing (and verifying) HLS optimisations of our own, such as scheduling and memory analysis.  This section also reports on our campaign to fuzz-test \vericert{} using over a hundred thousand random C programs generated by Csmith~\cite{yang11_findin_under_bugs_c_compil} in order to confirm that its correctness theorem is watertight. %\NR{Question rather than comment: Will there be verification issues to add support for hard IPs like division blocks?}\YH{Not really any issues, just many different levels of reliability.  You don't have to prove IP correct, but theoretically could.}
+\end{itemize}
+%\JW{This sentence seems pretty good to me; is it up-to-date with the latest `challenges' you've faced?}
+
+\paragraph{Companion material}
+\vericert{} is fully open source and available on GitHub at \url{https://github.com/ymherklotz/vericert}. A snapshot of the \vericert{} development is also available in a Zenodo repository~\cite{yann_herklotz_2021_5093839}.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../thesis"
+%%% TeX-engine: luatex
+%%% End:
