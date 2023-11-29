@@ -1,5 +1,316 @@
 \chapter{Hardware Generation}
 
+Until now the representation of the program has still been in the form of a
+software program, with virtual, infinite registers, a program counter, as well
+as a rich but abstract memory model.  This representation needs to be
+transformed into a more suitable representation on which hardware specific
+transformations can applied, and which is closer to th structure of the final
+Verilog design.  The main transformation that takes place is converting a
+control-flow graph into a state machine with data-path representation, which is
+also the structure of the final design.  There are various steps involved in
+this refinement because of the large gap between control-flow graph semantics
+and state machine semantics.  In addition to that, additional components, such
+as an implementation of a memory that can be efficiently implemented in
+hardware, need to be added to the hardware to produce a useful design.  Finally,
+until now programs have only been executing sequentially, whereas to produce the
+final hardware one will have to transform the sequential execution of operations
+within each state into parallel assignments.
+
+This chapter describes the hardware generation process, starting from \rtlpar{}
+and producing a final Verilog design.  \Cref{sec:hg:state-partitioning}
+describes the first step in the transformation which separates each sequential
+block within a state in \rtlpar{} into separate states that can be addressed
+using the program counter.  This matches addressing that the state register
+would have to do in the hardware design. Next, \cref{sec:hg:htl-generation}
+describes the generation of HTL, an intermediate language representing the
+execution of a state machine.  This performs the main transformation from a
+software representation of the program into hardware, making the execution of
+the program more explicit in the design itself instead of as part of the
+semantics.  \Cref{sec:hg:bram-generation} then describes the first
+hardware-specific optimisation on the state-machine representation of the
+hardware by adding a specification of a \gls{BRAM} to the HTL semantics and
+replacing any explicit reads and writes to the array representing memory by
+properly formed reads and writes to the \gls{BRAM}.  Until now, updates to
+registers have been specified sequentially, so a forward substitution
+transformation is describe in \cref{sec:hg:register-forward-substitution} to
+parallelise the updates to registers.  Finally, \cref{sec:hg:verilog-generation}
+describes the generation of the final Verilog design, which implements the
+state-machine that was specified by HTL, in particular implementing the
+\gls{BRAM} that was specified.
+
+\section{State Partitioning}%
+\label{sec:hg:state-partitioning}
+
+\rtlpar{} is a control-flow graph with nodes mapping to hyperblocks.  This is
+useful for the scheduling proof, as each of these hyperblocks can be compared
+individually.  However, in the hardware itself, the individual sequential blocks
+have to be separated into different states, as within each state the
+assignments will be performed in parallel.  This first state partitioning
+transformation transforms \rtlpar{} into \rtlsubpar{}, which is is a
+control-flow graph language
+
+\section{HTL Generation}%
+\label{sec:hg:htl-generation}
+
+\section{BRAM Generation}%
+\label{sec:hg:bram-generation}
+
+\section{Register Forward Substitution}%
+\label{sec:hg:register-forward-substitution}
+
+\section{Verilog Generation}%
+\label{sec:hg:verilog-generation}
+
+\section{Correctness Proof}\label{sec:proof}
+
+%\JW{That's quite a hard-to-parse section heading; I'd go for something simpler like `Correctness Proof' or `Proving Correctness'}
+
+Now that the Verilog semantics have been adapted to the CompCert model, we are
+in a position to formally prove the correctness of our C-to-Verilog compilation.
+This section describes the main correctness theorem that was proven and the key
+ideas in the proof. The full Coq proof is available
+online~\cite{yann_herklotz_2021_5093839}.
+
+\subsection{Main Challenges in the Proof}
+
+The proof of correctness of the Verilog back end is quite different from the usual proofs performed in CompCert, mainly because of the difference in the memory model and semantic differences between Verilog and CompCert's existing intermediate languages.
+
+\begin{itemize}
+\item As already mentioned in Section~\ref{sec:verilog:memory}, because the memory model in our Verilog semantics is finite and concrete, but the CompCert memory model is more abstract and infinite with additional bounds, the equivalence of these models needs to be proven.  Moreover, our memory is word-addressed for efficiency reasons, whereas CompCert's memory is byte-addressed.
+%\JW{This point has been made a couple of times already by now. I think it's ok to say it again briefly here, but I'd be tempted to acknowledge that it's repetitive by prepending it with something like ``As already mentioned in Section blah,'' }
+
+\item Second, the Verilog semantics operates quite differently to the usual intermediate languages in CompCert.  All the CompCert intermediate languages use a map from control-flow nodes to instructions.  An instruction can therefore be selected using an abstract program pointer. Meanwhile, in the Verilog semantics the whole design is executed at every clock cycle, because hardware is inherently parallel. The program pointer is part of the design as well, not just part of an abstract state. This makes the semantics of Verilog simpler, but comparing it to the semantics of 3AC becomes more challenging, as one has to map the abstract notion of the state to concrete values in registers.
+\end{itemize}
+
+Together, these differences mean that translating 3AC directly to Verilog is infeasible, as the differences in the semantics are too large.  Instead, HTL, which was introduced in Section~\ref{sec:design}, bridges the gap in the semantics between the two languages.  HTL still consists of maps, like many of the other CompCert languages, but each state corresponds to a Verilog statement.
+%\JW{This is good text, but the problem is that it reads like you're introducing HTL here for the first time. In fact, the reader has already encountered HTL in Section 2. So this needs acknowledging.}\YH{Added that.}
+
+\subsection{Formulating the Correctness Theorem}
+
+The main correctness theorem is analogous to that stated in \compcert{}~\cite{leroy09_formal_verif_realis_compil}: for all Clight source programs $C$, if the translation to the target Verilog code succeeds, $\mathit{Safe}(C)$ holds and the target Verilog has behaviour $B$ when simulated, then $C$ will have the same behaviour $B$. $\mathit{Safe}(C)$ means all observable behaviours of $C$ are safe, which can be defined as $\forall B,\ C \Downarrow B \implies B \in \texttt{Safe}$.  A behaviour is in \texttt{Safe} if it is either a final state (in the case of convergence) or divergent, but it cannot `go wrong'. (This means that the source program must not contain undefined behaviour.) In \compcert{}, a behaviour is also associated with a trace of I/O events, but since external function calls are not supported in \vericert{}, this trace will always be empty.
+
+%This correctness theorem is also appropriate for HLS, as HLS is often used as a part of a larger hardware design that is connected together using a hardware description language like Verilog.  This means that HLS designs are normally triggered multiple times and results are returned each time when the computation terminates, which is the property that the correctness theorem states.
+
+%\JW{Perhaps it would be worth first explaining why somebody might think this correctness theorem might \emph{not} be appropriate for HLS. At the moment, it feels like you're giving the answer without saying the question. Is it to do with the fact that hardware tends to run forever?}\YH{Yes definitely, will add that.}
+
+%The following `backwards simulation' theorem describes the correctness theorem, where $\Downarrow$ stands for simulation and execution respectively.
+
+\begin{theorem}
+  Whenever the translation from $C$ succeeds and produces Verilog $V$, and all observable behaviours of $C$ are safe, then $V$ has behaviour $B$ only if $C$ has behaviour $B$.
+  \begin{equation*}
+    \forall C, V, B,\quad \yhfunction{HLS} (C) = \yhconstant{OK} (V) \land \mathit{Safe}(C) \implies (V \Downarrow B \implies C \Downarrow B).
+  \end{equation*}
+\end{theorem}
+
+Why is this correctness theorem also the right one for HLS? It could be argued that hardware inherently runs forever and therefore does not produce a definitive final result.  This would mean that the \compcert{} correctness theorem would probably be unhelpful with proving hardware correctness, as the behaviour would always be divergent.  However, in practice, HLS does not normally produce the top-level of the design that needs to connect to other components, therefore needing to run forever.  Rather, HLS often produces smaller components that take an input, execute, and then terminate with an answer.  To start the execution of the hardware and to signal to the HLS component that the inputs are ready, the $\mathit{rst}$ signal is set and unset.  Then, once the result is ready, the $\mathit{fin}$ signal is set and the result value is placed in $\mathit{ret}$.  These signals are also present in the semantics of execution shown in Fig.~\ref{fig:inference_module}.  The correctness theorem therefore also uses these signals, and the proof shows that once the $\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct according to the semantics of Verilog and Clight.  Note that the compiler is allowed to fail and not produce any output; the correctness theorem only applies when the translation succeeds.
+
+How can we prove this theorem? First, note that the theorem is a `backwards simulation' result (every target behaviour must also be a source behaviour), following the terminology used in the \compcert{} literature~\cite{leroy09_formal_verif_realis_compil}. The reverse direction (every source behaviour must also be a target behaviour) is not demanded because compilers are permitted to resolve any non-determinism present in their source programs. However, since Clight programs are all deterministic, as are the Verilog programs in the fragment we consider, we can actually reformulate the correctness theorem above as a forwards simulation result (following standard \compcert{} practice), which makes it easier to prove.
+To prove this forward simulation, it suffices to prove forward simulations between each pair of consecutive intermediate languages, as these results can be composed to prove the correctness of the whole HLS tool.
+The forward simulation from 3AC to HTL is stated in Lemma~\ref{lemma:htl} (Section~\ref{sec:proof:3ac_htl}), the forward simulation for the RAM insertion is shown in Lemma~\ref{lemma:htl_ram} (Section~\ref{sec:proof:ram_insertion}), then the forward simulation between HTL and Verilog is shown in Lemma~\ref{lemma:verilog} (Section~\ref{sec:proof:htl_verilog}), and finally, the proof that Verilog is deterministic is given in Lemma~\ref{lemma:deterministic} (Section~\ref{sec:proof:deterministic}).
+
+\subsection{Forward Simulation from 3AC to HTL}\label{sec:proof:3ac_htl}
+
+As HTL is quite far removed from 3AC, this first translation is the most involved and therefore requires a larger proof, because the translation from 3AC instructions to Verilog statements needs to be proven correct in this step.  In addition to that, the semantics of HTL are also quite different to the 3AC semantics. Instead of defining small-step semantics for each construct in Verilog, the semantics are defined over one clock cycle and mirror the semantics defined for Verilog.  Lemma~\ref{lemma:htl} shows the result that needs to be proven in this subsection.
+
+\begin{lemma}[Forward simulation from 3AC to HTL]\label{lemma:htl}
+  Writing \texttt{tr\_htl} for the translation from 3AC to HTL, we have:
+  \begin{equation*}
+    \forall c, h, B \in \texttt{Safe},\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK} (h) \land c \Downarrow B \implies h \Downarrow B.
+  \end{equation*}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  We prove this lemma by first establishing a specification of the translation function $\yhfunction{tr\_htl}$ that captures its important properties, and then splitting the proof into two parts: one to show that the translation function does indeed meet its specification, and one to show that the specification implies the desired simulation result. This strategy is in keeping with standard \compcert{} practice. % The forward simulation is then proven by showing that the initial states and final states between the 3AC semantics and HTL semantics match, and then showing that the simulation diagram in Lemma~\ref{lemma:simulation_diagram} holds.
+\end{proof}
+
+\subsubsection{From Implementation to Specification}\label{sec:proof:3ac_htl:specification}
+
+%To simplify the proof, instead of using the translation algorithm as an assumption, as was done in Lemma~\ref{lemma:htl}, a specification of the translation can be constructed instead which contains all the properties that are needed to prove the correctness.  For example, for the translation from 3AC to HTL,
+The specification for the translation of 3AC instructions into HTL data-path and control logic can be defined by the following predicate:
+\begin{equation*}
+  \yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ i\ \mathit{data}\ \mathit{control}
+\end{equation*}
+
+\noindent Here, the $\mathit{control}$ and $\mathit{data}$ parameters are the statements that the current 3AC instruction $i$ should translate to. The other parameters are the special registers defined in Section~\ref{sec:verilog:integrating}. An example of a rule describing the translation of an arithmetic/logical operation from 3AC is the following:
+\begin{equation*}
+  \inferrule[Iop]{\yhfunction{tr\_op}\ \mathit{op}\ \vec{a} = \yhconstant{OK}\ e}{\yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ (\yhconstant{Iop}\ \mathit{op}\ \vec{a}\ d\ n)\ (d\ \yhkeyword{<=}\ e)\ (\sigma\ \yhkeyword{<=}\ n)}
+\end{equation*}
+
+\noindent Assuming that the translation of the operator $\mathit{op}$ with operands $\vec{a}$ is successful and results in expression $e$, the rule describes how the destination register $d$ is updated to $e$ via a non-blocking assignment in the data path, and how the program counter $\sigma$ is updated to point to the next CFG node $n$ via another non-blocking assignment in the control logic.
+
+In the following lemma, $\yhfunction{spec\_htl}$ is the top-level specification predicate, which is built using $\yhfunction{spec\_instr}$ at the level of instructions.
+
+\begin{lemma}\label{lemma:specification}
+  If a 3AC program $c$ is translated correctly to an HTL program $h$, then the specification of the translation holds.
+  \begin{equation*}
+    \forall c, h,\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK}(h) \implies \yhfunction{spec\_htl}\ c\ h.
+  \end{equation*}
+\end{lemma}
+
+%\begin{proof}
+%  Follows from the definition of the specification and therefore should match the implementation of the algorithm.
+%\end{proof}
+
+\subsubsection{From Specification to Simulation}
+
+To prove that the specification predicate implies the desired forward simulation, we must first define a relation that matches each 3AC state to an equivalent HTL state.  This relation also captures the assumptions made about the 3AC code that we receive from \compcert{}. % so that these assumptions can be used to prove the translations correct.
+These assumptions then have to be proven to always hold assuming the HTL code was created by the translation algorithm.  Some of the assumptions that need to be made about the 3AC and HTL code for a pair of states to match are:
+
+\begin{itemize}
+  \item The 3AC register file $R$ needs to be `less defined' than the HTL register map $\Gamma_{r}$ (written $R \le \Gamma_{r}$). This means that all entries should be equal to each other, unless a value in $R$ is undefined, in which case any value can match it.
+  \item The RAM values represented by each Verilog array in $\Gamma_{a}$ need to match the 3AC function's stack contents, which are part of the memory $M$; that is: $M \le \Gamma_{a}$.
+  \item The state is well formed, which means that the value of the state register matches the current value of the program counter; that is: $\mathit{pc} = \Gamma_{r}[\sigma]$.
+\end{itemize}
+
+We also define the following set $\mathcal{I}$ of invariants that must hold for the current state to be valid:
+
+\begin{itemize}
+  \item that all pointers in the program use the stack as a base pointer,
+  \item that any loads or stores to locations outside of the bounds of the stack result in undefined behaviour (and hence we do not need to handle them),
+  \item that $\mathit{rst}$ and $\mathit{fin}$ are not modified and therefore stay at a constant 0 throughout execution, and
+  \item that the stack frames match.
+\end{itemize}
+
+We can now define the simulation diagram for the translation. The 3AC state can be represented by the tuple $(R,M,\mathit{pc})$, which captures the register file, memory, and program counter. The HTL state can be represented by the pair $(\Gamma_{r}, \Gamma_{a})$, which captures the states of all the registers and arrays in the module.  Finally, $\mathcal{I}$ stands for the other invariants that need to hold for the states to match.
+
+\begin{lemma}\label{lemma:simulation_diagram}
+  Given the 3AC state $(R,M,\mathit{pc})$ and the matching HTL state $(\Gamma_{r}, \Gamma_{a})$, assuming one step in the 3AC semantics produces state $(R',M',\mathit{pc}')$, there exist one or more steps in the HTL semantics that result in matching states $(\Gamma_{r}', \Gamma_{a}')$.  This is all under the assumption that the specification $\yhfunction{spec\_{htl}}$ holds for the translation.
+
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{scope}
+        \node[circle] (s1) at (0,1.5) {$R, M, \mathit{pc}$};
+        \node[circle] (r1) at (8.5,1.5) {$\Gamma_{r}, \Gamma_{a}$};
+        \node[circle] (s2) at (0,0) {$R', M', \mathit{pc}'$};
+        \node[circle] (r2) at (8.5,0) {$\Gamma_{r}', \Gamma_{a}'$};
+        %\node at (6.8,0.75) {+};
+        \draw (s1) -- node[above] {$\mathcal{I} \land (R \le \Gamma_{r}) \land (M \le \Gamma_{a}) \land (\mathit{pc} = \Gamma_{r}[\sigma])$} ++ (r1);
+        \draw[-{Latex}] ($(s1.south) + (0,0.4)$) -- ($(s2.north) - (0,0.4)$);
+        \draw[-{Latex},dashed] ($(r1.south) + (0,0.2)$) to[auto, pos=0.7] node {+} ($(r2.north) - (0,0.2)$);
+        \draw[dashed] (s2) -- node[above] {$\mathcal{I} \land (R' \le \Gamma_{r}') \land (M' \le \Gamma_{a}') \land (\mathit{pc}' = \Gamma_{r}'[\sigma])$} ++ (r2);
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  This simulation diagram is proven by induction over the operational semantics of 3AC, which allows us to find one or more steps in the HTL semantics that will produce the same final matching state.
+\end{proof}
+
+\subsection{Forward Simulation of RAM Insertion}\label{sec:proof:ram_insertion}
+
+\begin{figure}
+  \centering
+  \begin{minipage}{1.0\linewidth}
+    \begin{gather*}
+      \inferrule[Idle]{\Gamma_{\mathrm{r}}[\mathit{r.en}] = \Gamma_{\mathrm{r}}[\mathit{r.u_{en}}]}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), \Delta, r) \downarrow_{\text{ram}} \Delta}\\
+%
+      \inferrule[Load]{\Gamma_{\mathrm{r}}[\mathit{r.en}] \ne \Gamma_{\mathrm{r}}[\mathit{r.u_{en}}] \\ \Gamma_{\mathrm{r}}[\mathit{r.wr_{en}}] = 0}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\text{ram}} (\Delta_{\mathrm{r}}[\mathit{r.en} \mapsto \mathit{r.u_{en}}, \mathit{r.d_{out}} \mapsto (\Gamma_{\mathrm{a}}[\mathit{r.mem}])[ \mathit{r.addr}]], \Delta_{\mathrm{a}}) }\\
+%
+      \inferrule[Store]{\Gamma_{\mathrm{r}}[\mathit{r.en}] \ne \Gamma_{\mathrm{r}}[\mathit{r.u_{en}}] \\ \Gamma_{\mathrm{r}}[\mathit{r.wr_{en}}] = 1}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\text{ram}} (\Delta_{\mathrm{r}}[\mathit{r.en} \mapsto \mathit{r.u\_en}], \Delta_{\mathrm{a}}[\mathit{r.mem} \mapsto (\Gamma_{\mathrm{a}}[ \mathit{r.mem}])[\mathit{r.addr} \mapsto \mathit{r.d_{in}}]]) }
+    \end{gather*}
+  \end{minipage}
+  \caption{Specification for the memory implementation in HTL, where $r$ is the RAM, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
+\end{figure}
+
+HTL can only represent a single state machine, so we must model the RAM abstractly to reason about the correctness of replacing the direct read and writes to the array by loads and stores to a RAM.  The specification for the RAM is shown in Fig.~\ref{fig:htl_ram_spec}, which defines how the RAM $r$ will behave for all the possible combinations of the input signals.
+
+\subsubsection{From Implementation to Specification}
+
+The first step in proving the simulation correct is to build a specification of the translation algorithm.  There are three possibilities for the transformation of an instruction. For each Verilog statement in the map at location $i$, the statement is either a load, a store, or neither. The load or store is translated to the equivalent representation using the RAM specification and all other instructions are left intact.  An example of the specification for the translation of the store instruction is shown below, where $\sigma$ is state register, $r$ is the RAM, $d$ and $c$ are the input data-path and control logic maps, and $i$ is the current state. ($n$ is the newly inserted state, which only applies to the translation of loads.)
+
+\begin{gather*}
+  \inferrule[Store Spec]{ d[i] = (r.mem\texttt{[}e_{1}\texttt{]} \texttt{ <= } e_{2}) \\ t = (r.u\_en \texttt{ <= } \neg r.u\_en; r.wr\_en \texttt{ <= } 1; r.d\_in \texttt{ <= } e_{2}; r.addr \texttt{ <= } e_{1})}%
+  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ c\ d[i \mapsto t]\ c\ i\ n}
+\end{gather*}
+
+A similar specification is created for the load.  We then also prove that the implementation of the translation proves that the specification holds.
+
+\subsubsection{From Specification to Simulation}
+
+Another simulation proof is performed to prove that the insertion of the RAM is semantics preserving.  As in Lemma~\ref{lemma:simulation_diagram}, we require some invariants that always hold at the start and end of the simulation.  The invariants needed for the simulation of the RAM insertion are quite different to the previous ones, so we can define these invariants $\mathcal{I}_{r}$ to be the following:
+
+\begin{itemize}
+  \item The association map for arrays $\Gamma_{a}$ always needs to have the same arrays present, and these arrays should never change in size.
+  \item The RAM should always be disabled at the start and the end of each simulation step. (This is why self-disabling RAM is needed.)
+\end{itemize}
+
+The other invariants and assumptions for defining two matching states in HTL are quite similar to the simulation performed in Lemma~\ref{lemma:simulation_diagram}, such as ensuring that the states have the same value, and that the values in the registers are less defined.  In particular, the less defined relation matches up all the registers, except for the new registers introduced by the RAM.
+
+\begin{lemma}[Forward simulation from HTL to HTL after inserting the RAM]\label{lemma:htl_ram}
+  Given an HTL program, the forward-simulation relation should hold after inserting the RAM and wiring the load, store, and control signals.
+
+  \begin{align*}
+    \forall h, h', B \in \texttt{Safe},\quad \yhfunction{tr\_ram\_ins}(h) = h' \land h \Downarrow B \implies h' \Downarrow B.
+  \end{align*}
+\end{lemma}
+
+\subsection{Forward Simulation from HTL to Verilog}\label{sec:proof:htl_verilog}
+
+The HTL-to-Verilog simulation is conceptually simple, as the only transformation is from the map representation of the code to the case-statement representation.  The proof is more involved, as the semantics of a map structure is quite different to that of the case-statement to which it is converted.
+
+%\YH{Maybe want to split this up into two lemmas?  One which states the proof about the map property of uniqueness of keys, and another proving the final theorem?}
+\begin{lemma}[Forward simulation from HTL to Verilog]\label{lemma:verilog}
+  In the following, we write $\yhfunction{tr\_verilog}$ for the translation from HTL to Verilog. (Note that this translation cannot fail, so we do not need the \yhconstant{OK} constructor here.)
+  \begin{align*}
+    \forall h, V, B \in \texttt{Safe},\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
+  \end{align*}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  The translation from maps to case-statements is done by turning each node of the tree into a case-expression containing the same statements.  The main difficulty is that a random-access structure is being transformed into an inductive structure where a certain number of constructors need to be called to get to the correct case.
+  %\JW{I would chop from here.}\YH{Looks good to me.}
+  %The proof of the translation from maps to case-statements follows by induction over the list of elements in the map and the fact that each key will be unique.  In addition to that, the statement that is currently being evaluated is guaranteed by the correctness of the list of elements to be in that list.  The latter fact therefore eliminates the base case, as an empty list does not contain the element we know is in the list.  The other two cases follow by the fact that either the key is equal to the evaluated value of the case expression, or it isn't.  In the first case we can then evaluate the statement and get the state after the case expression, as the uniqueness of the key tells us that the key cannot show up in the list anymore.  In the other case we can just apply the inductive hypothesis and remove the current case from the case statement, as it did not match.
+\end{proof}
+
+\subsection{Deterministic Verilog Semantics}\label{sec:proof:deterministic}
+
+%Finally, to obtain the backward simulation that we want, it has to be shown that if we generate hardware with a specific behaviour, that it is the only possible program with that behaviour.  This only has to be performed for the final intermediate language, which is Verilog, so that the backward simulation holds for the whole chain from Clight to Verilog.
+The final lemma we need is that the Verilog semantics is deterministic. This result allows us to replace the forwards simulation we have proved with the backwards simulation we desire.
+
+\begin{lemma}\label{lemma:deterministic}
+  If a Verilog program $V$ admits behaviours $B_1$ and $B_2$, then $B_1$ and $B_2$ must be the same.
+
+  \begin{equation*}
+    \forall V, B_{1}, B_{2},\quad V \Downarrow B_{1} \land V \Downarrow B_{2} \implies B_{1} = B_{2}.
+  \end{equation*}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  The Verilog semantics is deterministic because the order of operation of all the constructs is defined, so there is only one way to evaluate the module, and hence only one possible behaviour. This was proven for the small-step semantics shown in Fig.~\ref{fig:inference_module}.
+\end{proof}
+
+%\subsection{Coq Mechanisation}
+
+%\JW{Would be nice to include a few high-level metrics here. How many person-years of effort was the proof (very roughly)? How many lines of Coq? How many files, how many lemmas? How long does it take for the Coq proof to execute?}
+
+\subsection{Coq Mechanisation}
+
+\begin{table}
+  \centering
+  \caption{Statistics about the numbers of lines of code in the proof and implementation of \vericert{}.}\label{tab:proof_statistics}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    & \textbf{Coq code} & \multicolumn{1}{p{1cm}}{\raggedleft\textbf{OCaml code}} & \textbf{Spec} & \multicolumn{1}{p{2cm}}{\raggedleft\textbf{Theorems \& Proofs}} & \textbf{Total}\\
+    \midrule
+    {Data structures and libraries}     & 280  & --- & ---  & 500  & 780   \\
+    {Integers and values}               & 98   & --- & 15   & 968  & 1081  \\
+    {HTL semantics}                     & 50   & --- & 181  & 65   & 296   \\
+    {HTL generation}                    & 590  & --- & 66   & 3069 & 3725  \\
+    {RAM generation}                    & 253  & --- & ---  & 2793 & 3046  \\
+    {Verilog semantics}                 & 78   & --- & 431  & 235  & 744   \\
+    {Verilog generation}                & 104  & --- & ---  & 486  & 590   \\
+    {Top-level driver, pretty printers} & 318  & 775 & ---  & 189  & 1282  \\
+    \midrule
+    \textbf{Total}                      & 1721 & 775 & 693  & 8355 & 11544 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The lines of code for the implementation and proof of \vericert{} can be found in Table~\ref{tab:proof_statistics}.  Overall, it took about 1.5 person-years to build \vericert{} -- about three person-months on implementation and 15 person-months on proofs.  The largest proof is the correctness proof for the HTL generation, which required equivalence proofs between all integer operations supported by \compcert{} and those supported in hardware.  From the 3069 lines of proof code in the HTL generation, 1189 are for the correctness proof of just the load and store instructions.  These were tedious to prove correct because of the substantial difference between the memory models used, and the need to prove properties such as stores outside of the allocated memory being undefined, so that a finite array could be used. In addition to that, since pointers in HTL and Verilog are represented as integers, instead of as a separate `pointer' type like in the \compcert{} semantics, it was painful to reason about them.  Many new theorems had to be proven about them in \vericert{} to prove the conversion from pointer to integer.  Moreover, the second-largest proof of the correct RAM generation includes many proofs about the extensional equality of array operations, such as merging arrays with different assignments.  As the negative edge implies that two merges take place every clock cycle, the proofs about the equality of the contents in memory and in the merged arrays become more tedious too.
+
+Looking at the trusted computing base of \vericert{}, the Verilog semantics is 431 lines of code.  This and the Clight semantics from \compcert{} are the only parts of the compiler that need to be trusted.  The Verilog semantics specification is therefore much smaller compared to the 1721 lines of the implementation that are written in Coq, which are the verified parts of the HLS tool, even when the Clight semantics are added.  In addition to that, understanding the semantics specification is simpler than trying to understand the translation algorithm. We conclude that the trusted base has been successfully reduced.
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../thesis"

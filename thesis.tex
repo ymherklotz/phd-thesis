@@ -1,6 +1,10 @@
 \documentclass[12pt,svgnames]{scrreprt}
 
-\KOMAoptions{draft=on}
+\KOMAoption{draft}{on}
+
+\usepackage[autooneside=false]{scrlayer-scrpage}
+\pagestyle{scrheadings}
+\automark[section]{chapter}
 
 \usepackage[autostyle]{csquotes}
 \usepackage{polyglossia}
@@ -9,7 +13,10 @@
 \usepackage[backend=biber,backref=true]{biblatex}
 \addbibresource{thesis-refs.bib}
 \addbibresource{oopsla-refs.bib}
+\addbibresource{lsr-refs.bib}
 
+\usepackage{lineno}
+\linenumbers
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -52,12 +59,18 @@
 \hypersetup{linkcolor=teal}
 \hypersetup{urlcolor=teal}
 \hypersetup{citecolor=teal}
+
+\usepackage{imakeidx}
+\usepackage[acronym]{glossaries}
+\makeglossaries
+
 \usepackage{cleveref}
 
 \usepackage{ymh-macros}
 
 \graphicspath{{./figures/hyperblock-scheduling/}}
 
+%% https://tex.stackexchange.com/a/535849
 \usepackage{hyperxmp}
 %\usepackage{embedfile}
 
@@ -86,11 +99,41 @@
   ]
 }
 
+% https://tex.stackexchange.com/a/474336
+\pdfvariable omitcidset=1
+
+\includeonly{chapters/5-hardware-generation}
+
 \begin{document}
 
 \maketitle
 
 \tableofcontents
+
+\newacronym{SSA}{SSA}{static single assignment}
+\newacronym{GSA}{GSA}{gated-SSA}
+\newacronym{HDL}{HDL}{hardware description language}
+\newacronym{HLS}{HLS}{high-level synthesis}
+\newacronym{FPGA}{FPGA}{field-programmable gate array}
+\newacronym{DFG}{DFG}{data-flow graph}
+\newacronym{CFG}{CFG}{control-flow graph}
+\newacronym{CDFG}{CDFG}{control- and data-flow graph}
+\newacronym{SDC}{SDC}{system of difference constraints}
+\newacronym{CNF}{CNF}{conjunctive normal form}
+\newacronym{SAT}{SAT}{satisfiability}
+\newacronym{SMT}{SMT}{satisfiability modulo theory}
+\newacronym{DSP}{DSP}{digital signal processing}
+\newacronym{ITP}{ITP}{interactive theorem prover}
+\newacronym{FSMD}{FSMD}{finite-state machine with data-path}
+\newacronym{II}{II}{initiation interval}
+\newacronym{ASAP}{ASAP}{as soon as possible}
+\newacronym{ALAP}{ALAP}{as late as possible}
+\newacronym{LUT}{LUT}{look-up table}
+\newacronym{MRT}{MRT}{modulo reservation table}
+\newacronym{LSQ}{LSQ}{load-store queue}
+\newacronym{BRAM}{BRAM}{block random access memory}
+
+\printglossaries
 
 \include{chapters/1-introduction}
 

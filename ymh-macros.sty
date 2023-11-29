@@ -28,6 +28,16 @@
     \setmonofont[Scale=MatchUppercase]{Iosevka Slab}
   \else
     \ifluatex
+% https://tex.stackexchange.com/a/486145
+% This is needed for PDF-A validation
+% \usepackage{luacode}
+% \begin{luacode}
+% local function embedfull(tfmdata)
+%     tfmdata.embedding = "full"
+% end
+%
+% luatexbase.add_to_callback("luaotfload.patch_font", embedfull, "embedfull")
+% \end{luacode}
       \RequirePackage[libertine]{newtxmath}
       \RequirePackage[tt=false]{libertine}
       \setmonofont[Scale=MatchUppercase]{Iosevka Slab}
@@ -106,6 +116,7 @@
 
 \newcommand\rtlblock{\textsc{RtlBlock}}
 \newcommand\rtlpar{\textsc{RtlPar}}
+\newcommand\rtlsubpar{\textsc{RtlSubPar}}
 \newcommand\rtlpath{\textsc{RtlPath}}
 \newcommand\rtl{\textsc{Rtl}}
 \newcommand\mrtl[1]{\hbox{\mrtlinline|#1|}}
@@ -573,6 +584,8 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \newcommand{\slowdownDiv}{2}
 \newcommand{\areaIncr}{1.1}
 \def\polybench{PolyBench/C}
+
+\newcommand\?{\nobreak-\nobreak\hspace{0pt}}
 
 %%% Local Variables:
 %%% mode: latex
