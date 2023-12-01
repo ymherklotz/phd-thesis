@@ -1,6 +1,6 @@
 \documentclass[12pt,svgnames]{scrreprt}
 
-\KOMAoption{draft}{on}
+%\KOMAoption{draft}{on}
 
 \usepackage[autooneside=false]{scrlayer-scrpage}
 \pagestyle{scrheadings}
@@ -60,8 +60,8 @@
 \hypersetup{urlcolor=teal}
 \hypersetup{citecolor=teal}
 
-\usepackage{imakeidx}
-\usepackage[acronym]{glossaries}
+\usepackage[acronym,index,xindy]{glossaries}
+\usepackage{glossary-bookindex}
 \makeglossaries
 
 \usepackage{cleveref}
@@ -104,12 +104,6 @@
 
 \includeonly{chapters/5-hardware-generation}
 
-\begin{document}
-
-\maketitle
-
-\tableofcontents
-
 \newacronym{SSA}{SSA}{static single assignment}
 \newacronym{GSA}{GSA}{gated-SSA}
 \newacronym{HDL}{HDL}{hardware description language}
@@ -133,7 +127,19 @@
 \newacronym{LSQ}{LSQ}{load-store queue}
 \newacronym{BRAM}{BRAM}{block random access memory}
 
-\printglossaries
+\newterm[name={plus forward simulation}]{plus-forward-simulation}
+\newterm[name={star forward simulation}]{star-forward-simulation}
+\newterm{CompCert}
+
+%\newterm
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\printglossary[type=\acronymtype]
 
 \include{chapters/1-introduction}
 
@@ -153,6 +159,8 @@
 \singlespacing
 \printbibliography
 \endgroup
+
+\printindex
 
 \end{document}
 

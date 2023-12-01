@@ -690,9 +690,6 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
 %   \label{fig:if-conversion-details}
 % \end{figure}
 
-\newcommand\ifconvlabel[1]{\raisebox{-2pt}{\tikz{\node[scale=0.9,circle,draw,fill=white,inner
-            sep=0.4mm,font=\footnotesize] {#1};}}}
-
 \begin{figure*}
   \lstset{basicstyle=\footnotesize\ttfamily}
     \centering
@@ -713,7 +710,7 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
       \draw[->] (b3) -- (b4);
       \draw[->] (b2) -- (b4);
 
-      \draw[-{Latex[length=3mm]}] ([xshift=7mm] b1.south east) to node[align=center, auto]{inline \ifconvlabel{$4$} \\ into \ifconvlabel{$3$}} +(10mm,0mm);
+      \draw[-{Latex[length=3mm]}] ([xshift=7mm] b1.south east) to node[align=center, auto]{inline \diaglabel{$4$} \\ into \diaglabel{$3$}} +(10mm,0mm);
 
       \node[bb,right=25mm of b1, draw] (c1)
       {\rtlinline{p1 := r10 == r11}\\\rtlinline{p1 => E(goto 2)}\\\rtlinline{!p1 => E(goto 3)}};
@@ -731,7 +728,7 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
       \draw[->] (c1) -- node[auto, inner sep=0] {\rtlinline{!p1}} (c3);
       \draw[->] (c2) -- (c4);
 
-      \draw[-{Latex[length=3mm]}] ([xshift=7mm] c1.south east) to node[align=center, auto]{inline \ifconvlabel{$3^\prime$} \\ into \ifconvlabel{$1^\prime$}} +(10mm,0mm);
+      \draw[-{Latex[length=3mm]}] ([xshift=7mm] c1.south east) to node[align=center, auto]{inline \diaglabel{$3^\prime$} \\ into \diaglabel{$1^\prime$}} +(10mm,0mm);
 
       \node[bb, right=53mm of c1.north, anchor=north, draw] (d1)
       {\rtlinline{p1 := r10 == r11}\\\rtlinline{p1 => E(goto 2)}\\\rtlinline{!p1 => r1 := 3}\\\rtlinline{!p1 => r3 := r1 * r4}\\\rtlinline{!p1 => E(goto 10)}};
@@ -792,7 +789,7 @@ p => E(goto n1);
 
 \item\textbf{Dead Block Elimination}~~~Finally, any blocks that are now
   unreachable from the function's entry-point (such as
-  \ifconvlabel{$3^{\prime\prime}$} in \cref{fig:if-conversion-example}) are
+  \diaglabel{$3^{\prime\prime}$} in \cref{fig:if-conversion-example}) are
     removed, to reduce code size.
     % Separating this transformation into its own pass simplifies the
     % correctness proof of the inlining pass, because it does not have to reason
@@ -917,35 +914,35 @@ plus a possibly infinite stream of events emitted by the execution.
     % how one would show that \cref{fig:if-conversion-example-initial} is
     % equivalent to \cref{fig:if-conversion-example-if-convert-a}.  Taking the
     % two cases described above, one can either be in a block that was not
-    % if-converted itself, in this case node \ifconvlabel{2}, then one can pick
+    % if-converted itself, in this case node \diaglabel{2}, then one can pick
     %   the same node in the transformed control-flow graph and execute each
     %   node until one reaches a control-flow instruction in the original block.
-    %   However, if instead one picks \ifconvlabel{4}, with the assumption that
-    %     one came from \ifconvlabel{3}, then one cannot find the right node in
+    %   However, if instead one picks \diaglabel{4}, with the assumption that
+    %     one came from \diaglabel{3}, then one cannot find the right node in
     %       the transformed control-flow graph because this edge was
     %       if-converted.  In that case, one must essentially execute nodes
-    %       \ifconvlabel{3} and \ifconvlabel{4} together, and match that up with
-    %           \ifconvlabel{3} in the transformed graph.  Executing two nodes
+    %       \diaglabel{3} and \diaglabel{4} together, and match that up with
+    %           \diaglabel{3} in the transformed graph.  Executing two nodes
     %             of the input program is actually not directly supported by the
     %             simulation diagram proofs, so instead one must remember how
-    %             one executed \ifconvlabel{3} in the original program with the
-    %               first instruction of \ifconvlabel{3} in the transformed
+    %             one executed \diaglabel{3} in the original program with the
+    %               first instruction of \diaglabel{3} in the transformed
     %                 program, and then one can proceed with executing
-    %                 \ifconvlabel{4} with the rest of the transformed
-    %                   \ifconvlabel{3}.
+    %                 \diaglabel{4} with the rest of the transformed
+    %                   \diaglabel{3}.
 
 The block inlining pass is a bit more involved.  To see why, consider how to
 prove a forward simulation for the first transformation in
 \cref{fig:if-conversion-example}. The edges
-$\ifconvlabel{$1$}\rightarrow\ifconvlabel{$1^\prime$}$,
-$\ifconvlabel{$2$}\rightarrow\ifconvlabel{$2^\prime$}$, and
-$\ifconvlabel{$4$}\rightarrow\ifconvlabel{$4^\prime$}$, are straightforward, but
-$\ifconvlabel{$3$}$ is tricky, because $\ifconvlabel{$3^\prime$}$ does not
-straightforwardly simulate $\ifconvlabel{$3$}$ (there is no edge from
-$\ifconvlabel{$3^\prime$}$ that can mimic the edge from $\ifconvlabel{$3$}$ to
-$\ifconvlabel{$4$}$). To resolve this, we make our simulation relation a little
-more fine-grained, so that $\ifconvlabel{$3$}$ can be mapped to the first `part'
-of $\ifconvlabel{$3^\prime$}$ and $\ifconvlabel{$4$}$ can be mapped to the
+$\diaglabel{$1$}\rightarrow\diaglabel{$1^\prime$}$,
+$\diaglabel{$2$}\rightarrow\diaglabel{$2^\prime$}$, and
+$\diaglabel{$4$}\rightarrow\diaglabel{$4^\prime$}$, are straightforward, but
+$\diaglabel{$3$}$ is tricky, because $\diaglabel{$3^\prime$}$ does not
+straightforwardly simulate $\diaglabel{$3$}$ (there is no edge from
+$\diaglabel{$3^\prime$}$ that can mimic the edge from $\diaglabel{$3$}$ to
+$\diaglabel{$4$}$). To resolve this, we make our simulation relation a little
+more fine-grained, so that $\diaglabel{$3$}$ can be mapped to the first `part'
+of $\diaglabel{$3^\prime$}$ and $\diaglabel{$4$}$ can be mapped to the
 second.
 
                                       % Then, upon exiting the block one has to

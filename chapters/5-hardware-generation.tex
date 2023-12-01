@@ -46,8 +46,46 @@ useful for the scheduling proof, as each of these hyperblocks can be compared
 individually.  However, in the hardware itself, the individual sequential blocks
 have to be separated into different states, as within each state the
 assignments will be performed in parallel.  This first state partitioning
-transformation transforms \rtlpar{} into \rtlsubpar{}, which is is a
-control-flow graph language
+transformation separates operations that should execute in different clock
+cycles into their own locations in the control-flow graph.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=Latex,shorten >=1pt,
+    label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
+    bb/.style={align=left, draw=white, fill=black!5}]
+    \node[bb] (initial block) {\rtlinline`[ [ [ r1 := r2 ] ]; `\\
+                               \rtlinline`  [ [ r3 := r4 ];   `\\
+                               \rtlinline`    [ goto 2   ] ] ]`};
+    \node[bb, right=4cm of initial block, yshift=1cm] (first transf block)
+      {\rtlinline`[ [ r1 := r2 ]; `\\
+       \rtlinline`  [ goto 3   ] ]`};
+    \node[bb, below=of first transf block] (second transf block)
+                               {\rtlinline`  [ [ r3 := r4 ];   `\\
+                                \rtlinline`    [ goto 2   ] ]`};
+    \node[label] at (initial block.north west) {\texttt{1}};
+    \node[label] at (first transf block.north west) {\texttt{1}};
+    \node[label] at (second transf block.north west) {\texttt{3}};
+    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+      -- node [below, font=\footnotesize] {state partitioning}
+      ($(initial block.east) + (3,0)$);
+  \end{tikzpicture}
+  \caption{State partitioning transformation splitting up the hyperblock into
+    multiple locations.}%
+  \label{fig:hg:state-partitioning}
+\end{figure}
+
+\Cref{fig:hg:state-partitioning} shows an example state partitioning
+transformation, where a new block is added at location \diaglabel{$3$} with the
+contents of the second sequential block, and a \rtlinline`goto` instruction is
+added to the original block leading to this next block.  Fresh locations for new
+blocks are chosen by keeping track of the greatest location in the current
+function.
+
+\subsection{Proof of State Partitioning}
+
+The proof of state partitioning is relatively simple using a standard plus
+forward simulation.
 
 \section{HTL Generation}%
 \label{sec:hg:htl-generation}
