@@ -718,6 +718,34 @@ The invariant used in the proofs is that block 0 should be equivalent to the mer
 %  \end{subfigure}
 %\end{figure}
 
+\subsection{Deterministic Verilog Semantics}%
+\label{sec:proof:deterministic}
+
+% Finally, to obtain the backward simulation that we want, it has to be shown
+% that if we generate hardware with a specific behaviour, that it is the only
+% possible program with that behaviour.  This only has to be performed for the
+% final intermediate language, which is Verilog, so that the backward simulation
+% holds for the whole chain from Clight to Verilog.
+The final lemma we need is that the Verilog semantics is deterministic. This
+result allows us to replace the forwards simulation we have proved with the
+backwards simulation we desire.
+
+\begin{lemma}\label{lemma:deterministic}
+  If a Verilog program $V$ admits behaviours $B_1$ and $B_2$, then $B_1$ and
+  $B_2$ must be the same.
+
+  \begin{equation*}
+    \forall V, B_{1}, B_{2},\quad V \Downarrow B_{1} \land V \Downarrow B_{2} \implies B_{1} = B_{2}.
+  \end{equation*}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  The Verilog semantics is deterministic because the order of operation of all
+  the constructs is defined, so there is only one way to evaluate the module,
+  and hence only one possible behaviour. This was proven for the small-step
+  semantics shown in Fig.~\ref{fig:inference_module}.
+\end{proof}
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../thesis"
