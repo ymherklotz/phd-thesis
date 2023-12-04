@@ -140,7 +140,65 @@ C and Verilog handle signedness quite differently. By default, all operators and
 
 Furthermore, equality checks between \emph{unsigned} variables are actually not supported, because this requires supporting the comparison of pointers, which should only be performed between pointers with the same provenance.  In \vericert{} there is currently no way to determine the provenance of a pointer, and it therefore cannot model the semantics of unsigned comparison in \compcert{}. This is not a severe restriction in practice however, because in the absence of dynamic allocation, equality comparison of pointers is rarely needed, and equality comparison of integers can still be performed by casting them both to signed integers.
 
-Finally, the \texttt{mulhs} and \texttt{mulhu} instructions, which fetch the upper bits of a 32-bit multiplication, are not translated by \vericert{}, because 64-bit numbers are not supported. These instructions are only generated to optimise divisions by a constant that is not a power of two, so turning off constant propagation will allow these programs to pass without error.
+Finally, the \texttt{mulhs} and \texttt{mulhu} instructions, which fetch the
+upper bits of a 32-bit multiplication, are not translated by \vericert{},
+because 64-bit numbers are not supported. These instructions are only generated
+to optimise divisions by a constant that is not a power of two, so turning off
+constant propagation will allow these programs to pass without error.
+
+\subsection{Coq Mechanisation}
+
+\begin{table}
+  \centering
+  \caption{Statistics about the numbers of lines of code in the proof and implementation of \vericert{}.}\label{tab:proof_statistics}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    & \textbf{Coq code} & \multicolumn{1}{p{1cm}}{\raggedleft\textbf{OCaml code}} & \textbf{Spec} & \multicolumn{1}{p{2cm}}{\raggedleft\textbf{Theorems \& Proofs}} & \textbf{Total}\\
+    \midrule
+    {Data structures and libraries}     & 280  & --- & ---  & 500  & 780   \\
+    {Integers and values}               & 98   & --- & 15   & 968  & 1081  \\
+    {HTL semantics}                     & 50   & --- & 181  & 65   & 296   \\
+    {HTL generation}                    & 590  & --- & 66   & 3069 & 3725  \\
+    {RAM generation}                    & 253  & --- & ---  & 2793 & 3046  \\
+    {Verilog semantics}                 & 78   & --- & 431  & 235  & 744   \\
+    {Verilog generation}                & 104  & --- & ---  & 486  & 590   \\
+    {Top-level driver, pretty printers} & 318  & 775 & ---  & 189  & 1282  \\
+    \midrule
+    \textbf{Total}                      & 1721 & 775 & 693  & 8355 & 11544 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The lines of code for the implementation and proof of \vericert{} can be found
+in Table~\ref{tab:proof_statistics}.  Overall, it took about 1.5 person-years to
+build \vericert{} -- about three person-months on implementation and 15
+person-months on proofs.  The largest proof is the correctness proof for the HTL
+generation, which required equivalence proofs between all integer operations
+supported by \compcert{} and those supported in hardware.  From the 3069 lines
+of proof code in the HTL generation, 1189 are for the correctness proof of just
+the load and store instructions.  These were tedious to prove correct because of
+the substantial difference between the memory models used, and the need to prove
+properties such as stores outside of the allocated memory being undefined, so
+that a finite array could be used. In addition to that, since pointers in HTL
+and Verilog are represented as integers, instead of as a separate `pointer' type
+like in the \compcert{} semantics, it was painful to reason about them.  Many
+new theorems had to be proven about them in \vericert{} to prove the conversion
+from pointer to integer.  Moreover, the second-largest proof of the correct RAM
+generation includes many proofs about the extensional equality of array
+operations, such as merging arrays with different assignments.  As the negative
+edge implies that two merges take place every clock cycle, the proofs about the
+equality of the contents in memory and in the merged arrays become more tedious
+too.
+
+Looking at the trusted computing base of \vericert{}, the Verilog semantics is
+431 lines of code.  This and the Clight semantics from \compcert{} are the only
+parts of the compiler that need to be trusted.  The Verilog semantics
+specification is therefore much smaller compared to the 1721 lines of the
+implementation that are written in Coq, which are the verified parts of the HLS
+tool, even when the Clight semantics are added.  In addition to that,
+understanding the semantics specification is simpler than trying to understand
+the translation algorithm. We conclude that the trusted base has been
+successfully reduced.
 
 %%% Local Variables:
 %%% mode: latex

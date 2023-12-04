@@ -101,25 +101,68 @@ a program represented by an \gls{FSMD}.  This \gls{FSMD} language
 \subsection{HTL Structure and Semantics}%
 \label{sec:hg:htl-structure-and-semantics}
 
+At a high level, HTL is structured like many other \compcert{} languages,
+mapping from locations to Verilog statements.  However, contrary to many other
+intermediate languages in \compcert{}, HTL does not contain any instructions,
+and its semantics use a smaller state to perform the execution.  For example,
+the state does not have to contain the program counter because there is an
+explicit state register that keeps track of it.
+
+HTL comprises a a lot of metadata pointing to important registers, as well as
+containing a map from program locations to Verilog statements.
+
+\begin{figure}
+\centering
+\begin{tabular}{rr@{~}r@{~}l@{\hspace*{2mm}}l}
+  \llabel{registers} & $\reg, \mbox{\rtlinline{r1}}, \mbox{\rtlinline{r2}}, \ldots \in \regtype$ & & & \\
+  \llabel{predicates} & $\predvar, \mbox{\rtlinline{p1}}, \mbox{\rtlinline{p2}}, \ldots \in \predvartype$ & & & \\
+  \llabel{CFG node labels} & $\location \in \locationtype$ & $::=$ & $\mathbb{N}$ & \\
+  \llabel{guard expressions} & $\guard \in \guardtype$ & ::= & \rlap{$\predvartype$ | $\neg
+                                              \predvartype$ | $\ltrue$ | $\lfalse$ | $\guardtype \land \guardtype$ | $\guardtype \lor \guardtype$} \\
+  \llabel{arithmetic ops} & $\exprop \in \exproptype$ & ::= & \mono{+} | \mono{*} | \mono{-} | \ldots & \\
+  \llabel{conditional ops} & $\condop \in \condoptype$ & ::= & \mono{==} | \mono{!=} | \mono{<}
+                                               | \ldots & \\
+  \llabel{addressing modes} & $\addr \in \addrtype$ & ::= & \mono{Stack} | \mono{Global} |
+                                             \ldots \\
+  \llabel{instructions} & $\instr \in \instrtype$ & ::= & \mono{skip} & \rlabel{no-op}\\
+     & & |   & \hl{$\guardtype$ \texttt{\small =>}} $\regtype \casgn \regtype \mathbin{\exproptype} \regtype$ & \rlabel{arith/logical op} \\
+     & & |   & \hl{$\guardtype$ \texttt{\small =>}} $\regtype \casgn \at{\addrtype}{\regtype}$ & \rlabel{memory load}\\
+     & & |   & \hl{$\guardtype$ \texttt{\small =>}} $\at{\addrtype}{\regtype}$ \mono{:=} $\regtype$ & \rlabel{memory store} \\
+     & & |   & \hl{$\guardtype$ \texttt{\small =>} $\predvartype \casgn
+               \regtype \mathbin{\condoptype} \regtype$} & \rlabel{assign predicate} \\
+     & & |   & \hl{$\guardtype$ \texttt{\small =>} $\mono{E}(\cfinstrtype)$} & \rlabel{block exit}
+  \\
+  \llabel{control-flow instructions} & $\cfinstr \in \cfinstrtype$ & ::= & \mono{if} $(\regtype \mathbin{\condoptype} \regtype)$ $\locationtype$ $\locationtype$ & \rlabel{conditional} \\
+      & & |   & \mono{goto} $\locationtype$ & \rlabel{goto node} \\
+      & & |   & \ldots \\
+%      & & |   & \mono{call} $\mathit{sig}$ $f$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (function call)\\
+%      & & |   & \mono{tailcall} $\mathit{sig}$ $f$ $\vec{\regtype}$ & (tailcall) \\
+%      & & |   & \mono{builtin} $f_{\mathit{ext}}$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (builtin function) \\
+%      & & |   & \mono{jumptable} $\regtype$ $\vec{\locationtype}$ & (jumptable) \\
+%      & & |   & \mono{return} $\optiontype{\regtype}$ & (function return) \\
+%      % & |   & \mono{RBpred\_{cf}} $P$ $i_{\mathit{cf}_{1}}$
+      % $i_{\mathit{cf}_{2}}$ \\
+      & \llap{$\rtlbb \in \rtlblock{}$} & ::= & $\instr\ \texttt{list}$ \\
+      & \llap{$\rtlpb \in \rtlpar{}$} & ::= & $\instr\ \texttt{list}\ \texttt{list}\ \texttt{list}$
+\end{tabular}
+\caption{S.}
+\label{fig:instructions}
+\end{figure}
+
 \subsection{HTL Generation Algorithm}%
 \label{sec:hg:htl-generation}
 
 \subsection{HTL Generation Correctness Proof}%
 \label{sec:hg:htl-generation-correctness-proof}
 
-\section{Correctness Proof}\label{sec:proof}
+%\section{Correctness Proof}\label{sec:proof}
 
 %\JW{That's quite a hard-to-parse section heading; I'd go for something simpler like `Correctness Proof' or `Proving Correctness'}
 
-Now that the Verilog semantics have been adapted to the CompCert model, we are
-in a position to formally prove the correctness of our C-to-Verilog compilation.
-This section describes the main correctness theorem that was proven and the key
-ideas in the proof. The full Coq proof is available
-online~\cite{yann_herklotz_2021_5093839}.
-
-\subsection{Main Challenges in the Proof}
-
-The proof of correctness of the Verilog back end is quite different from the usual proofs performed in CompCert, mainly because of the difference in the memory model and semantic differences between Verilog and CompCert's existing intermediate languages.
+The proof of correctness of the Verilog back end is quite different from the
+usual proofs performed in CompCert, mainly because of the difference in the
+memory model and semantic differences between Verilog and CompCert's existing
+intermediate languages.
 
 \begin{itemize}
 \item As already mentioned in Section~\ref{sec:verilog:memory}, because the
@@ -128,11 +171,6 @@ The proof of correctness of the Verilog back end is quite different from the usu
   equivalence of these models needs to be proven.  Moreover, our memory is
   word-addressed for efficiency reasons, whereas CompCert's memory is
   byte-addressed.
-
-  % \JW{This point has been made a couple of times already by now. I think it's
-  % ok to say it again briefly here, but I'd be tempted to acknowledge that it's
-  % repetitive by prepending it with something like ``As already mentioned in
-  % Section blah,'' }
 
 \item Second, the Verilog semantics operates quite differently to the usual
   intermediate languages in CompCert.  All the CompCert intermediate languages
@@ -152,10 +190,6 @@ which was introduced in Section~\ref{sec:design}, bridges the gap in the
 semantics between the two languages.  HTL still consists of maps, like many of
 the other CompCert languages, but each state corresponds to a Verilog statement.
 
-% \JW{This is good text, but the problem is that it reads like you're
-% introducing HTL here for the first time. In fact, the reader has already
-% encountered HTL in Section 2. So this needs acknowledging.}\YH{Added that.}
-
 \subsection{Formulating the Correctness Theorem}
 
 The main correctness theorem is analogous to that stated in
@@ -170,22 +204,6 @@ divergent, but it cannot `go wrong'. (This means that the source program must
 not contain undefined behaviour.) In \compcert{}, a behaviour is also associated
 with a trace of I/O events, but since external function calls are not supported
 in \vericert{}, this trace will always be empty.
-
-% This correctness theorem is also appropriate for HLS, as HLS is often used as
-% a part of a larger hardware design that is connected together using a hardware
-% description language like Verilog.  This means that HLS designs are normally
-% triggered multiple times and results are returned each time when the
-% computation terminates, which is the property that the correctness theorem
-% states.
-
-% \JW{Perhaps it would be worth first explaining why somebody might think this
-% correctness theorem might \emph{not} be appropriate for HLS. At the moment, it
-% feels like you're giving the answer without saying the question. Is it to do
-% with the fact that hardware tends to run forever?}\YH{Yes definitely, will add
-% that.}
-
-% The following `backwards simulation' theorem describes the correctness
-% theorem, where $\Downarrow$ stands for simulation and execution respectively.
 
 \begin{theorem}
   Whenever the translation from $C$ succeeds and produces Verilog $V$, and all
@@ -390,60 +408,6 @@ that need to hold for the states to match.
   of 3AC, which allows us to find one or more steps in the HTL semantics that
   will produce the same final matching state.
 \end{proof}
-
-\subsection{Coq Mechanisation}
-
-\begin{table}
-  \centering
-  \caption{Statistics about the numbers of lines of code in the proof and implementation of \vericert{}.}\label{tab:proof_statistics}
-  \begin{tabular}{lrrrrr}
-    \toprule
-    & \textbf{Coq code} & \multicolumn{1}{p{1cm}}{\raggedleft\textbf{OCaml code}} & \textbf{Spec} & \multicolumn{1}{p{2cm}}{\raggedleft\textbf{Theorems \& Proofs}} & \textbf{Total}\\
-    \midrule
-    {Data structures and libraries}     & 280  & --- & ---  & 500  & 780   \\
-    {Integers and values}               & 98   & --- & 15   & 968  & 1081  \\
-    {HTL semantics}                     & 50   & --- & 181  & 65   & 296   \\
-    {HTL generation}                    & 590  & --- & 66   & 3069 & 3725  \\
-    {RAM generation}                    & 253  & --- & ---  & 2793 & 3046  \\
-    {Verilog semantics}                 & 78   & --- & 431  & 235  & 744   \\
-    {Verilog generation}                & 104  & --- & ---  & 486  & 590   \\
-    {Top-level driver, pretty printers} & 318  & 775 & ---  & 189  & 1282  \\
-    \midrule
-    \textbf{Total}                      & 1721 & 775 & 693  & 8355 & 11544 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The lines of code for the implementation and proof of \vericert{} can be found
-in Table~\ref{tab:proof_statistics}.  Overall, it took about 1.5 person-years to
-build \vericert{} -- about three person-months on implementation and 15
-person-months on proofs.  The largest proof is the correctness proof for the HTL
-generation, which required equivalence proofs between all integer operations
-supported by \compcert{} and those supported in hardware.  From the 3069 lines
-of proof code in the HTL generation, 1189 are for the correctness proof of just
-the load and store instructions.  These were tedious to prove correct because of
-the substantial difference between the memory models used, and the need to prove
-properties such as stores outside of the allocated memory being undefined, so
-that a finite array could be used. In addition to that, since pointers in HTL
-and Verilog are represented as integers, instead of as a separate `pointer' type
-like in the \compcert{} semantics, it was painful to reason about them.  Many
-new theorems had to be proven about them in \vericert{} to prove the conversion
-from pointer to integer.  Moreover, the second-largest proof of the correct RAM
-generation includes many proofs about the extensional equality of array
-operations, such as merging arrays with different assignments.  As the negative
-edge implies that two merges take place every clock cycle, the proofs about the
-equality of the contents in memory and in the merged arrays become more tedious
-too.
-
-Looking at the trusted computing base of \vericert{}, the Verilog semantics is
-431 lines of code.  This and the Clight semantics from \compcert{} are the only
-parts of the compiler that need to be trusted.  The Verilog semantics
-specification is therefore much smaller compared to the 1721 lines of the
-implementation that are written in Coq, which are the verified parts of the HLS
-tool, even when the Clight semantics are added.  In addition to that,
-understanding the semantics specification is simpler than trying to understand
-the translation algorithm. We conclude that the trusted base has been
-successfully reduced.
 
 \section{BRAM Generation}%
 \label{sec:hg:bram-generation}
