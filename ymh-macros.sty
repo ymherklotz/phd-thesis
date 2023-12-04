@@ -25,7 +25,7 @@
   \ifxetex
     \RequirePackage[libertine]{newtxmath}
     \RequirePackage[tt=false]{libertine}
-    \setmonofont[Scale=MatchUppercase]{Iosevka Slab}
+    \setmonofont[Scale=MatchUppercase,Ligatures={NoRequired, NoCommon, NoContextual}]{Iosevka Slab}
   \else
     \ifluatex
 % https://tex.stackexchange.com/a/486145
@@ -40,7 +40,7 @@
 % \end{luacode}
       \RequirePackage[libertine]{newtxmath}
       \RequirePackage[tt=false]{libertine}
-      \setmonofont[Scale=MatchUppercase]{Iosevka Slab}
+      \setmonofont[Scale=MatchUppercase,Contextuals=AlternateOff]{Iosevka Slab}
     \else
        \RequirePackage[tt=false, type1=true]{libertine}
        \RequirePackage[varqu]{zi4}
@@ -590,7 +590,10 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \newcommand\diaglabel[1]{\raisebox{-2pt}{\tikz{\node[scale=0.9,circle,draw,fill=white,inner
             sep=0.4mm,font=\footnotesize] {#1};}}}
 
-\newcommand\verilogstmnt{\mathit{VerilogStmnt}}
+\newcommand\verilogstmnt{V_\mathit{stmnt}}
+\newcommand\verilogstmnttype{\mathbb{V}_\mathit{stmnt}}
+\newcommand\htlcode{\mathit{code}}
+\newcommand\htlmodule{\mathit{HTL}}
 
 %%% Local Variables:
 %%% mode: latex

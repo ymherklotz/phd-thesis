@@ -92,11 +92,14 @@ equivalent to the execution of the input state when executed sequentially.
 \section{HTL Generation}%
 \label{sec:hg:htl-generation}
 
-The most important transformation of an HLS tool is then the generation of
-proper hardware from the list of instructions.  Eventually the hardware design
-will be described using Verilog, however, to make the transformation more
+The most important transformation of an HLS tool is then the generation of a
+hardware description from the list of instructions.  Eventually the hardware
+design will be described using Verilog, however, to make the transformation more
 incremental, we first turn the program represented by a control-flow graph into
-a program represented by an \gls{FSMD}.  This \gls{FSMD} language
+a program represented by an \gls{FSMD}.  This section will describe the
+\gls{FSMD} language, called HTL, by showing the syntax and semantics of the
+language.  Then, the transformation from \rtlsubpar{} to HTL is shown, together
+with an overview of its correctness proof.
 
 \subsection{HTL Structure and Semantics}%
 \label{sec:hg:htl-structure-and-semantics}
@@ -115,38 +118,28 @@ containing a map from program locations to Verilog statements.
 \centering
 \begin{tabular}{rr@{~}r@{~}l@{\hspace*{2mm}}l}
   \llabel{registers} & $\reg, \mbox{\rtlinline{r1}}, \mbox{\rtlinline{r2}}, \ldots \in \regtype$ & & & \\
-  \llabel{predicates} & $\predvar, \mbox{\rtlinline{p1}}, \mbox{\rtlinline{p2}}, \ldots \in \predvartype$ & & & \\
   \llabel{CFG node labels} & $\location \in \locationtype$ & $::=$ & $\mathbb{N}$ & \\
-  \llabel{guard expressions} & $\guard \in \guardtype$ & ::= & \rlap{$\predvartype$ | $\neg
-                                              \predvartype$ | $\ltrue$ | $\lfalse$ | $\guardtype \land \guardtype$ | $\guardtype \lor \guardtype$} \\
-  \llabel{arithmetic ops} & $\exprop \in \exproptype$ & ::= & \mono{+} | \mono{*} | \mono{-} | \ldots & \\
-  \llabel{conditional ops} & $\condop \in \condoptype$ & ::= & \mono{==} | \mono{!=} | \mono{<}
-                                               | \ldots & \\
-  \llabel{addressing modes} & $\addr \in \addrtype$ & ::= & \mono{Stack} | \mono{Global} |
-                                             \ldots \\
-  \llabel{instructions} & $\instr \in \instrtype$ & ::= & \mono{skip} & \rlabel{no-op}\\
-     & & |   & \hl{$\guardtype$ \texttt{\small =>}} $\regtype \casgn \regtype \mathbin{\exproptype} \regtype$ & \rlabel{arith/logical op} \\
-     & & |   & \hl{$\guardtype$ \texttt{\small =>}} $\regtype \casgn \at{\addrtype}{\regtype}$ & \rlabel{memory load}\\
-     & & |   & \hl{$\guardtype$ \texttt{\small =>}} $\at{\addrtype}{\regtype}$ \mono{:=} $\regtype$ & \rlabel{memory store} \\
-     & & |   & \hl{$\guardtype$ \texttt{\small =>} $\predvartype \casgn
-               \regtype \mathbin{\condoptype} \regtype$} & \rlabel{assign predicate} \\
-     & & |   & \hl{$\guardtype$ \texttt{\small =>} $\mono{E}(\cfinstrtype)$} & \rlabel{block exit}
-  \\
-  \llabel{control-flow instructions} & $\cfinstr \in \cfinstrtype$ & ::= & \mono{if} $(\regtype \mathbin{\condoptype} \regtype)$ $\locationtype$ $\locationtype$ & \rlabel{conditional} \\
-      & & |   & \mono{goto} $\locationtype$ & \rlabel{goto node} \\
-      & & |   & \ldots \\
-%      & & |   & \mono{call} $\mathit{sig}$ $f$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (function call)\\
-%      & & |   & \mono{tailcall} $\mathit{sig}$ $f$ $\vec{\regtype}$ & (tailcall) \\
-%      & & |   & \mono{builtin} $f_{\mathit{ext}}$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (builtin function) \\
-%      & & |   & \mono{jumptable} $\regtype$ $\vec{\locationtype}$ & (jumptable) \\
-%      & & |   & \mono{return} $\optiontype{\regtype}$ & (function return) \\
-%      % & |   & \mono{RBpred\_{cf}} $P$ $i_{\mathit{cf}_{1}}$
-      % $i_{\mathit{cf}_{2}}$ \\
-      & \llap{$\rtlbb \in \rtlblock{}$} & ::= & $\instr\ \texttt{list}$ \\
-      & \llap{$\rtlpb \in \rtlpar{}$} & ::= & $\instr\ \texttt{list}\ \texttt{list}\ \texttt{list}$
+  \llabel{Verilog statements} & $\verilogstmnt \in \verilogstmnttype$ & & & \\
+  \llabel{Code} & $\htlcode \in \locationtype \rightarrow \verilogstmnttype$ & & & \\
+  \llabel{HTL} & $\htlmodule$ & $::=$ & $\{\ \mathit{params} : \regtype\
+                                        \texttt{list}; $ \\
+  & & & $\ \ \mathit{datapath} : \locationtype \rightarrow \verilogstmnttype; $ \\
+  & & & $\ \ \mathit{entrypoint} : \mathbb{N};$ & \\
+  & & & $\ \ \mathit{state} : \regtype;$ & \\
+  & & & $\ \ \mathit{stack} : \regtype;$ & \\
+  & & & $\ \ \mathit{stack\_size} : \mathbb{N};$ & \\
+  & & & $\ \ \mathit{finish},\mathit{return},\mathit{start},\mathit{reset},\mathit{clk} :
+        \regtype;$ & \\
+  & & & $\ \ \mathit{ram} : \optiontype{\mathit{RAM}};$ & \\
+  & & & $\ \ \mathit{order\_wf} : \mathit{state} < \mathit{finish} < \mathit{return}
+        < \mathit{stack} < \mathit{reset} < \mathit{clk};$ & \\
+  & & & $\ \ \mathit{ram\_wf} : \forall r\ldotp \mathit{ram} = \some{r} \implies
+        \mathit{clk} < r.\mathit{raddr}; $ & \\
+  & & & $\ \ \mathit{params\_wf} : \forall r \in \mathit{params}\ldotp
+        r < \mathit{state} \ \}$
 \end{tabular}
-\caption{S.}
-\label{fig:instructions}
+\caption{Syntax of HTL.}
+\label{fig:hg:htl}
 \end{figure}
 
 \subsection{HTL Generation Algorithm}%
@@ -389,10 +382,10 @@ that need to hold for the states to match.
   \begin{center}
     \begin{tikzpicture}
       \begin{scope}
-        \node[circle] (s1) at (0,1.5) {$R, M, \mathit{pc}$};
-        \node[circle] (r1) at (8.5,1.5) {$\Gamma_{r}, \Gamma_{a}$};
+        \node[circle] (s1) at (0,2) {$R, M, \mathit{pc}$};
+        \node[circle] (r1) at (10,2) {$\Gamma_{r}, \Gamma_{a}$};
         \node[circle] (s2) at (0,0) {$R', M', \mathit{pc}'$};
-        \node[circle] (r2) at (8.5,0) {$\Gamma_{r}', \Gamma_{a}'$};
+        \node[circle] (r2) at (10,0) {$\Gamma_{r}', \Gamma_{a}'$};
         %\node at (6.8,0.75) {+};
         \draw (s1) -- node[above] {$\mathcal{I} \land (R \le \Gamma_{r}) \land (M \le \Gamma_{a}) \land (\mathit{pc} = \Gamma_{r}[\sigma])$} ++ (r1);
         \draw[-{Latex}] ($(s1.south) + (0,0.4)$) -- ($(s2.north) - (0,0.4)$);
