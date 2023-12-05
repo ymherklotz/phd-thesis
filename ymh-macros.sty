@@ -1,6 +1,13 @@
 \RequirePackage{relsize}
 \RequirePackage{listings}
 
+\begingroup\endlinechar=-1\relax
+       \everyeof{\noexpand}%
+       \edef\x{\endgroup\def\noexpand\homepath{%
+         \@@input|"kpsewhich --var-value=HOME" }}\x
+
+\def\overleafhome{/tmp}% change as appropriate
+
 \newif\if@ACM@newfonts
 \@ACM@newfontstrue
 
@@ -39,8 +46,14 @@
 % luatexbase.add_to_callback("luaotfload.patch_font", embedfull, "embedfull")
 % \end{luacode}
       \RequirePackage[libertine]{newtxmath}
+      \ifx\homepath\overleafhome
+      \RequirePackage[tt=false]{libertine}
+      \RequirePackage{inconsolata}
+      \setmonofont{inconsolata}
+      \else
       \RequirePackage[tt=false]{libertine}
       \setmonofont[Scale=MatchUppercase,Contextuals=AlternateOff]{Iosevka Slab}
+      \fi
     \else
        \RequirePackage[tt=false, type1=true]{libertine}
        \RequirePackage[varqu]{zi4}
