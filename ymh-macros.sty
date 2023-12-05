@@ -484,8 +484,8 @@ diagonal fill/.style 2 args={fill=#2, path picture={
     sensitive=true,
     % Automatic breaking of long lines
     breaklines=false,
-    % Default style fors listings
-    basicstyle=\small,
+%    % Default style fors listings
+%    basicstyle=\small,
     % Position of captions is bottom
     captionpos=b,
     % flexible columns
@@ -594,6 +594,22 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \newcommand\verilogstmnttype{\mathbb{V}_\mathit{stmnt}}
 \newcommand\htlcode{\mathit{code}}
 \newcommand\htlmodule{\mathit{HTL}}
+
+
+\lstdefinestyle{verilog-style}
+{
+    language=Verilog,
+    keywordstyle=\color{keywordcolor}\bfseries,
+    identifierstyle=\color{black},
+    commentstyle=\ttfamily\color{commentcolor},
+%    numbers=left,
+%    numberstyle=\tiny\color{black},
+%    numbersep=10pt,
+%    tabsize=8,
+    literate=*{:}{{\textcolor{black}{:}}}1
+}
+
+\newcommand{\veriloginline}{\lstinline[style=verilog-style]}
 
 %%% Local Variables:
 %%% mode: latex

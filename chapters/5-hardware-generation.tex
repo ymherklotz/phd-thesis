@@ -112,7 +112,15 @@ the state does not have to contain the program counter because there is an
 explicit state register that keeps track of it.
 
 HTL comprises a a lot of metadata pointing to important registers, as well as
-containing a map from program locations to Verilog statements.
+containing a map from program locations to Verilog statements.  The syntax of
+HTL is shown in \cref{fig:hg:htl-syntax}.  First, HTL contains a list of
+parameters, which are additional input registers to the current module.  Next,
+the $\mathit{datapath}$ contains the code for the state machine, as well as the
+main data path associated with the data path.  This is done by mapping program
+locations, or states, to Verilog statements $\verilogstmnttype$, which updates
+registers as part of the data path, but also updates to the state.  The
+computation of the next state often relies on the state of registers, which is
+why it needs to be performed as part of the data path.
 
 \begin{figure}
 \centering
@@ -139,11 +147,116 @@ containing a map from program locations to Verilog statements.
         r < \mathit{state} \ \}$
 \end{tabular}
 \caption{Syntax of HTL.}
-\label{fig:hg:htl}
+\label{fig:hg:htl-syntax}
 \end{figure}
+
+Next, the \htl{} module contains an entry point, which is the initial starting
+state of the $\mathit{state}$ register.  After the reset input wire is asserted,
+the $\mathit{state}$ register will be reset to that value.  The $\mathit{state}$
+register is read at every clock tick and determines the next statement that
+should be executed from the $\mathit{datapath}$.  As mentioned before, the
+$\mathit{state}$ register is a physical representation of the virtual program
+counter from \rtlsubpar{} and other intermediate instruction languages.  We then
+also have $\mathit{stack}$ register and an associated $\mathit{stack\_size}$,
+which is a Verilog array storing the contents of the stack.  Initially, this
+array will be accessed directly by operations in the data path, however,
+\cref{sec:hg:bram-generation} describes how these direct accesses to the array
+are instead turned into accesses to a \gls{BRAM}.
+
+We then have a list of input and output control signals, which are used to
+return a result by setting the $\mathit{finish}$ flag and assigning the
+$\mathit{return}$ register to the result.  Next, there are $\mathit{start}$ and
+$\mathit{reset}$ signals that provide a way to reset the state of the internal
+state machine, as well as start the execution of the module when ready.
+Finally, there is a $\mathit{clk}$ input to provide the clock to the design.
+This input is not yet used by the \htl{} design, as execution is still performed
+using state transitions in the semantics, however, a register is already
+allocated for the clock which will be needed by the final Verilog design.  The
+module then also contains a $\mathit{ram}$ which will be further described in
+\cref{sec:hg:bram-generation}, because in the first translation pass it is
+initialised to \cnone.
+
+Finally, there are three \emph{well-formedness} criteria which are used to
+enforce an ordering between the registers, mainly to be able to show that
+registers are independent from each other.
 
 \subsection{HTL Generation Algorithm}%
 \label{sec:hg:htl-generation}
+
+The generation of \htl{} is relatively straight-forward, as most instructions
+have a direct translation to a Verilog implementation.  The Verilog
+implementation can therefore follow the semantics of each operation and
+implement their arithmetic behaviour directly.  The arithmetic operation is then
+assigned to the destination register using \emph{blocking} assignment, so as to
+preserve the sequential nature of the execution of the code and simplify the
+correctness proof.  One subtle aspect of the proof is the translation of
+registers and predicates into Verilog, because in \rtlsubpar{} these were
+contained in separate maps, whereas in Verilog and \htl{} they need to be
+combined into one register association map.  This is done by referring to
+register $r$ in \rtlsubpar{} as register $r' = 2r$ in Verilog.  Predicate $p$,
+on the other hand, is referred to as predicate $p' = 2p + 1$ in Verilog, thereby
+combining both name spaces into one.  A short example of a translation from
+\rtlsubpar{} to \htl{} is shown in \cref{fig:hg:htl-generation}.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=Latex,shorten >=1pt,
+    label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
+    bb/.style={align=left, draw=white, fill=black!5}]
+    \node[bb] (initial block) {\rtlinline`[ [ r1 := r2 * r3     ] ]; `\\
+                               \rtlinline`[ [ p1 => r4 := r5      ]; `\\
+                               \rtlinline`[ [ p2 => Stack[r6] = 3 ]; `\\
+                               \rtlinline`  [ goto 2              ] ]`};
+    \node[bb, right=4cm of initial block] (transf block)
+      {\veriloginline`r2 = r4 * r6;`\\
+       \veriloginline`r8 = r3 ? r10 : r8;`\\
+       \veriloginline`if (r5) stack[r12] = 32'd3;`\\
+       \veriloginline`state = 32'd2;`};
+    \node[label] at (initial block.north west) {\texttt{1}};
+    \node[label] at (transf block.north west) {\texttt{1}};
+    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+      -- node [below, font=\footnotesize] {\htl{} generation}
+      ($(initial block.east) + (3,0)$);
+  \end{tikzpicture}
+  \caption{Simple translation from an \rtlsubpar{} block into an \htl{} block.}%
+  \label{fig:hg:htl-generation}
+\end{figure}
+
+As shown in \cref{fig:hg:htl-generation}, predicated instructions are translated
+into blocking assignments of a ternary expression in Verilog.  This is the case
+for all instructions except for the store instruction, which is translated to a
+conditional statement.  This ensures that the memory is not modified
+
+\subsubsection{Implementing the \texttt{Oshrximm} Instruction}%
+\label{sec:algorithm:optimisation:oshrximm}
+
+% Mention that this optimisation is not performed sometimes (clang -03).
+
+Many of the \compcert{} instructions map well to hardware, but \texttt{Oshrximm}
+(efficient signed division by a power of two using a logical shift) is expensive
+if implemented na\"ively. The problem is that in \compcert{} it is specified as
+a signed division:
+
+\begin{equation*}
+  \texttt{Oshrximm } x\ y = \text{round\_towards\_zero}\left(\frac{x}{2^{y}}\right)
+\end{equation*}
+
+(where $x, y \in \mathbb{Z}$, $0 \leq y < 31$, and $-2^{31} \leq x < 2^{31}$)
+and instantiating divider circuits in hardware is well known to cripple
+performance. Moreover, since \vericert{} requires the result of a divide
+operation to be ready within a single clock cycle, the divide circuit needs to
+be entirely combinational. This is inefficient in terms of area, but also in
+terms of latency, because it means that the maximum frequency of the hardware
+must be reduced dramatically so that the divide circuit has enough time to
+finish.  It should therefore be implemented using a sequence of shifts.
+
+\compcert{} eventually performs a translation from this representation into
+assembly code which uses shifts to implement the division, however, the
+specification of the instruction in 3AC itself still uses division instead of
+shifts, meaning this proof of the translation cannot be reused.  In \vericert{},
+the equivalence of the representation in terms of divisions and shifts is proven
+over the integers and the specification, thereby making it simpler to prove the
+correctness of the Verilog implementation in terms of shifts.
 
 \subsection{HTL Generation Correctness Proof}%
 \label{sec:hg:htl-generation-correctness-proof}
@@ -404,6 +517,141 @@ that need to hold for the states to match.
 
 \section{BRAM Generation}%
 \label{sec:hg:bram-generation}
+
+\subsubsection{Byte- and Word-Addressable Memories}
+
+One big difference between C and Verilog is how memory is represented.  Although
+Verilog arrays use similar syntax to C arrays, they must be treated quite
+differently. To make loads and stores as efficient as possible, the RAM needs to
+be word-addressable, which means that an entire integer can be loaded or stored
+in one clock cycle.  However, the memory model that \compcert{} uses for its
+intermediate languages is
+byte-addre\-ssa\-ble~\cite{blazy05_formal_verif_memor_model_c}.  If a
+byte-addressable memory was used in the target hardware, which is closer to
+\compcert{}'s memory model, then a load and store would instead take four clock
+cycles, because a RAM can only perform one read and write per clock cycle.  It
+therefore has to be proven that the byte-addressable memory behaves in the same
+way as the word-addressable memory in hardware.  Any modifications of the bytes
+in the \compcert{} memory model also have to be shown to modify the
+word-addressable memory in the same way.  Since only integer loads and stores
+are currently supported in \vericert{}, it follows that the addresses given to
+the loads and stores will be multiples of four.  Translating from byte-addressed
+memory to word-addressed memory can then be done by dividing the address by
+four.
+
+\subsubsection{Implementation of RAM Interface}\label{sec:algorithm:optimisation:ram}
+The simplest way to implement loads and stores in \vericert{} would be to access
+the Verilog array directly from within the data-path (i.e., inside the
+always-block on lines 16--32 of Fig.~\ref{fig:accumulator_v}). This would be
+correct, but when a Verilog array is accessed at several program points, the
+synthesis tool is unlikely to detect that it can be implemented as a RAM block,
+and will resort to using lots of registers instead, ruining the circuit's area
+and performance.  To avert this, we arrange that the data-path does not access
+memory directly, but simply sets the address it wishes to access and then
+toggles the \texttt{u\_en} flag. This activates the RAM interface (lines 9--15
+of Fig.~\ref{fig:accumulator_v}) on the next falling clock edge, which performs
+the requested load or store. By factoring all the memory accesses out into a
+separate interface, we ensure that the underlying array is only accessed from a
+single program point in the Verilog code, and thus ensure that the synthesis
+tool will correctly infer a RAM block.\footnote{Interestingly, the Verilog code
+  shown for the RAM interface must not be modified, because the synthesis tool
+  will only generate a RAM when the code matches a small set of specific
+  patterns.}
+%\JW{I tweaked this slightly in an attempt to clarify; please check.} %\NR{Bring forward this sentence to help with flow.}
+
+%\JW{I think the following sentence could be cut as we've said this kind of thing a couple of times already.} Without the interface, the array would be implemented using registers, which would increase the size of the hardware considerably.
+
+Therefore, an extra compiler pass is added from HTL to HTL to extract all the
+direct accesses to the Verilog array and replace them by signals that access the
+RAM interface in a separate always-block. The translation is performed by going
+through all the instructions and replacing each load and store expression in
+turn.  Stores can simply be replaced by the necessary wires directly. Loads are
+a little more subtle: loads that use the RAM interface take two clock cycles
+where a direct load from an array takes only one, so this pass inserts an extra
+state after each load.
+
+%\JW{I've called that negedge always-block the `RAM driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
+%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a RAM, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to HTL converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from HTL to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
+
+There are two interesting parts to the inserted RAM interface.  Firstly, the
+memory updates are triggered on the negative (falling) edge of the clock, out of
+phase with the rest of the design which is triggered on the positive (rising)
+edge of the clock.  The advantage of this is that instead of loads and stores
+taking three clock cycles and two clock cycles respectively, they only take two
+clock cycles and one clock cycle instead, greatly improving their
+performance. %\JW{Is this a standard `trick' in hardware design? If so it might be nice to cite it.}\YH{Hmm, not really, because it has the downside of kind of halving your available clock period. However, RAMs normally come in both forms on the FPGA (Page 12, Fig. 2, \url{https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/ug_ram_rom.pdf})}
+% JW: thanks!
+Using the negative edge of the clock is widely supported by synthesis tools, and
+does not affect the maximum frequency of the final design.
+
+Secondly, the logic in the enable signal of the RAM (\texttt{en != u\_en}) is
+also atypical in hardware designs.  Enable signals are normally manually
+controlled and inserted into the appropriate states, by using a check like the
+following in the RAM:\@ \texttt{en == 1}.  This means that the RAM only turns on
+when the enable signal is set.  However, to make the proof simpler and avoid
+reasoning about possible side effects introduced by the RAM being enabled but
+not used, a RAM which disables itself after every use would be ideal.  One
+method for implementing this would be to insert an extra state after each load
+or store that disables the RAM, but this extra state would eliminate the speed
+advantage of the negative-edge-triggered RAM. Another method would be to
+determine the next state after each load or store and disable the RAM in that
+state, but this could quickly become complicated, especially in the case where
+the next state also contains a memory operation, and hence the disable signal
+should not be added. The method we ultimately chose was to have the RAM become
+enabled not when the enable signal is high, but when it \emph{toggles} its
+value.  This can be arranged by keeping track of the old value of the enable
+signal in \texttt{en} and comparing it to the current value \texttt{u\_en} set
+by the data-path.  When the values are different, the RAM gets enabled, and then
+\texttt{en} is set to the value of \texttt{u\_en}. This ensures that the RAM
+will always be disabled straight after it was used, without having to insert or
+modify any other states.
+
+%We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the RAM to be equal to the value that the user set.  This means that the RAM should be enabled whenever the two signals are different, and disabled otherwise.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.48\linewidth}
+    \begin{tikztimingtable}[timing/d/background/.style={fill=white}]
+      \small clk & 2L 3{6C} \\
+      \small u\_en & 2D{u\_en} 18D{$\overline{\text{u\_en}}$}\\
+      \small addr & 2U 18D{3} \\
+      \small wr\_en & 2U 18L \\
+      \small en & 8D{u\_en} 12D{$\overline{\text{u\_en}}$}\\
+      \small d\_out & 8U 12D{0xDEADBEEF} \\
+      \small r & 14U 6D{0xDEADBEEF} \\
+      \extracode
+      \node[help lines] at (2,2.25) {\tiny 1};
+      \node[help lines] at (8,2.25) {\tiny 2};
+      \node[help lines] at (14,2.25) {\tiny 3};
+      \begin{pgfonlayer}{background}
+        \vertlines[help lines]{2,8,14}
+      \end{pgfonlayer}
+    \end{tikztimingtable}
+    \caption{Timing diagram for loads. At time 1, the \texttt{u\_en} signal is toggled to enable the RAM. At time 2, \texttt{d\_out} is set to the value stored at the address in the RAM, which is finally assigned to the register \texttt{r} at time 3.}\label{fig:ram_load}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.48\linewidth}
+    \begin{tikztimingtable}[timing/d/background/.style={fill=white}]
+      \small clk & 2L 2{7C} \\
+      \small u\_en & 2D{u\_en} 14D{$\overline{\text{u\_en}}$}\\
+      \small addr & 2U 14D{3} \\
+      \small wr\_en & 2U 14H \\
+      \small d\_in & 2U 14D{0xDEADBEEF} \\
+      \small en & 9D{u\_en} 7D{$\overline{\text{u\_en}}$}\\
+      \small stack[addr] & 9U 7D{0xDEADBEEF} \\
+      \extracode
+      \node[help lines] at (2,2.25) {\tiny 1};
+      \node[help lines] at (9,2.25) {\tiny 2};
+      \begin{pgfonlayer}{background}
+        \vertlines[help lines]{2,9}
+      \end{pgfonlayer}
+    \end{tikztimingtable}
+    \caption{Timing diagram for stores. At time 1, the \texttt{u\_en} signal is toggled to enable the RAM, and the address \texttt{addr} and the data to store \texttt{d\_in} are set. On the negative edge at time 2, the data is stored into the RAM.}\label{fig:ram_store}
+  \end{subfigure}
+%  \alt{Timing diagrams of loads and stores, showing which signals are modified at which time step.}
+  \caption{Timing diagrams showing the execution of loads and stores over multiple clock cycles.}\label{fig:ram_load_store}
+\end{figure}
+
+Fig.~\ref{fig:ram_load_store} gives an example of how the RAM interface behaves when values are loaded and stored.
 
 \subsection{BRAM Model Semantics}%
 \label{sec:hg:bram-model-semantics}
