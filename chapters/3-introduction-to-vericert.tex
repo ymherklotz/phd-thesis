@@ -395,7 +395,73 @@ We discuss these proofs in upcoming sections.
 
  %In general, the generated Verilog structure has similar to that of the HTL code.
 %The key difference is that the control and datapath maps become Verilog case-statements.
-%Other additions are the initialisation of all the variables in the code to the correct bitwidths and the declaration of the inputs and outputs to the module, so that the module can be used inside a larger hardware design.
+%Other additions are the initialisation of all the variables in the code to the
+%correct bitwidths and the declaration of the inputs and outputs to the module,
+%so that the module can be used inside a larger hardware design.
+
+\section{Formulating the Correctness Theorem}
+
+The main correctness theorem is analogous to that stated in
+\compcert{}~\cite{leroy09_formal_verif_realis_compil}: for all Clight source
+programs $C$, if the translation to the target Verilog code succeeds,
+$\mathit{Safe}(C)$ holds and the target Verilog has behaviour $B$ when
+simulated, then $C$ will have the same behaviour $B$. $\mathit{Safe}(C)$ means
+all observable behaviours of $C$ are safe, which can be defined as
+$\forall B,\ C \Downarrow B \implies B \in \texttt{Safe}$.  A behaviour is in
+\texttt{Safe} if it is either a final state (in the case of convergence) or
+divergent, but it cannot `go wrong'. (This means that the source program must
+not contain undefined behaviour.) In \compcert{}, a behaviour is also associated
+with a trace of I/O events, but since external function calls are not supported
+in \vericert{}, this trace will always be empty.
+
+\begin{theorem}
+  Whenever the translation from $C$ succeeds and produces Verilog $V$, and all
+  observable behaviours of $C$ are safe, then $V$ has behaviour $B$ only if $C$
+  has behaviour $B$.
+  \begin{equation*}
+    \forall C, V, B,\quad \yhfunction{HLS} (C) = \yhconstant{OK} (V) \land \mathit{Safe}(C) \implies (V \Downarrow B \implies C \Downarrow B).
+  \end{equation*}
+\end{theorem}
+
+Why is this correctness theorem also the right one for HLS? It could be argued
+that hardware inherently runs forever and therefore does not produce a
+definitive final result.  This would mean that the \compcert{} correctness
+theorem would probably be unhelpful with proving hardware correctness, as the
+behaviour would always be divergent.  However, in practice, HLS does not
+normally produce the top-level of the design that needs to connect to other
+components, therefore needing to run forever.  Rather, HLS often produces
+smaller components that take an input, execute, and then terminate with an
+answer.  To start the execution of the hardware and to signal to the HLS
+component that the inputs are ready, the $\mathit{rst}$ signal is set and unset.
+Then, once the result is ready, the $\mathit{fin}$ signal is set and the result
+value is placed in $\mathit{ret}$.  These signals are also present in the
+semantics of execution shown in Fig.~\ref{fig:inference_module}.  The
+correctness theorem therefore also uses these signals, and the proof shows that
+once the $\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct
+according to the semantics of Verilog and Clight.  Note that the compiler is
+allowed to fail and not produce any output; the correctness theorem only applies
+when the translation succeeds.
+
+How can we prove this theorem? First, note that the theorem is a `backwards
+simulation' result (every target behaviour must also be a source behaviour),
+following the terminology used in the \compcert{}
+literature~\cite{leroy09_formal_verif_realis_compil}. The reverse direction
+(every source behaviour must also be a target behaviour) is not demanded because
+compilers are permitted to resolve any non-determinism present in their source
+programs. However, since Clight programs are all deterministic, as are the
+Verilog programs in the fragment we consider, we can actually reformulate the
+correctness theorem above as a forwards simulation result (following standard
+\compcert{} practice), which makes it easier to prove.  To prove this forward
+simulation, it suffices to prove forward simulations between each pair of
+consecutive intermediate languages, as these results can be composed to prove
+the correctness of the whole HLS tool.  The forward simulation from 3AC to HTL
+is stated in Lemma~\ref{lemma:htl} (Section~\ref{sec:proof:3ac_htl}), the
+forward simulation for the RAM insertion is shown in Lemma~\ref{lemma:htl_ram}
+(Section~\ref{sec:proof:ram_insertion}), then the forward simulation between HTL
+and Verilog is shown in Lemma~\ref{lemma:verilog}
+(Section~\ref{sec:proof:htl_verilog}), and finally, the proof that Verilog is
+deterministic is given in Lemma~\ref{lemma:deterministic}
+(Section~\ref{sec:proof:deterministic}).
 
 \section{A Formal Semantics for Verilog}\label{sec:verilog}
 

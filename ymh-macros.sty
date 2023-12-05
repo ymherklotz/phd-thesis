@@ -70,7 +70,7 @@
 
 \newif\ifCOMMENTS%
 \COMMENTStrue%
-\newcommand{\Comment}[3]{\ifCOMMENTS\textcolor{#1}{{\bf [\![#2:} #3{\bf ]\!]}}\fi}
+\newcommand{\Comment}[3]{\ifCOMMENTS\textcolor{#1}{\textbf{[\![#2:} #3\textbf{]\!]}}\fi}
 \newcommand\JW[1]{\Comment{red!75!black}{JW}{#1}}
 \newcommand\YH[1]{\Comment{green!50!blue}{YH}{#1}}
 \newcommand\JWcouldcut[1]{\Comment{red!75!black}{JW}{\st{#1}}}
@@ -619,7 +619,8 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 %    numberstyle=\tiny\color{black},
 %    numbersep=10pt,
 %    tabsize=8,
-    literate=*{:}{{\textcolor{black}{:}}}1
+%    literate=*{:}{{\textcolor{black}{:}}}1,
+    literate=*{ }{{~}}1
 }
 
 \newcommand{\veriloginline}{\lstinline[style=verilog-style]}

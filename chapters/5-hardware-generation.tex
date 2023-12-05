@@ -17,7 +17,7 @@ final hardware one will have to transform the sequential execution of operations
 within each state into parallel assignments.
 
 This chapter describes the hardware generation process, starting from \rtlpar{}
-and producing a final Verilog design.  \Cref{sec:hg:state-partitioning}
+and producing a final Verilog design.  \Cref{sec:hg:hyperblock-destruction}
 describes the first step in the transformation which separates each sequential
 block within a state in \rtlpar{} into separate states that can be addressed
 using the program counter.  This matches addressing that the state register
@@ -38,14 +38,14 @@ describes the generation of the final Verilog design, which implements the
 state-machine that was specified by HTL, in particular implementing the
 \gls{BRAM} that was specified.
 
-\section{State Partitioning}%
-\label{sec:hg:state-partitioning}
+\section{Hyperblock Destruction}%
+\label{sec:hg:hyperblock-destruction}
 
 \rtlpar{} is a control-flow graph with nodes mapping to hyperblocks.  This is
 useful for the scheduling proof, as each of these hyperblocks can be compared
 individually.  However, in the hardware itself, the individual sequential blocks
 have to be separated into different states, as within each state the
-assignments will be performed in parallel.  This first state partitioning
+assignments will be performed in parallel.  This first hyperblock destruction
 transformation separates operations that should execute in different clock
 cycles into their own locations in the control-flow graph.
 
@@ -57,7 +57,7 @@ cycles into their own locations in the control-flow graph.
     \node[bb] (initial block) {\rtlinline`[ [ [ r1 := r2 ] ]; `\\
                                \rtlinline`  [ [ r3 := r4 ];   `\\
                                \rtlinline`    [ goto 2   ] ] ]`};
-    \node[bb, right=4cm of initial block, yshift=1cm] (first transf block)
+    \node[bb, right=5cm of initial block, yshift=1cm] (first transf block)
       {\rtlinline`[ [ r1 := r2 ]; `\\
        \rtlinline`  [ goto 3   ] ]`};
     \node[bb, below=of first transf block] (second transf block)
@@ -67,27 +67,27 @@ cycles into their own locations in the control-flow graph.
     \node[label] at (first transf block.north west) {\texttt{1}};
     \node[label] at (second transf block.north west) {\texttt{3}};
     \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
-      -- node [below, font=\footnotesize] {state partitioning}
-      ($(initial block.east) + (3,0)$);
+      -- node [below, font=\footnotesize] {hyperblock destruction}
+      ($(initial block.east) + (4,0)$);
   \end{tikzpicture}
-  \caption{State partitioning transformation splitting up the hyperblock into
+  \caption{Hyperblock destruction transformation splitting up the hyperblock into
     multiple locations.}%
-  \label{fig:hg:state-partitioning}
+  \label{fig:hg:hyperblock-destruction}
 \end{figure}
 
-\Cref{fig:hg:state-partitioning} shows an example state partitioning
+\Cref{fig:hg:hyperblock-destruction} shows an example hyperblock destruction
 transformation, where a new block is added at location \diaglabel{$3$} with the
 contents of the second sequential block, and a \rtlinline`goto` instruction is
 added to the original block leading to this next block.  Fresh locations for new
 blocks are chosen by keeping track of the greatest location in the current
 function.
 
-\subsection{Proof of State Partitioning}
+\subsection{Proof of Hyperblock Destruction}
 
-The proof of state partitioning is relatively simple using a
+The proof of hyperblock destruction is relatively simple using a
 \gls{plus-forward-simulation}.  Then, for each input states, there are one or
-more output states returned by the state partitioning algorithm that should be
-equivalent to the execution of the input state when executed sequentially.
+more output states returned by the hyperblock destruction algorithm that should
+be equivalent to the execution of the input state when executed sequentially.
 
 \section{HTL Generation}%
 \label{sec:hg:htl-generation}
@@ -186,17 +186,28 @@ registers are independent from each other.
 The generation of \htl{} is relatively straight-forward, as most instructions
 have a direct translation to a Verilog implementation.  The Verilog
 implementation can therefore follow the semantics of each operation and
-implement their arithmetic behaviour directly.  The arithmetic operation is then
-assigned to the destination register using \emph{blocking} assignment, so as to
-preserve the sequential nature of the execution of the code and simplify the
-correctness proof.  One subtle aspect of the proof is the translation of
-registers and predicates into Verilog, because in \rtlsubpar{} these were
-contained in separate maps, whereas in Verilog and \htl{} they need to be
-combined into one register association map.  This is done by referring to
-register $r$ in \rtlsubpar{} as register $r' = 2r$ in Verilog.  Predicate $p$,
-on the other hand, is referred to as predicate $p' = 2p + 1$ in Verilog, thereby
-combining both name spaces into one.  A short example of a translation from
-\rtlsubpar{} to \htl{} is shown in \cref{fig:hg:htl-generation}.
+implement their arithmetic behaviour directly.  In addition to that, because of
+the hyperblock destruction translation, each block in the control-flow graph
+corresponds to a state in the final hardware.  First, the translation of
+individual instructions is described in
+\cref{sec:hg:translating-individual-arithmetic-instructions}, next the
+translation of control-flow statements is described in
+\cref{sec:hg:translating-control-flow-instructions}.
+
+\subsubsection{Translating Individual Arithmetic Instructions}%
+\label{sec:hg:translating-individual-arithmetic-instructions}
+
+The arithmetic operation is then assigned to the destination register using
+\emph{blocking} assignment, so as to preserve the sequential nature of the
+execution of the code and simplify the correctness proof.  One subtle aspect of
+the proof is the translation of registers and predicates into Verilog, because
+in \rtlsubpar{} these were contained in separate maps, whereas in Verilog and
+\htl{} they need to be combined into one register association map.  This is done
+by referring to register $r$ in \rtlsubpar{} as register $r' = 2r$ in Verilog.
+Predicate $p$, on the other hand, is referred to as predicate $p' = 2p + 1$ in
+Verilog, thereby combining both name spaces into one.  A short example of a
+translation from \rtlsubpar{} to \htl{} is shown in
+\cref{fig:hg:htl-generation}.
 
 \begin{figure}
   \centering
@@ -222,12 +233,7 @@ combining both name spaces into one.  A short example of a translation from
   \label{fig:hg:htl-generation}
 \end{figure}
 
-As shown in \cref{fig:hg:htl-generation}, predicated instructions are translated
-into blocking assignments of a ternary expression in Verilog.  This is the case
-for all instructions except for the store instruction, which is translated to a
-conditional statement.  This ensures that the memory is not modified
-
-\subsubsection{Implementing the \texttt{Oshrximm} Instruction}%
+\paragraph{Implementing the \texttt{Oshrximm} Instruction}%
 \label{sec:algorithm:optimisation:oshrximm}
 
 % Mention that this optimisation is not performed sometimes (clang -03).
@@ -258,12 +264,114 @@ the equivalence of the representation in terms of divisions and shifts is proven
 over the integers and the specification, thereby making it simpler to prove the
 correctness of the Verilog implementation in terms of shifts.
 
+\subsubsection{Translating Memory}
+
+\YH{TODO: There is a section in the BRAM section on word-addressable vs
+  byte-addressable memories, which is needed here.  Maybe it can be moved here
+  instead.}
+
+Translating memory operations and the memory itself is one of the trickiest part
+of the translation, especially from a correctness point of view, because of the
+large difference in behaviour between CompCert memories and their Verilog
+implementation.  At the stage of \htl{} generation, we use a Verilog array to
+represent the stack of the function in \rtlsubpar{}.  The verilog array is
+defined as the following:
+
+\begin{lstlisting}[style=verilog-style]
+logic [31:0] stack [STK_LEN-1:0];
+\end{lstlisting}
+
+This is essentially an array of size \veriloginline`STK_LEN` of 32-bit integers.
+This array is therefore only word-addressable.
+
+As shown in \cref{fig:hg:htl-generation}, predicated instructions are translated
+into blocking assignments of a ternary expression in Verilog.  This is the case
+for all instructions except for the store instruction, which is translated to a
+conditional statement.  This ensures that the memory is only modified when the
+predicate is set.  If that were not the case, and the memory was translated
+using a ternary statement:
+
+\begin{center}
+  \begin{tikzpicture}[>=Latex,shorten >=1pt]
+    \node [] (rtlstack) {\rtlinline`p2 => Stack[r6] = 3`}; \node [right=4cm of
+    rtlstack] (verilogstack)
+    {\veriloginline`stack[r12] = r5 ? 32'd3 : stack[r12]`};
+    \draw[->,very thick] ($(rtlstack.east) + (0.5,0)$) --
+    ($(verilogstack.west) - (0.5,0)$);
+  \end{tikzpicture}
+\end{center}
+
+Then, in the case where the predicate \rtlinline`p2` is $\lfalse$, that would
+mean that the statement in \rtlsubpar{} would not be executed.  However, in the
+generated Verilog, one would have to execute the statement
+\veriloginline`stack[r12]`, which might not be possible as the register
+\rtlinline`r6` in \rtlsubpar{}, and the corresponding register
+\veriloginline`r12` in Verilog could be out-of-range of the
+\veriloginline`stack` array.  This would therefore mean that there is no way to
+execute the Verilog in that case, as one cannot read from the stack when it is
+out-of-range.  Gating it fully with an if-statement ensures that the Verilog
+statement can always be executed, assuming that the \rtlsubpar{} instruction can
+also be executed.
+
+\subsubsection{Translating Control-Flow Instructions}%
+\label{sec:hg:translating-control-flow-instructions}
+
+Most control-flow instructions also map nicely to hardware, however, the way
+predicated control-flow instructions are handled differs a bit between
+\rtlsubpar{} and \htl{}.  The main problem is that when execution in a
+\rtlsubpar{} block reaches a control-flow instruction that is executed, then it
+will exit the block immediately.  This is not possible in the \htl{} block,
+because the next state is determined based on the value of the
+\veriloginline`state` register at the start of the next clock cycle.  Na\"ively
+translating the control-flow instructions into assignments to the
+\veriloginline`state` register would produce incorrect state transitions in
+\htl{}, because a later control-flow instruction could overwrite a previous
+instruction.  As a remedy, we keep track of the current negated exit condition,
+which accumulates throughout the translation of a block.
+\Cref{fig:hg:htl-generation} demonstrates this on a chain of control-flow
+operations.  First, the condition of the ternary statement in Verilog
+corresponds to the predicate in the block, however, these quickly diverge.  For
+the next control-flow instruction, the condition of the ternary statement is set
+to be the the translated predicate associated with \rtlinline`p2`, anded
+together with the current negated exit condition which is \veriloginline`~r3`.
+The current negated exit condition is then updated to be
+\veriloginline`~r3 & ~r5`, which is then the ternary expression condition
+assigned to the last \veriloginline`state` update.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=Latex,shorten >=1pt,
+    label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
+    bb/.style={align=left, draw=white, fill=black!5}]
+    \node[bb] (initial block) {\rtlinline`[ [ p1 => goto 3;    `\\
+                               \rtlinline`    p2 => goto 4;    `\\
+                               \rtlinline`    goto 5;`\\
+                               \rtlinline`    r1 <= r2 * r3 ] ]`};
+    \node[bb, right=4cm of initial block] (transf block)
+      {\veriloginline`state =  r3       ? 32'd3 : state;`\\
+       \veriloginline`state = ~r3 & r5  ? 32'd4 : state;`\\
+       \veriloginline`state = ~r3 & ~r5 ? 32'd4 : state;`\\
+       \veriloginline`r2    = ~r3 & ~r5 ? r4 * r6 : r2; `};
+    \node[label] at (initial block.north west) {\texttt{1}};
+    \node[label] at (transf block.north west) {\texttt{1}};
+    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+      -- node [below, font=\footnotesize] {\htl{} generation}
+      ($(initial block.east) + (3,0)$);
+  \end{tikzpicture}
+  \caption{Simple translation from an \rtlsubpar{} block into an \htl{} block.}%
+  \label{fig:hg:htl-generation}
+\end{figure}
+
+To avoid all side-effects after a gated control-flow instruction, regular
+instructions will have to be gated by the same negated control-flow predicate,
+but do not themselves modify the value of the negated control-flow predicate for
+any following instructions.
+
 \subsection{HTL Generation Correctness Proof}%
 \label{sec:hg:htl-generation-correctness-proof}
 
-%\section{Correctness Proof}\label{sec:proof}
-
-%\JW{That's quite a hard-to-parse section heading; I'd go for something simpler like `Correctness Proof' or `Proving Correctness'}
+\YH{TODO: Move this section earlier, or maybe remove it completely it I have
+  already stated most of what is there.}
 
 The proof of correctness of the Verilog back end is quite different from the
 usual proofs performed in CompCert, mainly because of the difference in the
@@ -295,70 +403,6 @@ infeasible, as the differences in the semantics are too large.  Instead, HTL,
 which was introduced in Section~\ref{sec:design}, bridges the gap in the
 semantics between the two languages.  HTL still consists of maps, like many of
 the other CompCert languages, but each state corresponds to a Verilog statement.
-
-\subsection{Formulating the Correctness Theorem}
-
-The main correctness theorem is analogous to that stated in
-\compcert{}~\cite{leroy09_formal_verif_realis_compil}: for all Clight source
-programs $C$, if the translation to the target Verilog code succeeds,
-$\mathit{Safe}(C)$ holds and the target Verilog has behaviour $B$ when
-simulated, then $C$ will have the same behaviour $B$. $\mathit{Safe}(C)$ means
-all observable behaviours of $C$ are safe, which can be defined as
-$\forall B,\ C \Downarrow B \implies B \in \texttt{Safe}$.  A behaviour is in
-\texttt{Safe} if it is either a final state (in the case of convergence) or
-divergent, but it cannot `go wrong'. (This means that the source program must
-not contain undefined behaviour.) In \compcert{}, a behaviour is also associated
-with a trace of I/O events, but since external function calls are not supported
-in \vericert{}, this trace will always be empty.
-
-\begin{theorem}
-  Whenever the translation from $C$ succeeds and produces Verilog $V$, and all
-  observable behaviours of $C$ are safe, then $V$ has behaviour $B$ only if $C$
-  has behaviour $B$.
-  \begin{equation*}
-    \forall C, V, B,\quad \yhfunction{HLS} (C) = \yhconstant{OK} (V) \land \mathit{Safe}(C) \implies (V \Downarrow B \implies C \Downarrow B).
-  \end{equation*}
-\end{theorem}
-
-Why is this correctness theorem also the right one for HLS? It could be argued
-that hardware inherently runs forever and therefore does not produce a
-definitive final result.  This would mean that the \compcert{} correctness
-theorem would probably be unhelpful with proving hardware correctness, as the
-behaviour would always be divergent.  However, in practice, HLS does not
-normally produce the top-level of the design that needs to connect to other
-components, therefore needing to run forever.  Rather, HLS often produces
-smaller components that take an input, execute, and then terminate with an
-answer.  To start the execution of the hardware and to signal to the HLS
-component that the inputs are ready, the $\mathit{rst}$ signal is set and unset.
-Then, once the result is ready, the $\mathit{fin}$ signal is set and the result
-value is placed in $\mathit{ret}$.  These signals are also present in the
-semantics of execution shown in Fig.~\ref{fig:inference_module}.  The
-correctness theorem therefore also uses these signals, and the proof shows that
-once the $\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct
-according to the semantics of Verilog and Clight.  Note that the compiler is
-allowed to fail and not produce any output; the correctness theorem only applies
-when the translation succeeds.
-
-How can we prove this theorem? First, note that the theorem is a `backwards
-simulation' result (every target behaviour must also be a source behaviour),
-following the terminology used in the \compcert{}
-literature~\cite{leroy09_formal_verif_realis_compil}. The reverse direction
-(every source behaviour must also be a target behaviour) is not demanded because
-compilers are permitted to resolve any non-determinism present in their source
-programs. However, since Clight programs are all deterministic, as are the
-Verilog programs in the fragment we consider, we can actually reformulate the
-correctness theorem above as a forwards simulation result (following standard
-\compcert{} practice), which makes it easier to prove.  To prove this forward
-simulation, it suffices to prove forward simulations between each pair of
-consecutive intermediate languages, as these results can be composed to prove
-the correctness of the whole HLS tool.  The forward simulation from 3AC to HTL
-is stated in Lemma~\ref{lemma:htl} (Section~\ref{sec:proof:3ac_htl}), the
-forward simulation for the RAM insertion is shown in Lemma~\ref{lemma:htl_ram}
-(Section~\ref{sec:proof:ram_insertion}), then the forward simulation between HTL
-and Verilog is shown in Lemma~\ref{lemma:verilog}
-(Section~\ref{sec:proof:htl_verilog}), and finally, the proof that Verilog is
-deterministic is given in Lemma~\ref{lemma:deterministic}
-(Section~\ref{sec:proof:deterministic}).
 
 \subsection{Forward Simulation from 3AC to HTL}\label{sec:proof:3ac_htl}
 
