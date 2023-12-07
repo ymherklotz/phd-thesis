@@ -26,7 +26,7 @@ describes the generation of HTL, an intermediate language representing the
 execution of a state machine.  This performs the main transformation from a
 software representation of the program into hardware, making the execution of
 the program more explicit in the design itself instead of as part of the
-semantics.  \Cref{sec:hg:bram-generation} then describes the first
+semantics.  \Cref{sec:hg:bram-insertion} then describes the first
 hardware-specific optimisation on the state-machine representation of the
 hardware by adding a specification of a \gls{BRAM} to the HTL semantics and
 replacing any explicit reads and writes to the array representing memory by
@@ -160,7 +160,7 @@ counter from \rtlsubpar{} and other intermediate instruction languages.  We then
 also have $\mathit{stack}$ register and an associated $\mathit{stack\_size}$,
 which is a Verilog array storing the contents of the stack.  Initially, this
 array will be accessed directly by operations in the data path, however,
-\cref{sec:hg:bram-generation} describes how these direct accesses to the array
+\cref{sec:hg:bram-insertion} describes how these direct accesses to the array
 are instead turned into accesses to a \gls{BRAM}.
 
 We then have a list of input and output control signals, which are used to
@@ -173,7 +173,7 @@ This input is not yet used by the \htl{} design, as execution is still performed
 using state transitions in the semantics, however, a register is already
 allocated for the clock which will be needed by the final Verilog design.  The
 module then also contains a $\mathit{ram}$ which will be further described in
-\cref{sec:hg:bram-generation}, because in the first translation pass it is
+\cref{sec:hg:bram-insertion}, because in the first translation pass it is
 initialised to \cnone.
 
 Finally, there are three \emph{well-formedness} criteria which are used to
@@ -265,10 +265,7 @@ over the integers and the specification, thereby making it simpler to prove the
 correctness of the Verilog implementation in terms of shifts.
 
 \subsubsection{Translating Memory}
-
-\YH{TODO: There is a section in the BRAM section on word-addressable vs
-  byte-addressable memories, which is needed here.  Maybe it can be moved here
-  instead.}
+\label{sec:hg:translating-memory}
 
 Translating memory operations and the memory itself is one of the trickiest part
 of the translation, especially from a correctness point of view, because of the
@@ -277,12 +274,31 @@ implementation.  At the stage of \htl{} generation, we use a Verilog array to
 represent the stack of the function in \rtlsubpar{}.  The verilog array is
 defined as the following:
 
-\begin{lstlisting}[style=verilog-style]
+\begin{minted}{systemverilog}
 logic [31:0] stack [STK_LEN-1:0];
-\end{lstlisting}
+\end{minted}
 
 This is essentially an array of size \veriloginline`STK_LEN` of 32-bit integers.
-This array is therefore only word-addressable.
+This array is therefore word-addressable.  One big difference between C and
+Verilog is how memory is represented.  Although Verilog arrays use similar
+syntax to C arrays, they must be treated quite differently.  Eventually, this
+array will have to be replaced by an actual RAM, which only has a limited set of
+read and write ports (one of each in our case).  To make loads and stores of
+words as efficient as possible, the RAM needs to be word-addressable, which
+means that an entire integer can be loaded or stored in one clock cycle.
+However, the memory model that \compcert{} uses for its intermediate languages
+is byte\?addressable~\cite{blazy05_formal_verif_memor_model_c}.  If a
+byte\?addressable memory was used in the target hardware, which is closer to
+\compcert{}'s memory model, then a load and store would instead take four clock
+cycles, the RAM we implement in hardware can only perform one read and write per
+clock cycle.  It therefore has to be proven that the byte-addressable memory
+behaves in the same way as the word-addressable memory in hardware.  Any
+modifications of the bytes in the \compcert{} memory model also have to be shown
+to modify the word-addressable memory in the same way.  Since only integer loads
+and stores are currently supported in \vericert{}, it follows that the addresses
+given to the loads and stores will be multiples of four.  Translating from
+byte-addressed memory to word-addressed memory can then be done by dividing the
+address by four.
 
 As shown in \cref{fig:hg:htl-generation}, predicated instructions are translated
 into blocking assignments of a ternary expression in Verilog.  This is the case
@@ -301,17 +317,17 @@ using a ternary statement:
   \end{tikzpicture}
 \end{center}
 
-Then, in the case where the predicate \rtlinline`p2` is $\lfalse$, that would
-mean that the statement in \rtlsubpar{} would not be executed.  However, in the
-generated Verilog, one would have to execute the statement
+\noindent Then, in the case where the predicate \rtlinline`p2` is $\lfalse$,
+that would mean that the statement in \rtlsubpar{} would not be executed.
+However, in the generated Verilog, one would have to execute the statement
 \veriloginline`stack[r12]`, which might not be possible as the register
 \rtlinline`r6` in \rtlsubpar{}, and the corresponding register
 \veriloginline`r12` in Verilog could be out-of-range of the
 \veriloginline`stack` array.  This would therefore mean that there is no way to
 execute the Verilog in that case, as one cannot read from the stack when it is
-out-of-range.  Gating it fully with an if-statement ensures that the Verilog
-statement can always be executed, assuming that the \rtlsubpar{} instruction can
-also be executed.
+out-of-range.  Gating it fully with an if-statement, as shown in
+\cref{fig:hg:htl-generation}, ensures that the Verilog statement can always be
+executed, assuming that the \rtlsubpar{} instruction can also be executed.
 
 \subsubsection{Translating Control-Flow Instructions}%
 \label{sec:hg:translating-control-flow-instructions}
@@ -367,56 +383,61 @@ instructions will have to be gated by the same negated control-flow predicate,
 but do not themselves modify the value of the negated control-flow predicate for
 any following instructions.
 
-\subsection{HTL Generation Correctness Proof}%
+\YH{TODO: Describe return instruction translation.}
+
+\subsubsection{Translating the Top-Level Function}
+
+Each \rtlsubpar{} function is translated separately, and within each function,
+each block is translated to a Verilog statement.  In addition to that, new
+registers are created for the various control signals and registers in \htl{},
+ensuring that they follow the ordering present in the \htl{} specification.  In
+addition to that, the top-level translation also needs to ensure that it is
+compiling a translation unit with the \texttt{main} function, as linking with
+other translation units is not supported by the Verilog semantics.
+
+\subsection{\htl{} Generation Correctness Proof}%
 \label{sec:hg:htl-generation-correctness-proof}
 
 \YH{TODO: Move this section earlier, or maybe remove it completely it I have
   already stated most of what is there.}
 
-The proof of correctness of the Verilog back end is quite different from the
-usual proofs performed in CompCert, mainly because of the difference in the
-memory model and semantic differences between Verilog and CompCert's existing
-intermediate languages.
+There is quite a large mismatch between the \htl{} semantics and the
+\rtlsubpar{} semantics.  This is mainly due to the following two points:
 
 \begin{itemize}
-\item As already mentioned in Section~\ref{sec:verilog:memory}, because the
-  memory model in our Verilog semantics is finite and concrete, but the CompCert
-  memory model is more abstract and infinite with additional bounds, the
-  equivalence of these models needs to be proven.  Moreover, our memory is
+\item As already mentioned in Section~\ref{sec:hg:translating-memory}, because
+  the memory model in our \htl{} semantics is finite and concrete, but the
+  CompCert memory model is more abstract and infinite with additional bounds,
+  the equivalence of these models needs to be proven.  Moreover, our memory is
   word-addressed for efficiency reasons, whereas CompCert's memory is
   byte-addressed.
 
-\item Second, the Verilog semantics operates quite differently to the usual
+\item Second, the \htl{} semantics operates quite differently to the usual
   intermediate languages in CompCert.  All the CompCert intermediate languages
   use a map from control-flow nodes to instructions.  An instruction can
   therefore be selected using an abstract program pointer. Meanwhile, in the
-  Verilog semantics the whole design is executed at every clock cycle, because
+  \htl{} semantics the whole design is executed at every clock cycle, because
   hardware is inherently parallel. The program pointer is part of the design as
-  well, not just part of an abstract state. This makes the semantics of Verilog
+  well, not just part of an abstract state. This makes the semantics of \htl{}
   simpler, but comparing it to the semantics of 3AC becomes more challenging, as
   one has to map the abstract notion of the state to concrete values in
   registers.
 \end{itemize}
 
-Together, these differences mean that translating 3AC directly to Verilog is
-infeasible, as the differences in the semantics are too large.  Instead, HTL,
-which was introduced in Section~\ref{sec:design}, bridges the gap in the
-semantics between the two languages.  HTL still consists of maps, like many of
-the other CompCert languages, but each state corresponds to a Verilog statement.
+%\subsection{Forward Simulation from 3AC to \htl{}}\label{sec:proof:3ac_htl}
 
-\subsection{Forward Simulation from 3AC to HTL}\label{sec:proof:3ac_htl}
+As \htl{} is quite far removed from \rtlsubpar{}, this first translation is the
+most involved and therefore requires a larger proof, because the translation
+from \rtlsubpar{} instructions to Verilog statements needs to be proven correct
+in this step.  In addition to that, the semantics of \htl{} are also quite
+different to the \rtlsubpar{} semantics. Instead of defining small-step
+semantics for each construct in Verilog, the semantics are defined over one
+clock cycle and mirror the semantics defined for Verilog.  Lemma~\ref{lemma:htl}
+shows the result that needs to be proven in this subsection.
 
-As HTL is quite far removed from 3AC, this first translation is the most
-involved and therefore requires a larger proof, because the translation from 3AC
-instructions to Verilog statements needs to be proven correct in this step.  In
-addition to that, the semantics of HTL are also quite different to the 3AC
-semantics. Instead of defining small-step semantics for each construct in
-Verilog, the semantics are defined over one clock cycle and mirror the semantics
-defined for Verilog.  Lemma~\ref{lemma:htl} shows the result that needs to be
-proven in this subsection.
-
-\begin{lemma}[Forward simulation from 3AC to HTL]\label{lemma:htl}
-  Writing \texttt{tr\_htl} for the translation from 3AC to HTL, we have:
+\begin{lemma}[Forward simulation from \rtlsubpar{} to \htl{}]\label{lemma:htl}
+  Writing \texttt{tr\_htl} for the translation from \rtlsubpar{} to \htl{}, we
+  have:
   \begin{equation*}
     \forall c, h, B \in \texttt{Safe},\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK} (h) \land c \Downarrow B \implies h \Downarrow B.
   \end{equation*}
@@ -431,78 +452,82 @@ proven in this subsection.
   keeping with standard \compcert{} practice.
 
   % The forward simulation is then proven by showing that the initial states and
-  % final states between the 3AC semantics and HTL semantics match, and then
+  % final states between the \rtlsubpar{} semantics and \htl{} semantics match, and then
   % showing that the simulation diagram in Lemma~\ref{lemma:simulation_diagram}
   % holds.
 \end{proof}
 
-\subsubsection{From Implementation to Specification}\label{sec:proof:3ac_htl:specification}
+%\subsubsection{From Implementation to Specification}\label{sec:proof:3ac_htl:specification}
+%
+%%To simplify the proof, instead of using the translation algorithm as an
+%%assumption, as was done in Lemma~\ref{lemma:htl}, a specification of the
+%%translation can be constructed instead which contains all the properties that
+%%are needed to prove the correctness.  For example, for the translation from \rtlsubpar{}
+%%to \htl{},
+%
+%The specification for the translation of \rtlsubpar{} instructions into \htl{} data-path and
+%control logic can be defined by the following predicate:
+%
+%\begin{equation*}
+%  \yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ i\ \mathit{data}
+%\end{equation*}
+%
+%\noindent Here, the $\mathit{data}$ parameter is the statement that the current
+%\rtlsubpar{} instruction $i$ should translate to. The other parameters are the
+%special registers defined in Section~\ref{sec:verilog:integrating}. An example
+%of a rule describing the translation of an arithmetic/logical operation from
+%\rtlsubpar{} is the following:
+%
+%\begin{equation*}
+%  \inferrule[Iop]{\yhfunction{tr\_op}\ \mathit{op}\ \vec{a} = \yhconstant{OK}\ e}{\yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ (\yhconstant{Iop}\ \mathit{op}\ \vec{a}\ d\ n)\ (d\ \yhkeyword{<=}\ e)\ (\sigma\ \yhkeyword{<=}\ n)}
+%\end{equation*}
+%
+%\noindent Assuming that the translation of the operator $\mathit{op}$ with
+%operands $\vec{a}$ is successful and results in expression $e$, the rule
+%describes how the destination register $d$ is updated to $e$ via a non-blocking
+%assignment in the data path, and how the program counter $\sigma$ is updated to
+%point to the next CFG node $n$ via another non-blocking assignment in the
+%control logic.
+%
+%In the following lemma, $\yhfunction{spec\_htl}$ is the top-level specification
+%predicate, which is built using $\yhfunction{spec\_instr}$ at the level of
+%instructions.
+%
+%\begin{lemma}\label{lemma:specification}
+%  If a \rtlsubpar{} program $c$ is translated correctly to an \htl{} program $h$, then the
+%  specification of the translation holds.
+%  \begin{equation*}
+%    \forall c, h,\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK}(h) \implies \yhfunction{spec\_htl}\ c\ h.
+%  \end{equation*}
+%\end{lemma}
+%
+%%\begin{proof}
+%%  Follows from the definition of the specification and therefore should match
+%%  the implementation of the algorithm.
+%%\end{proof}
 
-%To simplify the proof, instead of using the translation algorithm as an
-%assumption, as was done in Lemma~\ref{lemma:htl}, a specification of the
-%translation can be constructed instead which contains all the properties that
-%are needed to prove the correctness.  For example, for the translation from 3AC
-%to HTL,
+\subsubsection{Forward Simulation Proof of Translation}
 
-The specification for the translation of 3AC instructions into HTL data-path and
-control logic can be defined by the following predicate:
-
-\begin{equation*}
-  \yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ i\ \mathit{data}\ \mathit{control}
-\end{equation*}
-
-\noindent Here, the $\mathit{control}$ and $\mathit{data}$ parameters are the
-statements that the current 3AC instruction $i$ should translate to. The other
-parameters are the special registers defined in
-Section~\ref{sec:verilog:integrating}. An example of a rule describing the
-translation of an arithmetic/logical operation from 3AC is the following:
-
-\begin{equation*}
-  \inferrule[Iop]{\yhfunction{tr\_op}\ \mathit{op}\ \vec{a} = \yhconstant{OK}\ e}{\yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ (\yhconstant{Iop}\ \mathit{op}\ \vec{a}\ d\ n)\ (d\ \yhkeyword{<=}\ e)\ (\sigma\ \yhkeyword{<=}\ n)}
-\end{equation*}
-
-\noindent Assuming that the translation of the operator $\mathit{op}$ with
-operands $\vec{a}$ is successful and results in expression $e$, the rule
-describes how the destination register $d$ is updated to $e$ via a non-blocking
-assignment in the data path, and how the program counter $\sigma$ is updated to
-point to the next CFG node $n$ via another non-blocking assignment in the
-control logic.
-
-In the following lemma, $\yhfunction{spec\_htl}$ is the top-level specification
-predicate, which is built using $\yhfunction{spec\_instr}$ at the level of
-instructions.
-
-\begin{lemma}\label{lemma:specification}
-  If a 3AC program $c$ is translated correctly to an HTL program $h$, then the
-  specification of the translation holds.
-  \begin{equation*}
-    \forall c, h,\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK}(h) \implies \yhfunction{spec\_htl}\ c\ h.
-  \end{equation*}
-\end{lemma}
-
-%\begin{proof}
-%  Follows from the definition of the specification and therefore should match
-%  the implementation of the algorithm.
-%\end{proof}
-
-\subsubsection{From Specification to Simulation}
-
-To prove that the specification predicate implies the desired forward
-simulation, we must first define a relation that matches each 3AC state to an
-equivalent HTL state.  This relation also captures the assumptions made about
-the 3AC code that we receive from
-\compcert{}. % so that these assumptions can be used to prove the translations correct.
-These assumptions then have to be proven to always hold assuming the HTL code
-was created by the translation algorithm.  Some of the assumptions that need to
-be made about the 3AC and HTL code for a pair of states to match are:
+To prove that the translation described in \cref{sec:hg:htl-generation} results
+in the desired forward simulation, we must first define a relation that matches
+each \rtlsubpar{} state to an equivalent \htl{} state.  This relation also
+captures the assumptions made about the \rtlsubpar{} code that we receive from
+\compcert{}.  These assumptions then have to be proven to always hold assuming
+the \htl{} code was created by the translation algorithm.  Some of the
+assumptions that need to be made about the \rtlsubpar{} and \htl{} code for a
+pair of states to match are:
 
 \begin{itemize}
-\item The 3AC register file $R$ needs to be `less defined' than the HTL register
+\item The \rtlsubpar{} register file $R$ needs to be `less defined' than the \htl{} register
   map $\Gamma_{r}$ (written $R \le \Gamma_{r}$). This means that all entries
   should be equal to each other, unless a value in $R$ is undefined, in which
   case any value can match it.
+\item There is a single allocation that was performed in \rtlsubpar{}, with the
+  size of the allocation being equal to the stack size of the \texttt{main}
+  function, which was performed when the \texttt{main} function was initially
+  called; that is: $|M| \le \mathtt{main}.\mathit{stacksize}$.
 \item The RAM values represented by each Verilog array in $\Gamma_{a}$ need to
-  match the 3AC function's stack contents, which are part of the memory $M$;
+  match the \rtlsubpar{} function's stack contents, which are part of the memory $M$;
   that is: $M \le \Gamma_{a}$.
 \item The state is well formed, which means that the value of the state register
   matches the current value of the program counter; that is:
@@ -518,36 +543,46 @@ the current state to be valid:
   result in undefined behaviour (and hence we do not need to handle them),
 \item that $\mathit{rst}$ and $\mathit{fin}$ are not modified and therefore stay
   at a constant 0 throughout execution, and
-\item that the stack frames match.
+\item that the stack frames match.  As no function calls are performed, as they
+  are all inlined, the stack frames will always be empty.
 \end{itemize}
 
-We can now define the simulation diagram for the translation. The 3AC state can
+We can now define the simulation diagram for the translation. The \rtlsubpar{} state can
 be represented by the tuple $(R,M,\mathit{pc})$, which captures the register
-file, memory, and program counter. The HTL state can be represented by the pair
+file, memory, and program counter. The \htl{} state can be represented by the pair
 $(\Gamma_{r}, \Gamma_{a})$, which captures the states of all the registers and
 arrays in the module.  Finally, $\mathcal{I}$ stands for the other invariants
 that need to hold for the states to match.
 
 \begin{lemma}\label{lemma:simulation_diagram}
-  Given the 3AC state $(R,M,\mathit{pc})$ and the matching HTL state
-  $(\Gamma_{r}, \Gamma_{a})$, assuming one step in the 3AC semantics produces
-  state $(R',M',\mathit{pc}')$, there exist one or more steps in the HTL
+  Given the \rtlsubpar{} state $(R,M,\mathit{pc})$ and the matching \htl{} state
+  $(\Gamma_{r}, \Gamma_{a})$, assuming one step in the \rtlsubpar{} semantics produces
+  state $(R',M',\mathit{pc}')$, there exist one or more steps in the \htl{}
   semantics that result in matching states $(\Gamma_{r}', \Gamma_{a}')$.  This
   is all under the assumption that the specification $\yhfunction{spec\_{htl}}$
   holds for the translation.
+
+  \YH{TODO: Maybe find a better way to describe that the memory was only
+    allocated once, as it is a slightly different condition to the one that
+    states that the contents of both memories are the same.  It touches more on
+    the permissions of the CompCert memory and showing that they agree with the
+    stack bounds.}
 
   \begin{center}
     \begin{tikzpicture}
       \begin{scope}
         \node[circle] (s1) at (0,2) {$R, M, \mathit{pc}$};
-        \node[circle] (r1) at (10,2) {$\Gamma_{r}, \Gamma_{a}$};
+        \node[circle] (r1) at (14,2) {$\Gamma_{r}, \Gamma_{a}$};
         \node[circle] (s2) at (0,0) {$R', M', \mathit{pc}'$};
-        \node[circle] (r2) at (10,0) {$\Gamma_{r}', \Gamma_{a}'$};
+        \node[circle] (r2) at (14,0) {$\Gamma_{r}', \Gamma_{a}'$};
         %\node at (6.8,0.75) {+};
-        \draw (s1) -- node[above] {$\mathcal{I} \land (R \le \Gamma_{r}) \land (M \le \Gamma_{a}) \land (\mathit{pc} = \Gamma_{r}[\sigma])$} ++ (r1);
+        \draw (s1) -- node[above] {$\mathcal{I} \land (R \le \Gamma_{r}) \land
+          (M \le \Gamma_{a}) \land (\mathit{pc} = \Gamma_{r}[\sigma]) \land |M| \le \mathtt{main}.\mathit{stacksize}$} ++ (r1);
         \draw[-{Latex}] ($(s1.south) + (0,0.4)$) -- ($(s2.north) - (0,0.4)$);
         \draw[-{Latex},dashed] ($(r1.south) + (0,0.2)$) to[auto, pos=0.7] node {+} ($(r2.north) - (0,0.2)$);
-        \draw[dashed] (s2) -- node[above] {$\mathcal{I} \land (R' \le \Gamma_{r}') \land (M' \le \Gamma_{a}') \land (\mathit{pc}' = \Gamma_{r}'[\sigma])$} ++ (r2);
+        \draw[dashed] (s2) -- node[above] {$\mathcal{I} \land (R' \le
+          \Gamma_{r}') \land (M' \le \Gamma_{a}') \land (\mathit{pc}' =
+          \Gamma_{r}'[\sigma]) \land |M'| \le \mathtt{main}.\mathit{stacksize}$} ++ (r2);
       \end{scope}
     \end{tikzpicture}
   \end{center}
@@ -555,42 +590,23 @@ that need to hold for the states to match.
 
 \begin{proof}[Proof sketch]
   This simulation diagram is proven by induction over the operational semantics
-  of 3AC, which allows us to find one or more steps in the HTL semantics that
+  of \rtlsubpar{}, which allows us to find one or more steps in the \htl{} semantics that
   will produce the same final matching state.
 \end{proof}
 
-\section{BRAM Generation}%
-\label{sec:hg:bram-generation}
+\section{BRAM insertion}%
+\label{sec:hg:bram-insertion}
 
-\subsubsection{Byte- and Word-Addressable Memories}
-
-One big difference between C and Verilog is how memory is represented.  Although
-Verilog arrays use similar syntax to C arrays, they must be treated quite
-differently. To make loads and stores as efficient as possible, the RAM needs to
-be word-addressable, which means that an entire integer can be loaded or stored
-in one clock cycle.  However, the memory model that \compcert{} uses for its
-intermediate languages is
-byte-addre\-ssa\-ble~\cite{blazy05_formal_verif_memor_model_c}.  If a
-byte-addressable memory was used in the target hardware, which is closer to
-\compcert{}'s memory model, then a load and store would instead take four clock
-cycles, because a RAM can only perform one read and write per clock cycle.  It
-therefore has to be proven that the byte-addressable memory behaves in the same
-way as the word-addressable memory in hardware.  Any modifications of the bytes
-in the \compcert{} memory model also have to be shown to modify the
-word-addressable memory in the same way.  Since only integer loads and stores
-are currently supported in \vericert{}, it follows that the addresses given to
-the loads and stores will be multiples of four.  Translating from byte-addressed
-memory to word-addressed memory can then be done by dividing the address by
-four.
-
-\subsubsection{Implementation of RAM Interface}\label{sec:algorithm:optimisation:ram}
 The simplest way to implement loads and stores in \vericert{} would be to access
-the Verilog array directly from within the data-path (i.e., inside the
-always-block on lines 16--32 of Fig.~\ref{fig:accumulator_v}). This would be
-correct, but when a Verilog array is accessed at several program points, the
-synthesis tool is unlikely to detect that it can be implemented as a RAM block,
-and will resort to using lots of registers instead, ruining the circuit's area
-and performance.  To avert this, we arrange that the data-path does not access
+the Verilog array directly from within the data path as is currently the case
+after the \htl{} generation. This would be correct, but when a Verilog array is
+accessed at several program points, the synthesis tool is unlikely to detect
+that it can be implemented as an RAM, and will resort to using lots of registers
+instead, ruining the circuit's area and performance.  This is because reads and
+writes to a RAM need to follow a certain pattern to be suitable to be replaced
+by RAM reads and writes.  For example, the synthesis tool will have to check
+that the array is only written to once per clock cycle, and is only read from
+once as well.  To avert this, we arrange that the data-path does not access
 memory directly, but simply sets the address it wishes to access and then
 toggles the \texttt{u\_en} flag. This activates the RAM interface (lines 9--15
 of Fig.~\ref{fig:accumulator_v}) on the next falling clock edge, which performs
@@ -601,18 +617,20 @@ tool will correctly infer a RAM block.\footnote{Interestingly, the Verilog code
   shown for the RAM interface must not be modified, because the synthesis tool
   will only generate a RAM when the code matches a small set of specific
   patterns.}
-%\JW{I tweaked this slightly in an attempt to clarify; please check.} %\NR{Bring forward this sentence to help with flow.}
 
-%\JW{I think the following sentence could be cut as we've said this kind of thing a couple of times already.} Without the interface, the array would be implemented using registers, which would increase the size of the hardware considerably.
-
-Therefore, an extra compiler pass is added from HTL to HTL to extract all the
-direct accesses to the Verilog array and replace them by signals that access the
-RAM interface in a separate always-block. The translation is performed by going
-through all the instructions and replacing each load and store expression in
-turn.  Stores can simply be replaced by the necessary wires directly. Loads are
-a little more subtle: loads that use the RAM interface take two clock cycles
-where a direct load from an array takes only one, so this pass inserts an extra
-state after each load.
+This transformation pass therefore translates direct accesses to the Verilog
+array in \htl{} and replaces them by signals that access the RAM interface in a
+separate always-block. The translation is performed by going through all the
+instructions and replacing each load and store expression in turn.  Stores can
+be replaced by the necessary wires to the RAM directly. Loads are a little more
+subtle: loads that use the RAM interface take two clock cycles where a direct
+load from an array takes only one, so this pass inserts an extra state after
+each load.  The scheduling algorithm described in
+\cref{sec:hs:scheduling-algorithm} can already take this into account as well,
+and can ensure that the next clock cycle after a load does not perform a load or
+a store, however, some additional proofs would have to be added to this
+transformation pass to check that this is actually the case, and that the load
+will proceed as expected.
 
 %\JW{I've called that negedge always-block the `RAM driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
 %Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a RAM, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to HTL converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from HTL to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
@@ -622,11 +640,22 @@ memory updates are triggered on the negative (falling) edge of the clock, out of
 phase with the rest of the design which is triggered on the positive (rising)
 edge of the clock.  The advantage of this is that instead of loads and stores
 taking three clock cycles and two clock cycles respectively, they only take two
-clock cycles and one clock cycle instead, greatly improving their
-performance. %\JW{Is this a standard `trick' in hardware design? If so it might be nice to cite it.}\YH{Hmm, not really, because it has the downside of kind of halving your available clock period. However, RAMs normally come in both forms on the FPGA (Page 12, Fig. 2, \url{https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/ug_ram_rom.pdf})}
+clock cycles and one clock cycle instead, greatly improving their performance.
+Ideally, this translation would take advantage of the scheduler, which can
+already ensure that the clock cycle after a load remains free to wait for the
+data from the RAM, however, this would require additional checking by this
+transformation to double check that the read result is not used until it is
+ready.
+% \JW{Is this a standard `trick' in hardware design? If so it might be nice to
+% cite it.}\YH{Hmm, not really, because it has the downside of kind of halving
+% your available clock period. However, RAMs normally come in both forms on the
+% FPGA (Page 12, Fig. 2,
+% \url{https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/ug_ram_rom.pdf})}
 % JW: thanks!
-Using the negative edge of the clock is widely supported by synthesis tools, and
-does not affect the maximum frequency of the final design.
+Using the negative edge of the clock is supported by synthesis tools and FPGAs,
+but in general it does reduces the time that's available for arithmetic
+operations in the positive edge of the clock, making it harder to schedule
+operations.
 
 Secondly, the logic in the enable signal of the RAM (\texttt{en != u\_en}) is
 also atypical in hardware designs.  Enable signals are normally manually
@@ -645,12 +674,24 @@ should not be added. The method we ultimately chose was to have the RAM become
 enabled not when the enable signal is high, but when it \emph{toggles} its
 value.  This can be arranged by keeping track of the old value of the enable
 signal in \texttt{en} and comparing it to the current value \texttt{u\_en} set
-by the data-path.  When the values are different, the RAM gets enabled, and then
+by the data path.  When the values are different, the RAM gets enabled, and then
 \texttt{en} is set to the value of \texttt{u\_en}. This ensures that the RAM
 will always be disabled straight after it was used, without having to insert or
 modify any other states.
 
 %We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the RAM to be equal to the value that the user set.  This means that the RAM should be enabled whenever the two signals are different, and disabled otherwise.
+
+\subsection{BRAM Model Semantics}%
+\label{sec:hg:bram-model-semantics}
+
+Fig.~\ref{fig:ram_load_store} gives an example of how the RAM interface behaves
+when values are loaded and stored.  There is a \texttt{wr\_en} signal that
+determines if a load or store is being performed.  Then, if at the falling edge
+\texttt{u\_en} and \texttt{en} are different, the read or write at address
+\texttt{addr} is executed.  At the same time, the value of \texttt{u\_en} is
+then assigned to \texttt{en}, which would disable it if there is no other action
+by the data path on the next clock cycle.  However, if the data path toggles the
+value of \texttt{u\_en} on the next clock cycle, the RAM would be enabled again.
 
 \begin{figure}
   \centering
@@ -695,56 +736,136 @@ modify any other states.
   \caption{Timing diagrams showing the execution of loads and stores over multiple clock cycles.}\label{fig:ram_load_store}
 \end{figure}
 
-Fig.~\ref{fig:ram_load_store} gives an example of how the RAM interface behaves when values are loaded and stored.
-
-\subsection{BRAM Model Semantics}%
-\label{sec:hg:bram-model-semantics}
-
-\subsection{BRAM Generation and Correctness Proof}%
-\label{sec:hg:bram-generation-and-correctness-proof}
-
-\subsection{Forward Simulation of RAM Insertion}\label{sec:proof:ram_insertion}
+\subsection{BRAM Insertion and Correctness Proof}%
+\label{sec:hg:bram-insertion-and-correctness-proof}
 
 \begin{figure}
   \centering
   \begin{minipage}{1.0\linewidth}
     \begin{gather*}
-      \inferrule[Idle]{\Gamma_{\mathrm{r}}[\mathit{r.en}] = \Gamma_{\mathrm{r}}[\mathit{r.u_{en}}]}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), \Delta, r) \downarrow_{\text{ram}} \Delta}\\
+      \inferrule[Idle]{\Gamma_{\mathrm{r}}[r.\mathrm{en}] = \Gamma_{\mathrm{r}}[r.\mathrm{u\_en}]}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), \Delta, r) \downarrow_{\mathrm{ram}} \Delta}\\
 %
-      \inferrule[Load]{\Gamma_{\mathrm{r}}[\mathit{r.en}] \ne \Gamma_{\mathrm{r}}[\mathit{r.u_{en}}] \\ \Gamma_{\mathrm{r}}[\mathit{r.wr_{en}}] = 0}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\text{ram}} (\Delta_{\mathrm{r}}[\mathit{r.en} \mapsto \mathit{r.u_{en}}, \mathit{r.d_{out}} \mapsto (\Gamma_{\mathrm{a}}[\mathit{r.mem}])[ \mathit{r.addr}]], \Delta_{\mathrm{a}}) }\\
+      \inferrule[Load]{\Gamma_{\mathrm{r}}[r.\mathrm{en}] \ne \Gamma_{\mathrm{r}}[r.\mathrm{u\_en}] \\ \Gamma_{\mathrm{r}}[r.\mathrm{wr\_en}] = 0}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\mathrm{ram}} (\Delta_{\mathrm{r}}[r.\mathrm{en} \mapsto r.\mathrm{u\_en}, r.\mathrm{d\_out} \mapsto (\Gamma_{\mathrm{a}}[r.\mathrm{mem}])[ r.\mathrm{addr}]], \Delta_{\mathrm{a}}) }\\
 %
-      \inferrule[Store]{\Gamma_{\mathrm{r}}[\mathit{r.en}] \ne \Gamma_{\mathrm{r}}[\mathit{r.u_{en}}] \\ \Gamma_{\mathrm{r}}[\mathit{r.wr_{en}}] = 1}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\text{ram}} (\Delta_{\mathrm{r}}[\mathit{r.en} \mapsto \mathit{r.u\_en}], \Delta_{\mathrm{a}}[\mathit{r.mem} \mapsto (\Gamma_{\mathrm{a}}[ \mathit{r.mem}])[\mathit{r.addr} \mapsto \mathit{r.d_{in}}]]) }
+      \inferrule[Store]{\Gamma_{\mathrm{r}}[r.\mathrm{en}] \ne \Gamma_{\mathrm{r}}[r.\mathrm{u\_en}] \\ \Gamma_{\mathrm{r}}[r.\mathrm{wr\_en}] = 1}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\mathrm{ram}} (\Delta_{\mathrm{r}}[r.\mathrm{en} \mapsto r.\mathrm{u\_en}], \Delta_{\mathrm{a}}[r.\mathrm{mem} \mapsto (\Gamma_{\mathrm{a}}[ r.\mathrm{mem}])[r.\mathrm{addr} \mapsto r.\mathrm{d\_in}]]) }
     \end{gather*}
   \end{minipage}
   \caption{Specification for the memory implementation in HTL, where $r$ is the RAM, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
 \end{figure}
 
-HTL can only represent a single state machine, so we must model the RAM
+\YH{TODO: Link the RAM from \htl{} to the ram instantiated here.}
+
+\htl{} can only represent a single state machine, so we must model the RAM
 abstractly to reason about the correctness of replacing the direct read and
 writes to the array by loads and stores to a RAM.  The specification for the RAM
 is shown in Fig.~\ref{fig:htl_ram_spec}, which defines how the RAM $r$ will
-behave for all the possible combinations of the input signals.
+behave for all the possible combinations of the input signals.  This
+specification is part of the \htl{} semantics and runs in parallel to the state
+machine.  However, as the RAM is triggered by the falling edge of the clock, it
+will execute in between standard clock cycles, and a merge of the association
+maps is performed in between each.
 
 \subsubsection{From Implementation to Specification}
 
 The first step in proving the simulation correct is to build a specification of
-the translation algorithm.  There are three possibilities for the transformation
+the translation algorithm.  There are five possibilities for the transformation
 of an instruction. For each Verilog statement in the map at location $i$, the
-statement is either a load, a store, or neither. The load or store is translated
-to the equivalent representation using the RAM specification and all other
-instructions are left intact.  An example of the specification for the
-translation of the store instruction is shown below, where $\sigma$ is state
-register, $r$ is the RAM, $d$ and $c$ are the input data-path and control logic
-maps, and $i$ is the current state. ($n$ is the newly inserted state, which only
+statement is either a load, a store, a predicated load, a predicated store, or
+neither. The load, store, predicated load and predicated store is translated to
+the equivalent representation using the RAM specification and all other
+instructions are left intact.  The specification of the translation is shown in
+\cref{sec:hg:memory-transformation-specification}, where $\sigma$ is state
+register, $r$ is the RAM, $d$ are the input data-path and control logic maps,
+and $i$ is the current state.  ($n$ is the newly inserted state, which only
 applies to the translation of loads.)
 
-\begin{gather*}
-  \inferrule[Store Spec]{ d[i] = (r.mem\texttt{[}e_{1}\texttt{]} \texttt{ <= } e_{2}) \\ t = (r.u\_en \texttt{ <= } \neg r.u\_en; r.wr\_en \texttt{ <= } 1; r.d\_in \texttt{ <= } e_{2}; r.addr \texttt{ <= } e_{1})}%
-  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ c\ d[i \mapsto t]\ c\ i\ n}
-\end{gather*}
+\newcommand\nonblockasgn{\mathrel{\texttt{<=}}}
+\newcommand\blockasgn{\mathrel{\texttt{=}}}
+\newcommand\msemi{\texttt{;}\ }
+\newcommand\mternary[3]{#1\mathbin{\texttt{?}}#2\mathbin{\texttt{:}}#3}
+\newcommand\mxor{\oplus}
+\newcommand\verilogeq{\mathbin{\texttt{==}}}
 
-A similar specification is created for the load.  We then also prove that the
-implementation of the translation proves that the specification holds.
+\begin{figure}
+\begin{center}
+\begin{mathpar}
+  \inferrule[Store Transl]{ d[i] = \left(\begin{array}{l}
+    r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
+    e_{2}\msemi \arcr
+    \sigma \blockasgn e_3\msemi
+  \end{array}\right) \\
+  t = \left(\begin{array}{l}
+    r.\mathrm{u\_en} \blockasgn
+    \neg r.\mathrm{u\_en}\msemi \arcr
+    r.\mathrm{wr\_en} \blockasgn 1\msemi \arcr r.\mathrm{d\_in} \blockasgn
+    e_{2}\msemi \arcr
+    r.\mathrm{addr} \blockasgn e_{1} \msemi \arcr
+    \sigma \blockasgn e_3 \msemi
+  \end{array}\right)}%
+  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d[i \mapsto t]\ i\ n}
+  \and
+  \inferrule[Predicated Store Transl]{ d[i] = \left(\begin{array}{l}
+    \texttt{if(} c\texttt{)}\ r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
+    e_{2}\msemi \arcr
+    \sigma \blockasgn e_3\msemi\end{array}\right) \\ t = \left(\begin{array}{l}
+      r.\mathrm{u\_en} \blockasgn
+    (c \verilogeq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi\arcr
+      r.\mathrm{wr\_en} \blockasgn \texttt{1'b1}\msemi\arcr
+      r.\mathrm{d\_in} \blockasgn \mternary{c}{e_{2}}{r.\mathrm{d\_in}}\msemi\arcr
+      r.\mathrm{addr} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{addr}}\msemi
+      \arcr
+      \sigma \blockasgn e_3 \msemi
+    \end{array}\right)}%
+  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d[i \mapsto t]\ i\ n}
+  \and
+  \inferrule[Load Transl]{ d[i] = \left(\begin{array}{l}
+    d \blockasgn r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \arcr
+    \sigma \blockasgn e_2\msemi
+  \end{array}\right) \\
+  t_1 = \left(\begin{array}{l}
+    r.\mathrm{u\_en} \blockasgn
+    \neg r.\mathrm{u\_en}\msemi \arcr
+    r.\mathrm{wr\_en} \blockasgn \texttt{1'b0}\msemi \arcr
+    r.\mathrm{addr} \blockasgn e_{1} \msemi \arcr
+    \sigma \blockasgn n \msemi
+  \end{array}\right) \\
+  t_2 = \left(\begin{array}{l}
+    d \blockasgn r.\mathrm{d\_out} \msemi \arcr
+    \sigma \blockasgn e_2 \msemi
+  \end{array}\right)}%
+  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
+  \and
+  \inferrule[Predicated Load Transl]{ d[i] = \left(\begin{array}{l}
+    d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \arcr
+    \sigma \blockasgn e_2\msemi
+  \end{array}\right) \\
+  t_1 = \left(\begin{array}{l}
+    r.\mathrm{u\_en} \blockasgn (c \verilogeq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi \arcr
+    r.\mathrm{wr\_en} \blockasgn \texttt{1'b0}\msemi \arcr
+    r.\mathrm{addr} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{addr}} \msemi \arcr
+    \sigma \blockasgn n \msemi
+  \end{array}\right) \\
+  t_2 = \left(\begin{array}{l}
+    d \blockasgn \mternary{c}{e_{1}}{r.\mathrm{d\_out}} \msemi \arcr
+    \sigma \blockasgn e_2 \msemi
+  \end{array}\right)}%
+  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
+  \and
+  \inferrule[Default Transl]{(\forall e_1\ e_2\ e_3\ldotp d[i] \neq (r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
+    e_{2}\msemi \sigma \blockasgn e_3)) \\
+    (\forall c\ e_1\ e_2\ e_3\ldotp d[i] \neq (\texttt{if(}c\texttt{)}\ r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
+    e_{2}\msemi \sigma \blockasgn e_3)) \\
+  (\forall d\ e_1\ e_2\ldotp d[i] \neq (d \blockasgn
+  r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}\msemi \sigma \blockasgn
+  e_2))\\
+(\forall c\ d\ e_1\ e_2\ldotp d[i] \neq (d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \sigma \blockasgn e_2))}%
+  {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d\ i\ n}
+\end{mathpar}
+\end{center}
+\caption{Memory transformation specification.\YH{TODO: replace register name $d$
+  because it's also used for the data path.}}%
+\label{sec:hg:memory-transformation-specification}
+\end{figure}
 
 \subsubsection{From Specification to Simulation}
 
@@ -752,14 +873,14 @@ Another simulation proof is performed to prove that the insertion of the RAM is
 semantics preserving.  As in Lemma~\ref{lemma:simulation_diagram}, we require
 some invariants that always hold at the start and end of the simulation.  The
 invariants needed for the simulation of the RAM insertion are quite different to
-the previous ones, so we can define these invariants $\mathcal{I}_{r}$ to be the
+the previous ones, so we can define these invariants $\mathcal{I}_{\mathrm{r}}$ to be the
 following:
 
 \begin{itemize}
-\item The association map for arrays $\Gamma_{a}$ always needs to have the same
-  arrays present, and these arrays should never change in size.
-\item The RAM should always be disabled at the start and the end of each
-  simulation step. (This is why self-disabling RAM is needed.)
+\item The association map for arrays $\Gamma_{\mathrm{a}}$ always needs to have
+  the same arrays present, and these arrays should never change in size.
+\item The RAM should always be disabled at the start of each simulation
+  step. (This is why self-disabling RAM is needed.)
 \end{itemize}
 
 The other invariants and assumptions for defining two matching states in HTL are
@@ -781,11 +902,34 @@ the new registers introduced by the RAM.
 \section{Register Forward Substitution}%
 \label{sec:hg:register-forward-substitution}
 
+Until now, only blocking assignment has been used to assign variables
+sequentially, being more faithful to the instructions provided as the input
+language.  However,
+
 \subsection{Forward Substitution Correctness Proof}%
 \label{sec:hg:forward-substitution-correctness-proof}
 
 \section{Verilog Generation}%
 \label{sec:hg:verilog-generation}
+
+\begin{figure}
+  \centering
+\begin{minted}{systemverilog}
+always @(negedge clk) begin
+  if ({u_en != en}) begin
+    if (wr_en) begin
+      stack[addr] <= d_in;
+    end else begin
+      d_out <= stack[addr];
+    end
+    en <= u_en;
+  end else begin
+  end
+end
+\end{minted}
+  \caption{Instantiation of RAM specification with Verilog implementation.}%
+  \label{fig:hg:ram-instantiation}
+\end{figure}
 
 \subsection{Forward Simulation from HTL to Verilog}%
 \label{sec:proof:htl_verilog}
