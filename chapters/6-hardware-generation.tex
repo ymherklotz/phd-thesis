@@ -22,20 +22,20 @@ describes the first step in the transformation which separates each sequential
 block within a state in \rtlpar{} into separate states that can be addressed
 using the program counter.  This matches addressing that the state register
 would have to do in the hardware design. Next, \cref{sec:hg:htl-generation}
-describes the generation of HTL, an intermediate language representing the
+describes the generation of \htl{}, an intermediate language representing the
 execution of a state machine.  This performs the main transformation from a
 software representation of the program into hardware, making the execution of
 the program more explicit in the design itself instead of as part of the
 semantics.  \Cref{sec:hg:bram-insertion} then describes the first
 hardware-specific optimisation on the state-machine representation of the
-hardware by adding a specification of a \gls{BRAM} to the HTL semantics and
+hardware by adding a specification of a \gls{BRAM} to the \htl{} semantics and
 replacing any explicit reads and writes to the array representing memory by
 properly formed reads and writes to the \gls{BRAM}.  Until now, updates to
 registers have been specified sequentially, so a forward substitution
 transformation is describe in \cref{sec:hg:register-forward-substitution} to
 parallelise the updates to registers.  Finally, \cref{sec:hg:verilog-generation}
 describes the generation of the final Verilog design, which implements the
-state-machine that was specified by HTL, in particular implementing the
+state-machine that was specified by \htl{}, in particular implementing the
 \gls{BRAM} that was specified.
 
 \section{Hyperblock Destruction}%
@@ -89,7 +89,7 @@ The proof of hyperblock destruction is relatively simple using a
 more output states returned by the hyperblock destruction algorithm that should
 be equivalent to the execution of the input state when executed sequentially.
 
-\section{HTL Generation}%
+\section{\htl{} Generation}%
 \label{sec:hg:htl-generation}
 
 The most important transformation of an HLS tool is then the generation of a
@@ -97,23 +97,23 @@ hardware description from the list of instructions.  Eventually the hardware
 design will be described using Verilog, however, to make the transformation more
 incremental, we first turn the program represented by a control-flow graph into
 a program represented by an \gls{FSMD}.  This section will describe the
-\gls{FSMD} language, called HTL, by showing the syntax and semantics of the
-language.  Then, the transformation from \rtlsubpar{} to HTL is shown, together
+\gls{FSMD} language, called \htl{}, by showing the syntax and semantics of the
+language.  Then, the transformation from \rtlsubpar{} to \htl{} is shown, together
 with an overview of its correctness proof.
 
-\subsection{HTL Structure and Semantics}%
+\subsection{\htl{} Structure and Semantics}%
 \label{sec:hg:htl-structure-and-semantics}
 
-At a high level, HTL is structured like many other \compcert{} languages,
+At a high level, \htl{} is structured like many other \compcert{} languages,
 mapping from locations to Verilog statements.  However, contrary to many other
-intermediate languages in \compcert{}, HTL does not contain any instructions,
+intermediate languages in \compcert{}, \htl{} does not contain any instructions,
 and its semantics use a smaller state to perform the execution.  For example,
 the state does not have to contain the program counter because there is an
 explicit state register that keeps track of it.
 
-HTL comprises a a lot of metadata pointing to important registers, as well as
+\htl{} comprises a a lot of metadata pointing to important registers, as well as
 containing a map from program locations to Verilog statements.  The syntax of
-HTL is shown in \cref{fig:hg:htl-syntax}.  First, HTL contains a list of
+\htl{} is shown in \cref{fig:hg:htl-syntax}.  First, \htl{} contains a list of
 parameters, which are additional input registers to the current module.  Next,
 the $\mathit{datapath}$ contains the code for the state machine, as well as the
 main data path associated with the data path.  This is done by mapping program
@@ -129,7 +129,7 @@ why it needs to be performed as part of the data path.
   \llabel{CFG node labels} & $\location \in \locationtype$ & $::=$ & $\mathbb{N}$ & \\
   \llabel{Verilog statements} & $\verilogstmnt \in \verilogstmnttype$ & & & \\
   \llabel{Code} & $\htlcode \in \locationtype \rightarrow \verilogstmnttype$ & & & \\
-  \llabel{HTL} & $\htlmodule$ & $::=$ & $\{\ \mathit{params} : \regtype\
+  \llabel{\htl{}} & $\htlmodule$ & $::=$ & $\{\ \mathit{params} : \regtype\
                                         \texttt{list}; $ \\
   & & & $\ \ \mathit{datapath} : \locationtype \rightarrow \verilogstmnttype; $ \\
   & & & $\ \ \mathit{entrypoint} : \mathbb{N};$ & \\
@@ -146,7 +146,7 @@ why it needs to be performed as part of the data path.
   & & & $\ \ \mathit{params\_wf} : \forall r \in \mathit{params}\ldotp
         r < \mathit{state} \ \}$
 \end{tabular}
-\caption{Syntax of HTL.}
+\caption{Syntax of \htl{}.}
 \label{fig:hg:htl-syntax}
 \end{figure}
 
@@ -180,7 +180,7 @@ Finally, there are three \emph{well-formedness} criteria which are used to
 enforce an ordering between the registers, mainly to be able to show that
 registers are independent from each other.
 
-\subsection{HTL Generation Algorithm}%
+\subsection{\htl{} Generation Algorithm}%
 \label{sec:hg:htl-generation}
 
 The generation of \htl{} is relatively straight-forward, as most instructions
@@ -633,7 +633,7 @@ transformation pass to check that this is actually the case, and that the load
 will proceed as expected.
 
 %\JW{I've called that negedge always-block the `RAM driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
-%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a RAM, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to HTL converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from HTL to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
+%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a RAM, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to \htl{} converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from \htl{} to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
 
 There are two interesting parts to the inserted RAM interface.  Firstly, the
 memory updates are triggered on the negative (falling) edge of the clock, out of
@@ -750,7 +750,7 @@ value of \texttt{u\_en} on the next clock cycle, the RAM would be enabled again.
       \inferrule[Store]{\Gamma_{\mathrm{r}}[r.\mathrm{en}] \ne \Gamma_{\mathrm{r}}[r.\mathrm{u\_en}] \\ \Gamma_{\mathrm{r}}[r.\mathrm{wr\_en}] = 1}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\mathrm{ram}} (\Delta_{\mathrm{r}}[r.\mathrm{en} \mapsto r.\mathrm{u\_en}], \Delta_{\mathrm{a}}[r.\mathrm{mem} \mapsto (\Gamma_{\mathrm{a}}[ r.\mathrm{mem}])[r.\mathrm{addr} \mapsto r.\mathrm{d\_in}]]) }
     \end{gather*}
   \end{minipage}
-  \caption{Specification for the memory implementation in HTL, where $r$ is the RAM, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
+  \caption{Specification for the memory implementation in \htl{}, where $r$ is the RAM, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
 \end{figure}
 
 \YH{TODO: Link the RAM from \htl{} to the ram instantiated here.}
@@ -883,15 +883,15 @@ following:
   step. (This is why self-disabling RAM is needed.)
 \end{itemize}
 
-The other invariants and assumptions for defining two matching states in HTL are
+The other invariants and assumptions for defining two matching states in \htl{} are
 quite similar to the simulation performed in
 Lemma~\ref{lemma:simulation_diagram}, such as ensuring that the states have the
 same value, and that the values in the registers are less defined.  In
 particular, the less defined relation matches up all the registers, except for
 the new registers introduced by the RAM.
 
-\begin{lemma}[Forward simulation from HTL to HTL after inserting the RAM]\label{lemma:htl_ram}
-  Given an HTL program, the forward-simulation relation should hold after
+\begin{lemma}[Forward simulation from \htl{} to \htl{} after inserting the RAM]\label{lemma:htl_ram}
+  Given an \htl{} program, the forward-simulation relation should hold after
   inserting the RAM and wiring the load, store, and control signals.
 
   \begin{align*}
@@ -904,10 +904,104 @@ the new registers introduced by the RAM.
 
 Until now, only blocking assignment has been used to assign variables
 sequentially, being more faithful to the instructions provided as the input
-language.  However,
+language.  The transformation is shown in \cref{fig:hg:forward-substitution},
+and it turns sequential, blocking assignment into parallel, nonblocking
+assignment by substituting register definitions within a state.  Each assignment
+in the translated block is independent from the other blocks, meaning each
+assignment can be executed in parallel.  Note that the \texttt{state} is
+assigned twice using nonblocking assignment.  In that case, only the last
+nonblocking assignment is kept.  In addition to that, \texttt{r2} is no longer
+used in the block, as it has been replaced by its definition in the assignment
+to \texttt{r8}.  It is likely that \texttt{r2} is not used in any other block
+either, in which case it should be removed.  This is not performed by this
+transformation pass, as in practice synthesis tools can reliably remove a
+register that is assigned and never referenced in the design.  There are two
+reasons why this transformation is needed.
+
+\begin{enumerate}
+\item In a clocked always-block, nonblocking assignment should be used for all
+  registers that could interact with other always-blocks.  As we have a RAM
+  block in a separate always block, we should at least use nonblocking
+  assignment for the registers that interact with memory.  In this case, it is
+  technically not required, because the RAM is executing on the negative edge of
+  the clock, however, if it is ever replaced by a RAM that executes on the
+  positive edge of the clock, or supplemented with other functional units that
+  execute on the positive edge of the clock, then any registers communicating
+  with those blocks will need to use nonblocking assignment.
+\item Some synthesis tools do not seem to be able to optimise the designs
+  generated by Vericert with blocking assignments, as they seem to remove less
+  unused registers, resulting in slightly lower maximum frequency and slightly
+  larger area.\footnote{This seems to be the case with Vivado 2017.1 and seems
+    to have been fixed by Vivado 2023.1.}  In the case of the example given in
+  \cref{fig:hg:forward-substitution}, it seems like some synthesis tool versions
+  do not remove \texttt{r2} when it is referenced in the assignment to
+  \texttt{r8} and not referenced anywhere else in the design.  This should not
+  be the case as in this example \texttt{r2} should just become a wire.
+\end{enumerate}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=Latex,shorten >=1pt,
+    label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
+    bb/.style={align=left, draw=white, fill=black!5}]
+    \node[bb] (initial block) {\veriloginline`state = 32'd2`\\
+                               \veriloginline`r2 = r4 * r6`\\
+                               \veriloginline`r8 = r2 + r10`\\
+                               \veriloginline`state = r3 ? 32'd3 : state`};
+    \node[bb, right=5cm of initial block] (transf block)
+      {\veriloginline`state <= 32'd2`\\
+       \veriloginline`r2 <= r4 * r6`\\
+       \veriloginline`r8 <= {r4 * r6} + r10`\\
+       \veriloginline`state <= r3 ? 32'd3 : 32'd2`};
+    \node[label] at (initial block.north west) {\texttt{1}};
+    \node[label] at (transf block.north west) {\texttt{1}};
+    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+      -- node [below, font=\footnotesize] {forward substitution}
+      ($(initial block.east) + (4,0)$);
+  \end{tikzpicture}
+  \caption{Simple forward substitution transformation.}%
+  \label{fig:hg:forward-substitution}
+\end{figure}
+
+The transformation is performed by traversing each block and storing for each
+register the expression that is being assigned to it.  If the same register is
+encountered multiple times, the expression being assigned is always substituted
+first and then replaces the current mapping from register to expression.  As the
+BRAM insertion already removed all the load and store operations in the data
+path, only regular register assignments need to be accounted for.
 
 \subsection{Forward Substitution Correctness Proof}%
 \label{sec:hg:forward-substitution-correctness-proof}
+
+The main lemma that needs to be proven for the forward substitution is the
+following.
+
+\begin{lemma}[Forward substitution of expressions]
+
+  Given a map from registers to expression $t$, an expression before forward
+  substitution $e$, and the result of forward substituting $e$ with map $t$
+  resulting in expression $e'$, then executing $e$ with the dynamically updated
+  association map $\Gamma^2_{\mathrm r}$ should be equivalent to executing $e'$
+  with the initial state of all the registers $\Gamma^1_{\mathrm r}$.\YH{TODO:
+    Explain the two starting hypotheses in the following equation.}
+
+  \begin{equation*}
+    \begin{aligned}
+    &(\forall r\ e\ldotp \at{t}{r} = \some{e} \implies \exists v\ldotp
+    ((\Gamma^1_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
+    \land \at{\Gamma^2_{\mathrm r}}{r} = \some{v}) \implies\\
+    &(\forall r\ldotp \at{t}{r} = \cnone \implies \at{\Gamma^1_{\mathrm r}}{r} =
+    \at{\Gamma^2_{\mathrm r}}{r}) \implies\\
+    &\texttt{forward\_substitute}(t, e) = \some{e'} \implies \\
+    &((\Gamma^2_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
+      \implies\\
+    &((\Gamma^1_{\mathrm r}, \Gamma_{\mathrm a}), e') \downarrow_{\text{expr}} v
+    \end{aligned}
+  \end{equation*}
+\end{lemma}
+
+Using this, the rest of the proof can be built up inductively.\YH{TODO: Talk
+  a bit more about the top-level proof.  Especially the invariants.}
 
 \section{Verilog Generation}%
 \label{sec:hg:verilog-generation}
@@ -931,18 +1025,18 @@ end
   \label{fig:hg:ram-instantiation}
 \end{figure}
 
-\subsection{Forward Simulation from HTL to Verilog}%
+\subsection{Forward Simulation from \htl{} to Verilog}%
 \label{sec:proof:htl_verilog}
 
-The HTL-to-Verilog simulation is conceptually simple, as the only transformation
-is from the map representation of the code to the case-statement representation.
-The proof is more involved, as the semantics of a map structure is quite
-different to that of the case-statement to which it is converted.
+The \htl{}-to-Verilog simulation is conceptually simple, as the only
+transformation is from the map representation of the code to the case-statement
+representation.  The proof is more involved, as the semantics of a map structure
+is quite different to that of the case-statement to which it is converted.
 
 %\YH{Maybe want to split this up into two lemmas?  One which states the proof about the map property of uniqueness of keys, and another proving the final theorem?}
-\begin{lemma}[Forward simulation from HTL to Verilog]\label{lemma:verilog}
+\begin{lemma}[Forward simulation from \htl{} to Verilog]\label{lemma:verilog}
   In the following, we write $\yhfunction{tr\_verilog}$ for the translation from
-  HTL to Verilog. (Note that this translation cannot fail, so we do not need the
+  \htl{} to Verilog. (Note that this translation cannot fail, so we do not need the
   \yhconstant{OK} constructor here.)
   \begin{align*}
     \forall h, V, B \in \texttt{Safe},\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
