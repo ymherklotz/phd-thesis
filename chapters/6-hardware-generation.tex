@@ -17,26 +17,101 @@ final hardware one will have to transform the sequential execution of operations
 within each state into parallel assignments.
 
 This chapter describes the hardware generation process, starting from \rtlpar{}
-and producing a final Verilog design.  \Cref{sec:hg:hyperblock-destruction}
-describes the first step in the transformation which separates each sequential
-block within a state in \rtlpar{} into separate states that can be addressed
-using the program counter.  This matches addressing that the state register
-would have to do in the hardware design. Next, \cref{sec:hg:htl-generation}
-describes the generation of \htl{}, an intermediate language representing the
-execution of a state machine.  This performs the main transformation from a
-software representation of the program into hardware, making the execution of
-the program more explicit in the design itself instead of as part of the
-semantics.  \Cref{sec:hg:bram-insertion} then describes the first
-hardware-specific optimisation on the state-machine representation of the
-hardware by adding a specification of a \gls{BRAM} to the \htl{} semantics and
-replacing any explicit reads and writes to the array representing memory by
-properly formed reads and writes to the \gls{BRAM}.  Until now, updates to
-registers have been specified sequentially, so a forward substitution
-transformation is describe in \cref{sec:hg:register-forward-substitution} to
-parallelise the updates to registers.  Finally, \cref{sec:hg:verilog-generation}
-describes the generation of the final Verilog design, which implements the
-state-machine that was specified by \htl{}, in particular implementing the
-\gls{BRAM} that was specified.
+and producing a final Verilog design.
+\Cref{fig:hg:vericert-hardware-generation} shows the intermediate
+transformations and in which section the transformation is described.
+\Cref{sec:hg:hyperblock-destruction} describes the first step in the
+transformation which separates each sequential block within a state in \rtlpar{}
+into separate states that can be addressed using the program counter.  This
+matches addressing that the state register would have to do in the hardware
+design. Next, \cref{sec:hg:htl-generation} describes the generation of \htl{},
+an intermediate language representing the execution of a state machine.  This
+performs the main transformation from a software representation of the program
+into hardware, making the execution of the program more explicit in the design
+itself instead of as part of the semantics.  \Cref{sec:hg:bram-insertion} then
+describes the first hardware-specific optimisation on the state-machine
+representation of the hardware by adding a specification of a \gls{BRAM} to the
+\htl{} semantics and replacing any explicit reads and writes to the array
+representing memory by properly formed reads and writes to the \gls{BRAM}.
+Until now, updates to registers have been specified sequentially, so a forward
+substitution transformation is describe in
+\cref{sec:hg:register-forward-substitution} to parallelise the updates to
+registers.  Finally, \cref{sec:hg:verilog-generation} describes the generation
+of the final Verilog design, which implements the state-machine that was
+specified by \htl{}, in particular implementing the \gls{BRAM} that was
+specified.
+
+\definecolor{bgbox1}{HTML}{b3e2cd}
+\definecolor{bgbox2}{HTML}{cbd5e8}
+\definecolor{bgbox3}{HTML}{fdcdac}
+\definecolor{ircolor}{HTML}{e78ac3}
+
+\tikzset{
+  numlabel/.style={draw,circle,inner sep=0.5mm,fill=white},
+  ir/.style={draw,very thick,black, fill=ircolor!70, align=center},
+  pass/.style={draw, very thick, rounded corners, fill=white, align=center},
+  extpass/.style={draw, dotted, very thick, rounded corners, fill=white, align=center},
+  bgbox/.style={draw=none},
+  ed/.style={->, very thick, >=stealth, shorten >=1pt},
+blacknumlarge/.style={
+  circle, draw=none,
+  fill=black, inner sep=1pt,
+  outer sep=0pt, minimum size=0.9em, text=white, font=\scriptsize\sffamily\bfseries}
+}
+
+\begin{figure*}
+
+\begin{center}
+\begin{tikzpicture}[
+yscale=-1
+]
+
+\node[ir] (rtlpar) {\rtlpar{}};
+\node[pass,right=of rtlpar] (hyperblock destruction) {Hyperblock \\
+  Destruction};
+\node[ir,right=of hyperblock destruction] (rtlsubpar) {\rtlsubpar{}};
+\node[pass,right=of rtlsubpar] (htl generation) {\htl{} \\
+  Generation};
+\node[ir,right=of htl generation] (htl) {\htl{}};
+\node[pass,below=of htl] (bram insertion) {BRAM \\ insertion};
+\node[ir,below=of bram insertion] (htlmem) {\htl{}};
+\node[pass,left=of htlmem] (forward substitution) {Forward \\ Substitution};
+\node[ir,left=of forward substitution] (htlsubst) {\htl{}};
+\node[pass,left=of htlsubst] (verilog generation) {Verilog \\ Generation};
+\node[ir,left=of verilog generation] (verilog) {Verilog};
+
+\draw[ed] (rtlpar) -- (hyperblock destruction);
+\draw[ed] (hyperblock destruction) -- (rtlsubpar);
+\draw[ed] (rtlsubpar) -- (htl generation);
+\draw[ed] (htl generation) -- (htl);
+\draw[ed] (htl) -- (bram insertion);
+\draw[ed] (bram insertion) -- (htlmem);
+\draw[ed] (htlmem) -- (forward substitution);
+\draw[ed] (forward substitution) -- (htlsubst);
+\draw[ed] (htlsubst) -- (verilog generation);
+\draw[ed] (verilog generation) -- (verilog);
+
+\node[blacknumlarge] at (hyperblock destruction.north west)
+{\ref*{sec:hg:hyperblock-destruction}};
+\node[blacknumlarge] at (htl generation.north west)
+{\ref*{sec:hg:htl-generation}};
+\node[blacknumlarge] at (bram insertion.north west)
+{\ref*{sec:hg:bram-insertion}};
+\node[blacknumlarge] at (forward substitution.north west)
+{\ref*{sec:hg:register-forward-substitution}};
+\node[blacknumlarge] at (verilog generation.north west)
+{\ref*{sec:hg:verilog-generation}};
+
+\begin{pgfonlayer}{background}
+\node[bgbox, fill=bgbox2, fit=(rtlpar)(htlmem), inner sep=1cm] {};
+\end{pgfonlayer}
+
+ \end{tikzpicture}
+\end{center}
+  \caption{Hardware generation transformation passes introduced to convert
+    \rtlpar{} to Verilog.}%
+  \label{fig:hg:vericert-hardware-generation}
+\end{figure*}
 
 \section{Hyperblock Destruction}%
 \label{sec:hg:hyperblock-destruction}
@@ -129,22 +204,22 @@ why it needs to be performed as part of the data path.
   \llabel{CFG node labels} & $\location \in \locationtype$ & $::=$ & $\mathbb{N}$ & \\
   \llabel{Verilog statements} & $\verilogstmnt \in \verilogstmnttype$ & & & \\
   \llabel{Code} & $\htlcode \in \locationtype \rightarrow \verilogstmnttype$ & & & \\
-  \llabel{\htl{}} & $\htlmodule$ & $::=$ & $\{\ \mathit{params} : \regtype\
+  \llabel{\htl{}} & $\htlmodule$ & $::=$ & $\{\ \mathrm{params} : \regtype\
                                         \texttt{list}; $ \\
-  & & & $\ \ \mathit{datapath} : \locationtype \rightarrow \verilogstmnttype; $ \\
-  & & & $\ \ \mathit{entrypoint} : \mathbb{N};$ & \\
-  & & & $\ \ \mathit{state} : \regtype;$ & \\
-  & & & $\ \ \mathit{stack} : \regtype;$ & \\
-  & & & $\ \ \mathit{stack\_size} : \mathbb{N};$ & \\
-  & & & $\ \ \mathit{finish},\mathit{return},\mathit{start},\mathit{reset},\mathit{clk} :
+  & & & $\ \ \mathrm{datapath} : \locationtype \rightarrow \verilogstmnttype; $ \\
+  & & & $\ \ \mathrm{entrypoint} : \mathbb{N};$ & \\
+  & & & $\ \ \mathrm{state} : \regtype;$ & \\
+  & & & $\ \ \mathrm{stack} : \regtype;$ & \\
+  & & & $\ \ \mathrm{stack\_size} : \mathbb{N};$ & \\
+  & & & $\ \ \mathrm{finish},\mathrm{return},\mathrm{start},\mathrm{reset},\mathrm{clk} :
         \regtype;$ & \\
-  & & & $\ \ \mathit{ram} : \optiontype{\mathit{RAM}};$ & \\
-  & & & $\ \ \mathit{order\_wf} : \mathit{state} < \mathit{finish} < \mathit{return}
-        < \mathit{stack} < \mathit{reset} < \mathit{clk};$ & \\
-  & & & $\ \ \mathit{ram\_wf} : \forall r\ldotp \mathit{ram} = \some{r} \implies
-        \mathit{clk} < r.\mathit{raddr}; $ & \\
-  & & & $\ \ \mathit{params\_wf} : \forall r \in \mathit{params}\ldotp
-        r < \mathit{state} \ \}$
+  & & & $\ \ \mathrm{ram} : \optiontype{\mathrm{RAM}};$ & \\
+  & & & $\ \ \mathrm{order\_wf} : \mathrm{state} < \mathrm{finish} < \mathrm{return}
+        < \mathrm{stack} < \mathrm{reset} < \mathrm{clk};$ & \\
+  & & & $\ \ \mathrm{ram\_wf} : \forall r\ldotp \mathrm{ram} = \some{r} \implies
+        \mathrm{clk} < r.\mathrm{raddr}; $ & \\
+  & & & $\ \ \mathrm{params\_wf} : \forall r \in \mathrm{params}\ldotp
+        r < \mathrm{state} \ \}$
 \end{tabular}
 \caption{Syntax of \htl{}.}
 \label{fig:hg:htl-syntax}
@@ -181,7 +256,7 @@ enforce an ordering between the registers, mainly to be able to show that
 registers are independent from each other.
 
 \subsection{\htl{} Generation Algorithm}%
-\label{sec:hg:htl-generation}
+\label{sec:hg:htl-generation-algorithm}
 
 The generation of \htl{} is relatively straight-forward, as most instructions
 have a direct translation to a Verilog implementation.  The Verilog
@@ -1005,6 +1080,15 @@ Using this, the rest of the proof can be built up inductively.\YH{TODO: Talk
 
 \section{Verilog Generation}%
 \label{sec:hg:verilog-generation}
+
+Finally, Verilog generation produces proper Verilog from \htl{}.  The main two
+transformations that take place are:
+
+\begin{enumerate}
+\item Converting the mapping from states to Verilog statements into a case
+  statement.
+\item Instantiating the RAM specification as a Verilog always block.
+\end{enumerate}
 
 \begin{figure}
   \centering
