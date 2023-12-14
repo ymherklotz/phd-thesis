@@ -44,7 +44,7 @@ The introduction of pipelined operators to \vericert{}, especially for division,
 \vericert{} is currently limited in terms of I/O because the main function cannot accept any arguments if the Clight program is to be well-formed.\footnote{Technically, \vericert{} (and indeed, \compcert{}) can compile main functions that have arbitrary arguments and will handle those inputs appropriately, but the correctness theorem offers no guarantees about such programs.} Moreover, external function calls that produce traces have not been implemented yet, but these could enable the C program to read and write values on a bus that is shared with various other components in the hardware design.
 
 \paragraph{Lack of support for global variables}
-In \compcert{}, each global variable is stored in its own memory.  A generalisation of our translation of the stack into a RAM block could therefore translate global variables in the same manner.  This would require a slight generalisation of pointers so that they store provenance information to ensure that each pointer accesses the right RAM. It would also be necessary to generalise the RAM interface so that it decodes the provenance information and indexes the correct array.
+In \compcert{}, each global variable is stored in its own memory.  A generalisation of our translation of the stack into a \gls{BRAM} block could therefore translate global variables in the same manner.  This would require a slight generalisation of pointers so that they store provenance information to ensure that each pointer accesses the right \gls{BRAM}. It would also be necessary to generalise the \gls{BRAM} interface so that it decodes the provenance information and indexes the correct array.
 %\NR{Curiously, is memory analysis in your to-do list?}\YH{Well kind of, would be nice, but probably not sophisticated analysis.}
 
 \paragraph{Other language restrictions}
@@ -71,7 +71,7 @@ constant propagation will allow these programs to pass without error.
     {Integers and values}               & 98   & --- & 15   & 968  & 1081  \\
     {HTL semantics}                     & 50   & --- & 181  & 65   & 296   \\
     {HTL generation}                    & 590  & --- & 66   & 3069 & 3725  \\
-    {RAM generation}                    & 253  & --- & ---  & 2793 & 3046  \\
+    {\gls{BRAM} generation}                    & 253  & --- & ---  & 2793 & 3046  \\
     {Verilog semantics}                 & 78   & --- & 431  & 235  & 744   \\
     {Verilog generation}                & 104  & --- & ---  & 486  & 590   \\
     {Top-level driver, pretty printers} & 318  & 775 & ---  & 189  & 1282  \\
@@ -95,12 +95,12 @@ that a finite array could be used. In addition to that, since pointers in HTL
 and Verilog are represented as integers, instead of as a separate `pointer' type
 like in the \compcert{} semantics, it was painful to reason about them.  Many
 new theorems had to be proven about them in \vericert{} to prove the conversion
-from pointer to integer.  Moreover, the second-largest proof of the correct RAM
-generation includes many proofs about the extensional equality of array
-operations, such as merging arrays with different assignments.  As the negative
-edge implies that two merges take place every clock cycle, the proofs about the
-equality of the contents in memory and in the merged arrays become more tedious
-too.
+from pointer to integer.  Moreover, the second-largest proof of the correct
+\gls{BRAM} generation includes many proofs about the extensional equality of
+array operations, such as merging arrays with different assignments.  As the
+negative edge implies that two merges take place every clock cycle, the proofs
+about the equality of the contents in memory and in the merged arrays become
+more tedious too.
 
 Looking at the trusted computing base of \vericert{}, the Verilog semantics is
 431 lines of code.  This and the Clight semantics from \compcert{} are the only

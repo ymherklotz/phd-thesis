@@ -66,10 +66,11 @@ incorrectly\footnote{\url{https://bit.ly/vivado-hls-pipeline-bug}\YH{Need to
 stray outside the fragment of C that it
 supports.\footnote{\url{https://support.xilinx.com/s/question/0D52E00006hpMZSSA2/pointer-synthesis-in-vivado-hls-v201}}\textsuperscript{,}\footnote{\url{https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/Pointer-Limitations}}
 Meanwhile, \textcite{lidbury15_many_core_compil_fuzzin} had to abandon their
-attempt to fuzz-test Altera's (now Intel's) OpenCL compiler since it ``either
-crashed or emitted an internal compiler error'' on so many of their test inputs.
-More recently, \textcite{herklotz21_empir_study_reliab_high_level_synth_tools}
-fuzz-tested three commercial \gls{HLS} tools using
+attempt to fuzz-test Altera's (now Intel's) OpenCL compiler since it
+\enquote{either crashed or emitted an internal compiler error} on so many of
+their test inputs.  More recently,
+\textcite{herklotz21_empir_study_reliab_high_level_synth_tools} fuzz-tested
+three commercial \gls{HLS} tools using
 Csmith~\cite{yang11_findin_under_bugs_c_compil}, and despite restricting the
 generated programs to the C fragment explicitly supported by all the tools, they
 still found that on average 2.5\% of test-cases were compiled to designs that

@@ -58,7 +58,7 @@ simulation, it suffices to prove forward simulations between each pair of
 consecutive intermediate languages, as these results can be composed to prove
 the correctness of the whole HLS tool.  The forward simulation from 3AC to HTL
 is stated in Lemma~\ref{lemma:htl} (Section~\ref{sec:proof:3ac_htl}), the
-forward simulation for the RAM insertion is shown in Lemma~\ref{lemma:htl_ram}
+forward simulation for the \gls{BRAM} insertion is shown in Lemma~\ref{lemma:htl_ram}
 (Section~\ref{sec:proof:ram_insertion}), then the forward simulation between HTL
 and Verilog is shown in Lemma~\ref{lemma:verilog}
 (Section~\ref{sec:proof:htl_verilog}), and finally, the proof that Verilog is
@@ -114,7 +114,7 @@ Five changes were made to the semantics proposed by
 target.
 
 \paragraph{Adding array support}
-The main change is the addition of support for arrays, which are needed to model RAM in Verilog.  RAM is needed to model the stack in C efficiently, without having to declare a variable for each possible stack location. % In the original semantics, RAMs (as well as inputs and outputs to the module) could be modelled using a function from variable names (strings) to values, which could be modified accordingly to model inputs to the module.  This is quite an abstract description of memory and can also be expressed as an array of bitvectors instead, which is the path we took. This requires the addition of array operators to the semantics and correct reasoning of loads and stores to the array in different \alwaysblock{}s simultaneously.
+The main change is the addition of support for arrays, which are needed to model \gls{BRAM} in Verilog.  \gls{BRAM} is needed to model the stack in C efficiently, without having to declare a variable for each possible stack location. % In the original semantics, RAMs (as well as inputs and outputs to the module) could be modelled using a function from variable names (strings) to values, which could be modified accordingly to model inputs to the module.  This is quite an abstract description of memory and can also be expressed as an array of bitvectors instead, which is the path we took. This requires the addition of array operators to the semantics and correct reasoning of loads and stores to the array in different \alwaysblock{}s simultaneously.
 Consider the following Verilog code:
 
 \begin{center}
@@ -127,7 +127,7 @@ always @(posedge clk) begin x[0] = 1; x[1] <= 1; end
 which modifies one array element using blocking assignment and then a second using nonblocking assignment. If the existing semantics were used to update the array, then during the merge, the entire array \texttt{x} from the nonblocking association map would replace the entire array from the blocking association map.  This would replace \texttt{x[0]} with its original value and therefore behave incorrectly. Accordingly, we modified the maps so they record updates on a per-el\-em\-ent basis. Our state $\Gamma$ is therefore further split up into $\Gamma_{r}$ for instantaneous updates to variables, and $\Gamma_{a}$ for instantaneous updates to arrays ($\Gamma = (\Gamma_{r}, \Gamma_{a})$); $\Delta$ is split similarly ($\Delta = (\Delta_{r}, \Delta_{a})$). The merge function then ensures that only the modified indices get updated when $\Gamma_{a}$ is merged with the nonblocking map equivalent $\Delta_{a}$.
 
 \paragraph{Adding negative edge support}
-To reason about circuits that execute on the negative edge of the clock (such as our RAM interface described in Section~\ref{sec:algorithm:optimisation:ram}),  support for negative-edge-triggered \alwaysblock{}s was added to the semantics. This is shown in the modifications of the \textsc{Module} rule shown below:
+To reason about circuits that execute on the negative edge of the clock (such as our \gls{BRAM} interface described in Section~\ref{sec:algorithm:optimisation:ram}),  support for negative-edge-triggered \alwaysblock{}s was added to the semantics. This is shown in the modifications of the \textsc{Module} rule shown below:
 
 \begin{equation*}
   \inferrule[Module]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}
@@ -170,14 +170,14 @@ The \compcert{} computation model defines a set of states through which executio
   \item[\texttt{Returnstate} $\mathit{sf}$ $v$] The state that is reached when a function returns back to the caller, with stack frame $\mathit{sf}$ and return value $v$.
 \end{description}
 
-To support this computational model, we extend the Verilog module we generate with the following four registers and a RAM block:
+To support this computational model, we extend the Verilog module we generate with the following four registers and a \gls{BRAM} block:
 
 \begin{description}
   \item[program counter] The program counter can be modelled using a register that keeps track of the state, denoted as $\sigma$.
   \item[function entry point] When a function is called, the entry point denotes the first instruction that will be executed. This can be modelled using a reset signal that sets the state accordingly, denoted as $\mathit{rst}$.
   \item[return value] The return value can be modelled by setting a finished flag to 1 when the result is ready, and putting the result into a 32-bit output register. These are denoted as $\mathit{fin}$ and $\mathit{ret}$ respectively.
 %\JW{Is there a mismatch between `ret' in the figure and `rtrn' in the text?}
-  \item[stack] The function stack can be modelled as a RAM block, which is implemented using an array in the module, and denoted as $\mathit{stk}$.
+  \item[stack] The function stack can be modelled as a \gls{BRAM} block, which is implemented using an array in the module, and denoted as $\mathit{stk}$.
 %\JW{Is there a mismatch between `st' in the figure and `stk' in the text?}\YH{It was actually between $\Gamma_{a}$ and \mathit{stk}.  The \mathit{st} should have been $\sigma$.}
 \end{description}
 
@@ -288,7 +288,7 @@ The optional values are present to ensure correct merging of the two association
 %This means that the block necessarily represents the stack of the main function.
 The invariant used in the proofs is that block 0 should be equivalent to the merged representation of the $\Gamma_{\mathrm{a}}$ and $\Delta_{\mathrm{a}}$ maps.
 
-%However, in practice, assigning and reading from an array directly in the state machine will not produce a memory in the final hardware design, as the synthesis tool cannot identify the array as having the necessary properties that a RAM needs, even though this is the most natural formulation of memory.  Even though theoretically the memory will only be read from once per clock cycle, the synthesis tool cannot ensure that this is true, and will instead create a register for each memory location.  This increases the size of the circuit dramatically, as the RAM on the FPGA chip will not be reused.  Instead, the synthesis tool expects a specific interface that ensures these properties, and will then transform the interface into a proper RAM during synthesis.  Therefore, a translation has to be performed from the naive use of memory in the state machine, to a proper use of a memory interface.
+%However, in practice, assigning and reading from an array directly in the state machine will not produce a memory in the final hardware design, as the synthesis tool cannot identify the array as having the necessary properties that a \gls{BRAM} needs, even though this is the most natural formulation of memory.  Even though theoretically the memory will only be read from once per clock cycle, the synthesis tool cannot ensure that this is true, and will instead create a register for each memory location.  This increases the size of the circuit dramatically, as the \gls{BRAM} on the FPGA chip will not be reused.  Instead, the synthesis tool expects a specific interface that ensures these properties, and will then transform the interface into a proper \gls{BRAM} during synthesis.  Therefore, a translation has to be performed from the naive use of memory in the state machine, to a proper use of a memory interface.
 
 %\begin{figure}
 %  \centering

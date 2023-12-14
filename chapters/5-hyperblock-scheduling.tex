@@ -997,7 +997,7 @@ the operations in each chain must not exceed a predefined limit; this ensures
 that operation chaining does not reduce the maximum clock frequency of the
 resultant hardware. Second, whenever operation $\instr_1$ has a data dependency
 on $\instr_2$, $\instr_2$'s end time must precede $\instr_1$'s start
-time. Third, since our hardware has only a single RAM controller, no two memory
+time. Third, since our hardware has only a single \gls{BRAM} controller, no two memory
 operations (loads or stores) may be scheduled for the same cycle.
 
 These are all passed to a linear program (LP) solver; we use

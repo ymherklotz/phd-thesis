@@ -212,7 +212,7 @@ why it needs to be performed as part of the data path.
   & & & $\ \ \mathrm{stack\_size} : \mathbb{N};$ & \\
   & & & $\ \ \mathrm{finish},\mathrm{return},\mathrm{start},\mathrm{reset},\mathrm{clk} :
         \regtype;$ & \\
-  & & & $\ \ \mathrm{ram} : \optiontype{\mathrm{RAM}};$ & \\
+  & & & $\ \ \mathrm{ram} : \optiontype{\mathrm{\gls{BRAM}}};$ & \\
   & & & $\ \ \mathrm{order\_wf} : \mathrm{state} < \mathrm{finish} < \mathrm{return}
         < \mathrm{stack} < \mathrm{reset} < \mathrm{clk};$ & \\
   & & & $\ \ \mathrm{ram\_wf} : \forall r\ldotp \mathrm{ram} = \some{r} \implies
@@ -356,15 +356,15 @@ This is essentially an array of size \veriloginline`STK_LEN` of 32-bit integers.
 This array is therefore word-addressable.  One big difference between C and
 Verilog is how memory is represented.  Although Verilog arrays use similar
 syntax to C arrays, they must be treated quite differently.  Eventually, this
-array will have to be replaced by an actual RAM, which only has a limited set of
+array will have to be replaced by an actual \gls{BRAM}, which only has a limited set of
 read and write ports (one of each in our case).  To make loads and stores of
-words as efficient as possible, the RAM needs to be word-addressable, which
+words as efficient as possible, the \gls{BRAM} needs to be word-addressable, which
 means that an entire integer can be loaded or stored in one clock cycle.
 However, the memory model that \compcert{} uses for its intermediate languages
 is byte\?addressable~\cite{blazy05_formal_verif_memor_model_c}.  If a
 byte\?addressable memory was used in the target hardware, which is closer to
 \compcert{}'s memory model, then a load and store would instead take four clock
-cycles, the RAM we implement in hardware can only perform one read and write per
+cycles, the \gls{BRAM} we implement in hardware can only perform one read and write per
 clock cycle.  It therefore has to be proven that the byte-addressable memory
 behaves in the same way as the word-addressable memory in hardware.  Any
 modifications of the bytes in the \compcert{} memory model also have to be shown
@@ -600,7 +600,7 @@ pair of states to match are:
   size of the allocation being equal to the stack size of the \texttt{main}
   function, which was performed when the \texttt{main} function was initially
   called; that is: $|M| \le \mathtt{main}.\mathit{stacksize}$.
-\item The RAM values represented by each Verilog array in $\Gamma_{a}$ need to
+\item The \gls{BRAM} values represented by each Verilog array in $\Gamma_{a}$ need to
   match the \rtlsubpar{} function's stack contents, which are part of the memory $M$;
   that is: $M \le \Gamma_{a}$.
 \item The state is well formed, which means that the value of the state register
@@ -675,29 +675,29 @@ The simplest way to implement loads and stores in \vericert{} would be to access
 the Verilog array directly from within the data path as is currently the case
 after the \htl{} generation. This would be correct, but when a Verilog array is
 accessed at several program points, the synthesis tool is unlikely to detect
-that it can be implemented as an RAM, and will resort to using lots of registers
+that it can be implemented as an \gls{BRAM}, and will resort to using lots of registers
 instead, ruining the circuit's area and performance.  This is because reads and
-writes to a RAM need to follow a certain pattern to be suitable to be replaced
-by RAM reads and writes.  For example, the synthesis tool will have to check
+writes to a \gls{BRAM} need to follow a certain pattern to be suitable to be replaced
+by \gls{BRAM} reads and writes.  For example, the synthesis tool will have to check
 that the array is only written to once per clock cycle, and is only read from
 once as well.  To avert this, we arrange that the data-path does not access
 memory directly, but simply sets the address it wishes to access and then
-toggles the \texttt{u\_en} flag. This activates the RAM interface (lines 9--15
+toggles the \texttt{u\_en} flag. This activates the \gls{BRAM} interface (lines 9--15
 of Fig.~\ref{fig:accumulator_v}) on the next falling clock edge, which performs
 the requested load or store. By factoring all the memory accesses out into a
 separate interface, we ensure that the underlying array is only accessed from a
 single program point in the Verilog code, and thus ensure that the synthesis
-tool will correctly infer a RAM block.\footnote{Interestingly, the Verilog code
-  shown for the RAM interface must not be modified, because the synthesis tool
-  will only generate a RAM when the code matches a small set of specific
+tool will correctly infer a \gls{BRAM} block.\footnote{Interestingly, the Verilog code
+  shown for the \gls{BRAM} interface must not be modified, because the synthesis tool
+  will only generate a \gls{BRAM} when the code matches a small set of specific
   patterns.}
 
 This transformation pass therefore translates direct accesses to the Verilog
-array in \htl{} and replaces them by signals that access the RAM interface in a
+array in \htl{} and replaces them by signals that access the \gls{BRAM} interface in a
 separate always-block. The translation is performed by going through all the
 instructions and replacing each load and store expression in turn.  Stores can
-be replaced by the necessary wires to the RAM directly. Loads are a little more
-subtle: loads that use the RAM interface take two clock cycles where a direct
+be replaced by the necessary wires to the \gls{BRAM} directly. Loads are a little more
+subtle: loads that use the \gls{BRAM} interface take two clock cycles where a direct
 load from an array takes only one, so this pass inserts an extra state after
 each load.  The scheduling algorithm described in
 \cref{sec:hs:scheduling-algorithm} can already take this into account as well,
@@ -706,10 +706,10 @@ a store, however, some additional proofs would have to be added to this
 transformation pass to check that this is actually the case, and that the load
 will proceed as expected.
 
-%\JW{I've called that negedge always-block the `RAM driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
-%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a RAM, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to \htl{} converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from \htl{} to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
+%\JW{I've called that negedge always-block the `\gls{BRAM} driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
+%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a \gls{BRAM}, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to \htl{} converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from \htl{} to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
 
-There are two interesting parts to the inserted RAM interface.  Firstly, the
+There are two interesting parts to the inserted \gls{BRAM} interface.  Firstly, the
 memory updates are triggered on the negative (falling) edge of the clock, out of
 phase with the rest of the design which is triggered on the positive (rising)
 edge of the clock.  The advantage of this is that instead of loads and stores
@@ -717,7 +717,7 @@ taking three clock cycles and two clock cycles respectively, they only take two
 clock cycles and one clock cycle instead, greatly improving their performance.
 Ideally, this translation would take advantage of the scheduler, which can
 already ensure that the clock cycle after a load remains free to wait for the
-data from the RAM, however, this would require additional checking by this
+data from the \gls{BRAM}, however, this would require additional checking by this
 transformation to double check that the read result is not used until it is
 ready.
 % \JW{Is this a standard `trick' in hardware design? If so it might be nice to
@@ -731,41 +731,41 @@ but in general it does reduces the time that's available for arithmetic
 operations in the positive edge of the clock, making it harder to schedule
 operations.
 
-Secondly, the logic in the enable signal of the RAM (\texttt{en != u\_en}) is
+Secondly, the logic in the enable signal of the \gls{BRAM} (\texttt{en != u\_en}) is
 also atypical in hardware designs.  Enable signals are normally manually
 controlled and inserted into the appropriate states, by using a check like the
-following in the RAM:\@ \texttt{en == 1}.  This means that the RAM only turns on
+following in the \gls{BRAM}:\@ \texttt{en == 1}.  This means that the \gls{BRAM} only turns on
 when the enable signal is set.  However, to make the proof simpler and avoid
-reasoning about possible side effects introduced by the RAM being enabled but
-not used, a RAM which disables itself after every use would be ideal.  One
+reasoning about possible side effects introduced by the \gls{BRAM} being enabled but
+not used, a \gls{BRAM} which disables itself after every use would be ideal.  One
 method for implementing this would be to insert an extra state after each load
-or store that disables the RAM, but this extra state would eliminate the speed
-advantage of the negative-edge-triggered RAM. Another method would be to
-determine the next state after each load or store and disable the RAM in that
+or store that disables the \gls{BRAM}, but this extra state would eliminate the speed
+advantage of the negative-edge-triggered \gls{BRAM}. Another method would be to
+determine the next state after each load or store and disable the \gls{BRAM} in that
 state, but this could quickly become complicated, especially in the case where
 the next state also contains a memory operation, and hence the disable signal
-should not be added. The method we ultimately chose was to have the RAM become
+should not be added. The method we ultimately chose was to have the \gls{BRAM} become
 enabled not when the enable signal is high, but when it \emph{toggles} its
 value.  This can be arranged by keeping track of the old value of the enable
 signal in \texttt{en} and comparing it to the current value \texttt{u\_en} set
-by the data path.  When the values are different, the RAM gets enabled, and then
-\texttt{en} is set to the value of \texttt{u\_en}. This ensures that the RAM
+by the data path.  When the values are different, the \gls{BRAM} gets enabled, and then
+\texttt{en} is set to the value of \texttt{u\_en}. This ensures that the \gls{BRAM}
 will always be disabled straight after it was used, without having to insert or
 modify any other states.
 
-%We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the RAM to be equal to the value that the user set.  This means that the RAM should be enabled whenever the two signals are different, and disabled otherwise.
+%We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the \gls{BRAM} to be equal to the value that the user set.  This means that the \gls{BRAM} should be enabled whenever the two signals are different, and disabled otherwise.
 
 \subsection{BRAM Model Semantics}%
 \label{sec:hg:bram-model-semantics}
 
-Fig.~\ref{fig:ram_load_store} gives an example of how the RAM interface behaves
+Fig.~\ref{fig:ram_load_store} gives an example of how the \gls{BRAM} interface behaves
 when values are loaded and stored.  There is a \texttt{wr\_en} signal that
 determines if a load or store is being performed.  Then, if at the falling edge
 \texttt{u\_en} and \texttt{en} are different, the read or write at address
 \texttt{addr} is executed.  At the same time, the value of \texttt{u\_en} is
 then assigned to \texttt{en}, which would disable it if there is no other action
 by the data path on the next clock cycle.  However, if the data path toggles the
-value of \texttt{u\_en} on the next clock cycle, the RAM would be enabled again.
+value of \texttt{u\_en} on the next clock cycle, the \gls{BRAM} would be enabled again.
 
 \begin{figure}
   \centering
@@ -786,7 +786,7 @@ value of \texttt{u\_en} on the next clock cycle, the RAM would be enabled again.
         \vertlines[help lines]{2,8,14}
       \end{pgfonlayer}
     \end{tikztimingtable}
-    \caption{Timing diagram for loads. At time 1, the \texttt{u\_en} signal is toggled to enable the RAM. At time 2, \texttt{d\_out} is set to the value stored at the address in the RAM, which is finally assigned to the register \texttt{r} at time 3.}\label{fig:ram_load}
+    \caption{Timing diagram for loads. At time 1, the \texttt{u\_en} signal is toggled to enable the \gls{BRAM}. At time 2, \texttt{d\_out} is set to the value stored at the address in the \gls{BRAM}, which is finally assigned to the register \texttt{r} at time 3.}\label{fig:ram_load}
   \end{subfigure}\hfill%
   \begin{subfigure}[b]{0.48\linewidth}
     \begin{tikztimingtable}[timing/d/background/.style={fill=white}]
@@ -804,7 +804,7 @@ value of \texttt{u\_en} on the next clock cycle, the RAM would be enabled again.
         \vertlines[help lines]{2,9}
       \end{pgfonlayer}
     \end{tikztimingtable}
-    \caption{Timing diagram for stores. At time 1, the \texttt{u\_en} signal is toggled to enable the RAM, and the address \texttt{addr} and the data to store \texttt{d\_in} are set. On the negative edge at time 2, the data is stored into the RAM.}\label{fig:ram_store}
+    \caption{Timing diagram for stores. At time 1, the \texttt{u\_en} signal is toggled to enable the \gls{BRAM}, and the address \texttt{addr} and the data to store \texttt{d\_in} are set. On the negative edge at time 2, the data is stored into the \gls{BRAM}.}\label{fig:ram_store}
   \end{subfigure}
 %  \alt{Timing diagrams of loads and stores, showing which signals are modified at which time step.}
   \caption{Timing diagrams showing the execution of loads and stores over multiple clock cycles.}\label{fig:ram_load_store}
@@ -824,18 +824,18 @@ value of \texttt{u\_en} on the next clock cycle, the RAM would be enabled again.
       \inferrule[Store]{\Gamma_{\mathrm{r}}[r.\mathrm{en}] \ne \Gamma_{\mathrm{r}}[r.\mathrm{u\_en}] \\ \Gamma_{\mathrm{r}}[r.\mathrm{wr\_en}] = 1}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\mathrm{ram}} (\Delta_{\mathrm{r}}[r.\mathrm{en} \mapsto r.\mathrm{u\_en}], \Delta_{\mathrm{a}}[r.\mathrm{mem} \mapsto (\Gamma_{\mathrm{a}}[ r.\mathrm{mem}])[r.\mathrm{addr} \mapsto r.\mathrm{d\_in}]]) }
     \end{gather*}
   \end{minipage}
-  \caption{Specification for the memory implementation in \htl{}, where $r$ is the RAM, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
+  \caption{Specification for the memory implementation in \htl{}, where $r$ is the \gls{BRAM}, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
 \end{figure}
 
-\YH{TODO: Link the RAM from \htl{} to the ram instantiated here.}
+\YH{TODO: Link the \gls{BRAM} from \htl{} to the ram instantiated here.}
 
-\htl{} can only represent a single state machine, so we must model the RAM
+\htl{} can only represent a single state machine, so we must model the \gls{BRAM}
 abstractly to reason about the correctness of replacing the direct read and
-writes to the array by loads and stores to a RAM.  The specification for the RAM
-is shown in Fig.~\ref{fig:htl_ram_spec}, which defines how the RAM $r$ will
+writes to the array by loads and stores to a \gls{BRAM}.  The specification for the \gls{BRAM}
+is shown in Fig.~\ref{fig:htl_ram_spec}, which defines how the \gls{BRAM} $r$ will
 behave for all the possible combinations of the input signals.  This
 specification is part of the \htl{} semantics and runs in parallel to the state
-machine.  However, as the RAM is triggered by the falling edge of the clock, it
+machine.  However, as the \gls{BRAM} is triggered by the falling edge of the clock, it
 will execute in between standard clock cycles, and a merge of the association
 maps is performed in between each.
 
@@ -846,10 +846,10 @@ the translation algorithm.  There are five possibilities for the transformation
 of an instruction. For each Verilog statement in the map at location $i$, the
 statement is either a load, a store, a predicated load, a predicated store, or
 neither. The load, store, predicated load and predicated store is translated to
-the equivalent representation using the RAM specification and all other
+the equivalent representation using the \gls{BRAM} specification and all other
 instructions are left intact.  The specification of the translation is shown in
 \cref{sec:hg:memory-transformation-specification}, where $\sigma$ is state
-register, $r$ is the RAM, $d$ are the input data-path and control logic maps,
+register, $r$ is the \gls{BRAM}, $d$ are the input data-path and control logic maps,
 and $i$ is the current state.  ($n$ is the newly inserted state, which only
 applies to the translation of loads.)
 
@@ -942,18 +942,18 @@ applies to the translation of loads.)
 
 \subsubsection{From Specification to Simulation}
 
-Another simulation proof is performed to prove that the insertion of the RAM is
+Another simulation proof is performed to prove that the insertion of the \gls{BRAM} is
 semantics preserving.  As in Lemma~\ref{lemma:simulation_diagram}, we require
 some invariants that always hold at the start and end of the simulation.  The
-invariants needed for the simulation of the RAM insertion are quite different to
+invariants needed for the simulation of the \gls{BRAM} insertion are quite different to
 the previous ones, so we can define these invariants $\mathcal{I}_{\mathrm{r}}$ to be the
 following:
 
 \begin{itemize}
 \item The association map for arrays $\Gamma_{\mathrm{a}}$ always needs to have
   the same arrays present, and these arrays should never change in size.
-\item The RAM should always be disabled at the start of each simulation
-  step. (This is why self-disabling RAM is needed.)
+\item The \gls{BRAM} should always be disabled at the start of each simulation
+  step. (This is why self-disabling \gls{BRAM} is needed.)
 \end{itemize}
 
 The other invariants and assumptions for defining two matching states in \htl{} are
@@ -961,11 +961,11 @@ quite similar to the simulation performed in
 Lemma~\ref{lemma:simulation_diagram}, such as ensuring that the states have the
 same value, and that the values in the registers are less defined.  In
 particular, the less defined relation matches up all the registers, except for
-the new registers introduced by the RAM.
+the new registers introduced by the \gls{BRAM}.
 
-\begin{lemma}[Forward simulation from \htl{} to \htl{} after inserting the RAM]\label{lemma:htl_ram}
+\begin{lemma}[Forward simulation from \htl{} to \htl{} after inserting the \gls{BRAM}]\label{lemma:htl_ram}
   Given an \htl{} program, the forward-simulation relation should hold after
-  inserting the RAM and wiring the load, store, and control signals.
+  inserting the \gls{BRAM} and wiring the load, store, and control signals.
 
   \begin{align*}
     \forall h, h', B \in \texttt{Safe},\quad \yhfunction{tr\_ram\_ins}(h) = h' \land h \Downarrow B \implies h' \Downarrow B.
@@ -993,11 +993,11 @@ reasons why this transformation is needed.
 
 \begin{enumerate}
 \item In a clocked always-block, nonblocking assignment should be used for all
-  registers that could interact with other always-blocks.  As we have a RAM
+  registers that could interact with other always-blocks.  As we have a \gls{BRAM}
   block in a separate always block, we should at least use nonblocking
   assignment for the registers that interact with memory.  In this case, it is
-  technically not required, because the RAM is executing on the negative edge of
-  the clock, however, if it is ever replaced by a RAM that executes on the
+  technically not required, because the \gls{BRAM} is executing on the negative edge of
+  the clock, however, if it is ever replaced by a \gls{BRAM} that executes on the
   positive edge of the clock, or supplemented with other functional units that
   execute on the positive edge of the clock, then any registers communicating
   with those blocks will need to use nonblocking assignment.
@@ -1318,7 +1318,7 @@ transformations that take place are:
 \begin{enumerate}
 \item Converting the mapping from states to Verilog statements into a case
   statement.
-\item Instantiating the RAM specification as a Verilog always block.
+\item Instantiating the \gls{BRAM} specification as a Verilog always block.
 \end{enumerate}
 
 \begin{figure}
@@ -1336,7 +1336,7 @@ always @(negedge clk) begin
   end
 end
 \end{minted}
-  \caption{Instantiation of RAM specification with Verilog implementation.}%
+  \caption{Instantiation of \gls{BRAM} specification with Verilog implementation.}%
   \label{fig:hg:ram-instantiation}
 \end{figure}
 
