@@ -1,4 +1,5 @@
-\chapter{Evaluation}
+\chapter{Evaluation}%
+\label{sec:evaluation}
 
 \section{Performance Evaluation}
 \label{sec:performance-comparison}
@@ -52,7 +53,7 @@ Our evaluation aims to answer the following research questions:
 \begin{figure*}
   \centering
   \resizebox{\linewidth}{!}{\input{figures/hyperblock-scheduling/bar-plot}}
-  \caption{Results of simulating and synthesising the PolyBench/C benchmark suite using a range of HLS tools. All figures are relative to \BambuDefault{}.}%
+  \caption[Results of simulating and synthesising the PolyBench/C benchmark suite using a range of HLS tools. All figures are relative to Bambu.]{Results of simulating and synthesising the PolyBench/C benchmark suite using a range of HLS tools. All figures are relative to \BambuDefault{}.}%
   \label{fig:list-against-hyper-scheduling}
 \end{figure*}
 
@@ -66,12 +67,12 @@ To assess whether adding scheduling to Vericert leads to better hardware designs
 \paragraph{Answering RQ2}
 Hyperblock scheduling is considerably more complicated to implement and verify than list scheduling, as it requires if-conversion to combine basic blocks into hyperblocks, as well as predicate-aware scheduling. If we omit if-conversion entirely (hence avoiding predication too), we obtain list scheduling as a special case. Does hyperblock scheduling yield enough of a performance improvement over list scheduling to justify its additional complexity?
 
-To answer this, \cref{fig:list-against-hyper-scheduling} measures the hardware produced by Vericert with list scheduling (\VericertList{}). On average, list scheduling leads to hardware that requires 0.51$\times$ the cycle count compared to \VericertBase{}, which is 1.1$\times$ the cycle count compared to \VericertHyper{}. We expect hyperblock scheduling to extend its small lead over list scheduling once the heuristics that guide if-conversion are improved.  In particular, our predictions of the latency of predicated instructions are currently quite conservative to ensure that timing constraints are met; improving these estimates is an active research area~\cite{TanFeb15,RizziJul23,WangOct23,UstunNov20,ZhengFeb14}.
+To answer this, \cref{fig:list-against-hyper-scheduling} measures the hardware produced by Vericert with list scheduling (\VericertList{}). On average, list scheduling leads to hardware that requires 0.51$\times$ the cycle count compared to \VericertBase{}, which is 1.1$\times$ the cycle count compared to \VericertHyper{}. We expect hyperblock scheduling to extend its small lead over list scheduling once the heuristics that guide if-conversion are improved.  In particular, our predictions of the latency of predicated instructions are currently quite conservative to ensure that timing constraints are met; improving these estimates is an active research area~\cite{tan15_mappin_lut_fpgas,rizzi23_iterat_method_mappin_aware_frequen,wang23_mapbuf,ustun20_accur_fpga_hls,zheng14_fast_effec_placem_routin_direc}.
 
 In terms of area, we see that \VericertList{} leads to the smallest hardware designs. This can be attributed to the downstream logic synthesis tool being able to save area by optimising chained operations, such as multiply--accumulate, while not having to handle the predicates that are introduced with \VericertHyper{}.
 
 \paragraph{Answering RQ3}
-To assess how \VericertHyper{} fares against unverified HLS tools, we compare it against the state-of-the-art open-source HLS tool Bambu~\cite[]{ferrandi2021bambu}. We use Bambu in two modes: one where all default optimisations are enabled (\BambuDefault{}), and one where as many optimisations as possible are disabled (\BambuNoOpt{}). Note that several `optimisations' are built into Bambu and cannot be disabled, such as list scheduling and loop flattening.
+To assess how \VericertHyper{} fares against unverified HLS tools, we compare it against the state-of-the-art open-source HLS tool Bambu~\cite[]{ferrandi21_bambu}. We use Bambu in two modes: one where all default optimisations are enabled (\BambuDefault{}), and one where as many optimisations as possible are disabled (\BambuNoOpt{}). Note that several `optimisations' are built into Bambu and cannot be disabled, such as list scheduling and loop flattening.
 
 All the bars in \cref{fig:list-against-hyper-scheduling} are relative to \BambuDefault. The pink bars show \BambuNoOpt. We see that although \VericertHyper{} is well behind \BambuDefault{} (its designs require 3$\times$ the cycle count), it performs comparably to \BambuNoOpt{} (1.04$\times$ the cycle count), which is encouraging because \VericertHyper{} and \BambuNoOpt{} have similar feature sets.
 

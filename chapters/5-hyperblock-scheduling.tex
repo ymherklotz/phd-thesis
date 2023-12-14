@@ -1,6 +1,7 @@
 \graphicspath{{./figures/hyperblock-scheduling/}}
 
-\chapter{Hyperblock Scheduling}
+\chapter{Hyperblock Scheduling}%
+\label{sec:hyperblock-scheduling}
 
 \section{Introduction}
 
@@ -18,7 +19,7 @@ devices (such as FPGAs) now widespread, HLS tools such as AMD
 Vitis HLS~\cite[]{amd23_vitis_high_synth}, Intel
 HLS Compiler~\cite[]{intel20_high_synth_compil},
 %Microchip SmartHLS~\cite{smarthls},
-LegUp~\cite[]{canis11_legup}, and Bambu~\cite[]{ferrandi2021bambu} are
+LegUp~\cite[]{canis11_legup}, and Bambu~\cite[]{ferrandi21_bambu} are
 increasingly relied upon. But existing HLS tools are too unreliable for safety-
 and security-critical applications; indeed, random testing by
 \textcite{herklotz21_empir_study_reliab_high_level_synth_tools} uncovered
@@ -60,8 +61,8 @@ scheduling in HLS was first proposed over two decades
 ago~\cite{budiu02_compil_applic_specif_hardw,
   callahan98_instr_level_paral_recon_comput}, and is nowadays used by popular
 HLS tools such as AMD Vitis HLS~\cite{amd23_vitis_forum},
-LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{googleXLS}, and
-Bambu~\cite[line~304]{bambu_ifc}.
+LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls}, and
+Bambu~\cite[line~304]{ferrandi14_panda_bambu}.
 % This is due to custom hardware being able to execute arbitrarily many
 % independent instructions in parallel.
 
@@ -90,7 +91,7 @@ In this paper, we present:
     validation} in order to reason about predicates, and
 \item \textbf{experiments on the widely used PolyBench/C suite} showing that
   scheduling makes Vericert generate 2.1$\times$ faster hardware, thus making it
-  competitive with Bambu~\cite{ferrandi2021bambu}, a state-of-the-art
+  competitive with Bambu~\cite{ferrandi21_bambu}, a state-of-the-art
   open-source HLS tool, when a similar set of optimisations is enabled.
 \end{itemize}
 
@@ -104,7 +105,7 @@ implementation.
 % say something about benchmarking data also being available?}
 
 \section{Overview}
-\label{sec:overview}
+\label{sec:hs:overview}
 
 \Cref{fig:compcert_interm} shows the main components of our hyperblock scheduler
 and how they fit into the wider Vericert and CompCert projects.
@@ -125,7 +126,7 @@ and how they fit into the wider Vericert and CompCert projects.
 
 \begin{figure*}
 
-\begin{center}
+\centering
 \begin{tikzpicture}[
 yscale=-1
 ]
@@ -195,7 +196,6 @@ yscale=-1
 \draw[ed] (fsub) to[bend left=10] (htl);
 
  \end{tikzpicture}
-\end{center}
   \caption{New passes and intermediate languages introduced in this work.}%
   \label{fig:compcert_interm}
 \end{figure*}
@@ -272,7 +272,7 @@ yscale=-1
 
 \item To ensure that these assignments are actually performed in parallel, we
   have a final pass that performs \emph{forward
-    substitution}~\cite[p.~109]{hopwoodthesis} to turn the sequence of Verilog
+    substitution}~\cite[p.~109]{hopwood78_decom} to turn the sequence of Verilog
   blocking assignments into a sequence of non-blocking assignments. For example:
 \begin{center}
 \begin{tikzpicture}
@@ -411,7 +411,7 @@ reasoning about reordering of instructions in a predicate-aware fashion.
 % are also shown in \cref{sec:rtlblockdef}.
 
 \section{New Intermediate Languages}%
-\label{sec:rtlblockdef}
+\label{sec:hs:rtlblockdef}
 
 Our work introduces two new intermediate languages: \rtlblock{} and \rtlpar{},
 which implement the sequential and parallel semantics %\YH{I wanted to remove
@@ -648,7 +648,7 @@ validated, but we save that for future work.)
 % to get the most performance out of the hardware.
 
 \section{Verified If-Conversion}%
-\label{sec:if-conversion}
+\label{sec:hs:if-conversion}
 
 If-conversion introduces the predicated instructions that form hyperblocks.  As
 mentioned in \cref{sec:overview}, CompCert does have an if-converter already,
@@ -975,13 +975,14 @@ second.
 \end{theorem}
 
 \section{Implementing Hyperblock Scheduling}
-\label{sec:implementing_scheduling}
+\label{sec:hs:implementing-scheduling}
 
 This section discusses our implementation of hyperblock scheduling in Vericert.
 The scheduler takes each hyperblock of an if-converted \rtlblock{} program in
 turn, and schedules it to form an \rtlpar{} hyperblock. The scheduler is
 unverified, but it uses a verified translation validation algorithm to prove
-each output correct, which we will describe in \cref{sec:verifying_scheduling}.
+each output correct, which we will describe in
+\cref{sec:hs:verifying-scheduling}.
 
 Our scheduler is written in OCaml, and follows the SDC scheduling
 approach~\cite{cong06_sdc}. SDC scheduling is widely used in HLS tools, and it
@@ -1162,7 +1163,7 @@ the two multiplications \sIV{} and \sV{} can be allocated to the same resources
 since they never execute at the same time.
 
 \section{Validation of Hyperblock Scheduling}
-\label{sec:verifying_scheduling}
+\label{sec:hs:verifying-scheduling}
 
 Although the scheduling algorithm itself is complex with many heuristics, it is
 quite simple to check each specific schedule. To do so, we follow
@@ -2148,7 +2149,7 @@ validation approach:
   \end{equation*}
 
 \section{Proving the Validator Correct}%
-\label{sec:overview-validator-correctness-proof}
+\label{sec:hs:overview-validator-correctness-proof}
 
 In order to prove our validator correct, we need to prove that whenever our
 validator deems $\symbolic{\rtlpb}$ to be a symbolic refinement of
@@ -2906,23 +2907,24 @@ of CompCert called CompCertKVX.
 
 Outside of the realm of mechanised proof, most HLS tools implement some form of
 static scheduling. For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
-LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{googleXLS} and
-Bambu~\cite[line~304]{ferrandi2021bambu} all employ SDC-based hyperblock
-scheduling. Other HLS tools, such as Dynamatic~\cite{dynamatic}, defer
-scheduling decisions until runtime. It is notable that these unverified tools
-tend towards fewer, larger passes, where several optimisations are packed into
-`scheduling'. This minimises the number of times the solver needs to be invoked,
-and gives it the best chance of finding a global optimum. Verified tools such as
-CompCert and Vericert, on the other hand, tend towards more, smaller passes that
-are individually feasible to prove correct.
+LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls} and
+Bambu~\cite[line~304]{ferrandi21_bambu} all employ SDC-based hyperblock
+scheduling. Other HLS tools, such as
+Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
+until runtime. It is notable that these unverified tools tend towards fewer,
+larger passes, where several optimisations are packed into `scheduling'. This
+minimises the number of times the solver needs to be invoked, and gives it the
+best chance of finding a global optimum. Verified tools such as CompCert and
+Vericert, on the other hand, tend towards more, smaller passes that are
+individually feasible to prove correct.
 
 Several HLS tools are associated with translation validators, either for an
 individual scheduling
 pass~\cite{chouksey20_verif_sched_condit_behav_high_level_synth,
   karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the HLS
-tool as a whole~\cite{mentor20_catap_high_level_synth, crest}. These typically
-work by establishing equivalence at the level of state machines, whereas we take
-the approach of comparing symbolic states, because
+tool as a whole~\cite{mentor20_catap_high_level_synth, tiemeyer19_crest}. These
+typically work by establishing equivalence at the level of state machines,
+whereas we take the approach of comparing symbolic states, because
 \textcite{tristan08_formal_verif_trans_valid} showed it to be viable in the
 context of a verified compiler. Unlike our work, none of these translation
 validators provide mechanised proofs of equivalence, so might produce false

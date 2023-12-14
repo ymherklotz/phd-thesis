@@ -11,18 +11,6 @@
 \newif\if@ACM@newfonts
 \@ACM@newfontstrue
 
-\ifPDFTeX
-\input{glyphtounicode}
-\pdfglyphtounicode{f_f}{FB00}
-\pdfglyphtounicode{f_f_i}{FB03}
-\pdfglyphtounicode{f_f_l}{FB04}
-\pdfglyphtounicode{f_i}{FB01}
-\pdfglyphtounicode{t_t}{0074 0074}
-\pdfglyphtounicode{f_t}{0066 0074}
-\pdfglyphtounicode{T_h}{0054 0068}
-\pdfgentounicode=1
-\RequirePackage{cmap}
-\fi
 \if@ACM@newfonts
   \RequirePackage[T1]{fontenc}
   % Note that the order in which packages are loaded matters,
@@ -625,6 +613,10 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 
 \newcommand{\veriloginline}{\mintinline{systemverilog}}
 \def\arcr{\@arraycr}
+
+\newcommand{\verilogmerge}{\mathbin{//}}
+
+\newcommand{\printpublication}[1]{\AtNextCite{\defcounter{maxnames}{99}}\fullcite{#1_bold}\nocite{#1}}
 
 %\newcommand{\quote}{``#1''}
 

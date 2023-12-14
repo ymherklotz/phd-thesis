@@ -1,4 +1,5 @@
-\chapter{Hardware Generation}
+\chapter{Hardware Generation}%
+\label{sec:hardware-generation}
 
 Until now the representation of the program has still been in the form of a
 software program, with virtual, infinite registers, a program counter, as well
@@ -60,8 +61,7 @@ blacknumlarge/.style={
 }
 
 \begin{figure*}
-
-\begin{center}
+\centering
 \begin{tikzpicture}[
 yscale=-1
 ]
@@ -107,7 +107,6 @@ yscale=-1
 \end{pgfonlayer}
 
  \end{tikzpicture}
-\end{center}
   \caption{Hardware generation transformation passes introduced to convert
     \rtlpar{} to Verilog.}%
   \label{fig:hg:vericert-hardware-generation}
@@ -862,7 +861,7 @@ applies to the translation of loads.)
 \newcommand\verilogeq{\mathbin{\texttt{==}}}
 
 \begin{figure}
-\begin{center}
+\centering
 \begin{mathpar}
   \inferrule[Store Transl]{ d[i] = \left(\begin{array}{l}
     r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
@@ -936,7 +935,6 @@ applies to the translation of loads.)
 (\forall c\ d\ e_1\ e_2\ldotp d[i] \neq (d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \sigma \blockasgn e_2))}%
   {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d\ i\ n}
 \end{mathpar}
-\end{center}
 \caption{Memory transformation specification.\YH{TODO: replace register name $d$
   because it's also used for the data path.}}%
 \label{sec:hg:memory-transformation-specification}
@@ -1014,29 +1012,107 @@ reasons why this transformation is needed.
   be the case as in this example \texttt{r2} should just become a wire.
 \end{enumerate}
 
+\definecolor{mathcommentcolor}{HTML}{0099FF}
+\newcommand\mathstate[1]{\veriloginline`//` \textcolor{mathcommentcolor}{#1}}
+
+\newcommand\asgnblockingbefore{\Gamma}
+\newcommand\asgnblockingafter{\Gamma'}
+\newcommand\asgnnonblockingbefore{\Delta}
+\newcommand\asgnnonblockingafter{\Delta'}
+
+\newcommand\interstate[2]{{#2}^{#1}_{\mathrm r}}
+\newcommand\initialstate[1]{{#1}^{\mathrm I}_{\mathrm r}}
+
 \begin{figure}
   \centering
   \begin{tikzpicture}[>=Latex,shorten >=1pt,
     label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
     bb/.style={align=left, draw=white, fill=black!5}]
-    \node[bb] (initial block) {\veriloginline`state = 32'd2`\\
-                               \veriloginline`r2 = r4 * r6`\\
-                               \veriloginline`r8 = r2 + r10`\\
-                               \veriloginline`state = r3 ? 32'd3 : state`};
-    \node[bb, right=5cm of initial block] (transf block)
-      {\veriloginline`state <= 32'd2`\\
-       \veriloginline`r2 <= r4 * r6`\\
-       \veriloginline`r8 <= {r4 * r6} + r10`\\
-       \veriloginline`state <= r3 ? 32'd3 : 32'd2`};
-    \node[label] at (initial block.north west) {\texttt{1}};
-    \node[label] at (transf block.north west) {\texttt{1}};
-    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
-      -- node [below, font=\footnotesize] {forward substitution}
-      ($(initial block.east) + (4,0)$);
+    \node[bb] (initial block) {
+      {\tiny 1 $\quad$}\mathstate{\texttt{assume:} $\at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto \varnothing; \texttt{r2} \mapsto
+          \varnothing; \texttt{r8} \mapsto \varnothing}$}\\[0.5em]
+      {\tiny 2 $\quad$}\veriloginline`state = 32'd2;`\\[0.5em]
+      {\tiny 3 $\quad$}\mathstate{$\interstate{1}{\asgnblockingbefore} = \at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto
+          \texttt{32'd2}}$}\\[0.5em]
+      {\tiny 4 $\quad$}\mathstate{$\interstate{1}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      {\tiny 5 $\quad$}\veriloginline`r2 = r4 * r6;`\\[0.5em]
+      {\tiny 6 $\quad$}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
+          \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
+      {\tiny 7 $\quad$}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \interstate{1}{\asgnnonblockingbefore}$}\\[0.5em]
+      {\tiny 8 $\quad$}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
+      {\tiny 9 $\quad$}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      {\tiny 10 $\quad$}\veriloginline`r8 = r2 + r10;`\\[0.5em]
+      {\tiny 11 $\quad$}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
+          \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}} \mathbin{\texttt{+}}
+          \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
+      {\tiny 12 $\quad$}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \interstate{2}{\asgnnonblockingbefore}$}\\[0.5em]
+{\tiny 13 $\quad$}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
+          (\at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}) \mathbin{\texttt{+}}
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
+{\tiny 14 $\quad$}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      {\tiny 15 $\quad$}\veriloginline`state = r3 ? 32'd3 : state;`\\[0.5em]
+{\tiny 16 $\quad$}\mathstate{$\interstate{4}{\asgnblockingbefore} =
+  \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
+    \mternary{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{state}}}}$}\\[0.5em]
+{\tiny 17 $\quad$}\mathstate{$\interstate{4}{\asgnnonblockingbefore} = \interstate{3}{\asgnnonblockingbefore}$}\\[0.5em]
+{\tiny 18 $\quad$}\mathstate{$\interstate{4}{\asgnblockingbefore} =
+  \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
+    \mternary{\at{\initialstate{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
+{\tiny 19 $\quad$}\mathstate{$\interstate{4}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}};
+    \node[bb, right=1cm of
+    initial block] (transf block)
+    {\veriloginline`state <= 32'd2;`\\[0.5em]
+     \mathstate{$\interstate{1}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+     \mathstate{$\interstate{1}{\asgnnonblockingafter} = \at{\initialstate{\asgnnonblockingafter}}{\texttt{state} \mapsto \texttt{32'd2}}$}\\[0.5em]
+     \veriloginline`r2 <= r4 * r6;`\\[0.5em]
+     \mathstate{$\interstate{2}{\asgnblockingafter} = \interstate{1}{\asgnblockingafter}$}\\[0.5em]
+     \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\interstate{1}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\interstate{1}{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
+     \mathstate{$\interstate{2}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+     \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
+     \veriloginline`r8 <= {r4 * r6} + r10;`\\[0.5em]
+     \mathstate{$\interstate{3}{\asgnblockingafter} = \interstate{2}{\asgnblockingafter}$}\\[0.5em]
+     \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
+          (\at{\interstate{2}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\interstate{2}{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
+          \at{\interstate{2}{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
+     \mathstate{$\interstate{3}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+     \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
+          (\at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
+          \at{\initialstate{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
+     \veriloginline`state <= r3 ? 32'd3 : 32'd2;`\\[0.5em]
+     \mathstate{$\interstate{4}{\asgnblockingafter} = \interstate{3}{\asgnblockingafter}$}\\[0.5em]
+\mathstate{$\interstate{4}{\asgnnonblockingafter} =
+  \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
+    \mternary{\at{\interstate{3}{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
+     \mathstate{$\interstate{4}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+\mathstate{$\interstate{4}{\asgnnonblockingafter} =
+  \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
+    \mternary{\at{\initialstate{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}};
+    \node[label] at (initial
+    block.north west) {\texttt{1}};
+    \node[label] at (transf block.north west)
+    {\texttt{1}};
+    %\draw[->,very thick] ($(initial block.east) + (0.5,0)$) --
+    %node [below, font=\footnotesize] {forward substitution}
+    %($(initial block.east) + (4,0)$);
   \end{tikzpicture}
-  \caption{Simple forward substitution transformation.}%
+  \caption{Simple forward substitution transformation together with the runtime
+    value of the blocking assignment association map ($\Gamma_{\mathrm r}$) and
+    the nonblocking assignment association map ($\Delta_{\mathrm r}$).\YH{TODO:
+      Need to find a better way to lay this out.}}%
   \label{fig:hg:forward-substitution}
 \end{figure}
+
+\newcommand\substmap{t}
+\newcommand\substexpr[2]{\texttt{subst\_expr}\ #1\ #2}
+\newcommand\subststmnt[2]{\texttt{subst\_stmnt}\ #1\ #2}
+\newcommand\invinsubstmap[4]{\texttt{in\_subst\_map}\ #1\ #2\ #3\ #4}
+\newcommand\invnotinsubstmap[3]{\texttt{not\_in\_subst\_map}\ #1\ #2\ #3}
 
 The transformation is performed by traversing each block and storing for each
 register the expression that is being assigned to it.  If the same register is
@@ -1045,38 +1121,193 @@ first and then replaces the current mapping from register to expression.  As the
 BRAM insertion already removed all the load and store operations in the data
 path, only regular register assignments need to be accounted for.
 
+First, we describe the substitution of expressions in
+\cref{def:substitute-expressions}, and then we describe the substitution of
+statements in \cref{def:substitute-statements}.
+
+\begin{definition}[Substitute expressions]%
+  \label{def:substitute-expressions}
+
+  Expressions are substituted based on a map $\substmap$ from registers to
+  expressions.  Each register within the expression is replaced by the
+  expression in the map.
+
+  \begin{mathpar}
+    \inferrule[SubstReg]{\at{t}{r} = \some{e'}}{\substexpr{t}{r} = e'}
+    \and
+    \inferrule[SubstRegNotIn]{\at{t}{r} = \cnone}{\substexpr{t}{r} = r}
+    \and
+    \inferrule[SubstBinaryOp]{ }{\substexpr{t}{(e_1
+        \mathbin{\texttt{+}} e_2)} = \substexpr{t}{e_1} \mathbin{\texttt{+}}
+      \substexpr{t}{e_2}}
+    \and \cdots
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}[Substitute statements]%
+  \label{def:substitute-statements}
+
+  Only two types of statements need to be substituted, blocking assignments and
+  sequential composition of statements.  For blocking assignments, substitution
+  means that it is turned into nonblocking assignment by substituting the
+  expression with the current expression substitution map $\substmap$, in
+  addition to updating the map itself with a new expression mapping for the
+  register $r$.
+
+  \begin{mathpar}
+    \inferrule[SubstBlocking]{e' = \substexpr{\substmap}{e}}{\subststmnt{\substmap}{(r
+        \blockasgn e)} = \some{r \nonblockasgn e', \at{\substmap}{r \mapsto e'}}}
+    \and
+    \inferrule[SubstSeq]{\subststmnt{\substmap}{s_1} = \some{s_1', \substmap'}
+      \\ \subststmnt{\substmap'}{s_2} = \some{s_2',
+        \substmap''}}{\subststmnt{\substmap}{(s_1\msemi s_2)} = \some{s_1'\msemi s_2', \substmap''}}
+    \and
+    \inferrule[SubstOther]{(\forall s_1\ s_2\ldotp s \neq s_1\msemi s_2) \\
+      (\forall r\ e\ldotp s \neq r \blockasgn e)}{\subststmnt{\substmap}{s} = \cnone}
+  \end{mathpar}
+\end{definition}
+
+It might seem restrictive to only support sequential composition of statements
+and blocking assignment, but those are the only constructs that are generated by
+the HTL generation.  Supporting additional statements would not require a
+significant change to the transformation.  Even adding support for nonblocking
+assignment in the input statement should be safe, as long as the expressions are
+correctly substituted, and are \emph{not} added to the expression substitution
+map $\substmap$.  The main property one would have to check about the input
+statement is that a register is not assigned using blocking assignment after a
+nonblocking assignment, as otherwise the input and output statement would have
+different results.
+
 \subsection{Forward Substitution Correctness Proof}%
 \label{sec:hg:forward-substitution-correctness-proof}
+
+The main sub-proof that is needed to prove the forward simulation correct is
+that the execution of statements in each state results in equivalent
+\emph{merged} association maps from the blocking and nonblocking assignments.
+In \cref{fig:hg:forward-substitution} this corresponds to showing that
+$\interstate{4}{\asgnblockingbefore} \verilogmerge \Delta^{\mathrm I}_{\mathrm r} =
+{\Gamma'}^{\mathrm I}_{\mathrm r} \verilogmerge {\Delta'}^4_{\mathrm r}$. \YH{TODO:
+  Need to fix the naming scheme as currently one cannot distinguish between the
+  runtime maps before and after substitution.}
+
+\YH{TODO: Technically it shouldn't be equality but equivalence.}
+
+\begin{lemma}[Equivalence of statement substitution]%
+  \label{lem:hg:equivalence-of-statement-subst}
+
+  After merging the maps of a statement $s$ and the substituted statements $s'$,
+  the contents of the merged blocking association map $\Gamma'$ and nonblocking
+  association map $\Delta'$ after executing $s$ should be equivalent to merging
+  the maps $\Gamma''$ and $\Delta''$ after executing $s'$.
+
+  {\normalfont
+    \begin{equation*}
+      \begin{aligned}
+        &\subststmnt{\substmap}{s} = \some{s', \substmap'}\implies\\
+        &((\Gamma, \Delta), s) \downarrow_{\text{stmnt}} (\Gamma', \Delta')
+          \implies\\
+        &((\Gamma, \Delta), s') \downarrow_{\text{stmnt}} (\Gamma'', \Delta'')
+          \implies\\
+        &\Gamma' \verilogmerge \Delta' = \Gamma'' \verilogmerge \Delta''
+      \end{aligned}
+    \end{equation*}}
+
+  \begin{proof}[Proof sketch]
+    By induction on the definition of a statement, by applying
+    \cref{lem:hg:forward-substitution-of-expressions} to show equivalence of
+    expressions within the statements.
+  \end{proof}
+\end{lemma}
+
+There are two main invariants that have to be maintained when proving the lemma
+above, which relates the run time association map used to execute expressions
+encountered during the execution of the original statement with the contents of
+the expression substitution map $\substmap$.  The first invariant, described in
+\cref{def:in-substitution-map}, states that the evaluation of an expression in
+the substitution map $\substmap$ should correspond to the value associated with
+that register in the current execution of the block.  For example, in
+\cref{fig:hg:forward-substitution} after line 5, the substitution map would
+contain the entry:
+$\at{\substmap}{\texttt{r2} \mapsto \at{\substmap}{\texttt{r4}}
+  \mathbin{\texttt{*}} \at{\substmap}{\texttt{r6}}}$.  Executing this expression
+$\at{\substmap}{\texttt{r4}} \mathbin{\texttt{*}} \at{\substmap}{\texttt{r6}}$
+with the initial blocking assignment at the start of the statement
+$\initialstate{\asgnblockingbefore}$ should be the same as indexing the current
+run time association map at the register \texttt{r2},
+i.e. $\at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}}$, which is the case.
+
+\begin{definition}[In substitution map]%
+  \label{def:in-substitution-map}
+
+  If the register $r$ is in the substitution map $\substmap$ and it maps to
+  expression $e$, then the value in the current association map
+  $\Gamma_{\mathrm r}$ should be the same as the value obtained from evaluating
+  expression $e$ with the initial association map
+  $\Gamma^{\mathrm{I}}_{\mathrm r}$.
+
+  \begin{equation*}
+    \begin{aligned}
+      &\invinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \defeq \\
+      &\qquad \forall r\ e\ldotp \at{t}{r} = \some{e} \implies \exists v\ldotp
+      ((\Gamma^{\mathrm{I}}_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
+      \land \at{\Gamma_{\mathrm r}}{r} = \some{v}
+    \end{aligned}
+  \end{equation*}
+\end{definition}
+
+\Cref{def:hg:not-in-substitution-map} describes what the relationship is between
+the initial map and the current run time map is when a register is not in the
+expression substitution map.  For example, this would be the case for register
+\texttt{r2} before line 5.  In that case, \texttt{r2} is not in $\substmap$ and
+so
+$\at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2}} =
+\at{\initialstate{\asgnblockingbefore}}{\texttt{r2}}$.
+
+\begin{definition}[Not in substitution map]%
+  \label{def:hg:not-in-substitution-map}
+
+  If the register $r$ is not in the substitution map $\substmap$, then the value
+  for that register in the blocking assignment association map
+  $\Gamma_{\mathrm r}$ should be the same as the value of the register in the
+  initial association map $\Gamma^{\mathrm{I}}_{\mathrm r}$ at the start of the
+  execution of the statement.
+
+  \begin{equation*}
+    \begin{aligned}
+      &\invnotinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap}
+      \defeq \\
+      &\qquad\forall r\ldotp \at{t}{r} = \cnone \implies \at{\Gamma^{\mathrm{I}}_{\mathrm r}}{r} =
+      \at{\Gamma_{\mathrm r}}{r}
+    \end{aligned}
+  \end{equation*}
+\end{definition}
 
 The main lemma that needs to be proven for the forward substitution is the
 following.
 
-\begin{lemma}[Forward substitution of expressions]
+\begin{lemma}[Forward substitution of expressions]%
+  \label{lem:hg:forward-substitution-of-expressions}
 
   Given a map from registers to expression $t$, an expression before forward
   substitution $e$, and the result of forward substituting $e$ with map $t$
   resulting in expression $e'$, then executing $e$ with the dynamically updated
-  association map $\Gamma^2_{\mathrm r}$ should be equivalent to executing $e'$
-  with the initial state of all the registers $\Gamma^1_{\mathrm r}$.\YH{TODO:
-    Explain the two starting hypotheses in the following equation.}
+  association map $\Gamma_{\mathrm r}$ should be equivalent to executing $e'$
+  with the initial state of all the registers $\Gamma^{\mathrm{I}}_{\mathrm r}$.
 
-  \begin{equation*}
-    \begin{aligned}
-    &(\forall r\ e\ldotp \at{t}{r} = \some{e} \implies \exists v\ldotp
-    ((\Gamma^1_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
-    \land \at{\Gamma^2_{\mathrm r}}{r} = \some{v}) \implies\\
-    &(\forall r\ldotp \at{t}{r} = \cnone \implies \at{\Gamma^1_{\mathrm r}}{r} =
-    \at{\Gamma^2_{\mathrm r}}{r}) \implies\\
-    &\texttt{forward\_substitute}(t, e) = \some{e'} \implies \\
-    &((\Gamma^2_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
-      \implies\\
-    &((\Gamma^1_{\mathrm r}, \Gamma_{\mathrm a}), e') \downarrow_{\text{expr}} v
-    \end{aligned}
-  \end{equation*}
+  {\normalfont
+    \begin{equation*}
+      \begin{aligned}
+        &\substexpr{\substmap}{e} = \some{e'} \implies \\
+        &\invinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \implies\\
+        &\invnotinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap} \implies\\
+        &\forall v\ldotp ((\Gamma_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
+          \implies ((\Gamma^{\mathrm{I}}_{\mathrm r}, \Gamma_{\mathrm a}), e') \downarrow_{\text{expr}} v
+      \end{aligned}
+    \end{equation*}}
 \end{lemma}
 
-Using this, the rest of the proof can be built up inductively.\YH{TODO: Talk
-  a bit more about the top-level proof.  Especially the invariants.}
+\YH{TODO: Talk a bit more about the top-level proof.  Especially the
+  invariants.}
 
 \section{Verilog Generation}%
 \label{sec:hg:verilog-generation}
@@ -1122,9 +1353,10 @@ is quite different to that of the case-statement to which it is converted.
   In the following, we write $\yhfunction{tr\_verilog}$ for the translation from
   \htl{} to Verilog. (Note that this translation cannot fail, so we do not need the
   \yhconstant{OK} constructor here.)
-  \begin{align*}
-    \forall h, V, B \in \texttt{Safe},\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
-  \end{align*}
+  {\normalfont
+    \begin{align*}
+      \forall h, V, B \in \texttt{Safe},\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
+    \end{align*}}
 \end{lemma}
 
 \begin{proof}[Proof sketch]

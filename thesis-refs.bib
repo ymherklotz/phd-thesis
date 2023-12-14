@@ -1,16 +1,16 @@
 @Comment{
-ebib-main-file: /Users/ymherklotz/Dropbox/bibliography/references.bib
+ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 }
 
 
-@Misc{absint19_compc,
+@Software{absint19_compc,
 	year = {2019},
 	title = {{CompCert} release 19.10},
 	author = {AbsInt},
 	url = {https://www.absint.com/releasenotes/compcert/19.10/}
 }
 
-@Misc{absint22_compc,
+@Software{absint22_compc,
 	url = {https://www.absint.com/releasenotes/compcert/22.10/},
 	year = {2022},
 	title = {{CompCert} release 22.10},
@@ -39,15 +39,6 @@ ebib-main-file: /Users/ymherklotz/Dropbox/bibliography/references.bib
 	urldate = {2023-06-02},
 	year = {2023},
 	note = {Relevant quote from AMD: ``If-Conversion aims to convert a sequence of blocks into a single block for better optimization result.''}
-}
-
-@misc{googleXLS,
-author = {Google},
-title = {{XLS: Accelerated HW Synthesis}},
-url = {https://github.com/google/xls/blob/dde7095ff1050b09c37cb44d1977bff1af8de050/xls/scheduling/mutual_exclusion_pass.h#L112},
-urldate = {2023-11-14},
-year = {2023},
-note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes},
 }
 
 @misc{amd23_vitis_high_synth,
@@ -107,11 +98,29 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	year = {2014}
 }
 
-@Misc{berkelaar10,
+@software{berkelaar10,
 	year = {2010},
-	title = {\textbf{lp\_solve} v5.5},
+	title = {\texttt{lp\_solve} v5.5},
 	author = {Berkelaar, Michel},
 	url = {https://lpsolve.sourceforge.net/5.5/}
+}
+
+@inproceedings{bowen20_perfor_cost_softw_based_secur_mitig,
+	author = {Bowen, Lucy and Lupo, Chris},
+	title = {The Performance Cost of Software-Based Security Mitigations},
+	year = {2020},
+	isbn = {9781450369916},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3358960.3379139},
+	doi = {10.1145/3358960.3379139},
+	abstract = {Historically, performance has been the most important feature when optimizing computer hardware. Modern processors are so highly optimized that every cycle of computation time matters. However, this practice of optimizing for performance at all costs has been called into question by new microarchitectural attacks, e.g. Meltdown and Spectre. Microarchitectural attacks exploit the effects of microarchitectural components or optimizations in order to leak data to an attacker. These attacks have caused processor manufacturers to introduce performance impacting mitigations in both software and silicon. To investigate the performance impact of the various mitigations, a test suite of forty-seven different tests was created. This suite was run on a series of virtual machines that tested both Ubuntu 16 and Ubuntu 18. These tests investigated the performance change across version updates and the performance impact of CPU core number vs. default microarchitectural mitigations. The testing proved that the performance impact of the microarchitectural mitigations is non-trivial, as the percent difference in performance can be as high as 200\%.},
+	booktitle = {Proceedings of the ACM/SPEC International Conference on Performance Engineering},
+	pages = {210–217},
+	numpages = {8},
+	keywords = {performance evaluation, hardware vulnerabilities, security mitigations},
+	location = {Edmonton AB, Canada},
+	series = {ICPE '20}
 }
 
 @inproceedings{budiu02_compil_applic_specif_hardw,
@@ -193,6 +202,19 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
+@article{chouksey20_verif_sched_condit_behav_high_level_synth,
+	abstract = {High-level synthesis (HLS) technique translates the behaviors written in high-level languages like C/C++ into register transfer level (RTL) design. Due to its complexity, proving the correctness of an HLS tool is prohibitively expensive. Translation validation is the process of proving that the target code is a correct translation of the source program being compiled. The path-based equivalence checking (PBEC) method is a widely used translation validation method for verification of the scheduling phase of HLS. The existing PBEC methods cannot handle significant control structure modification that occurs in the efficient scheduling of conditional behaviors. Hence, they produce a false-negative result. In this article, we identify some scenarios involving path merge/split where the state-of-the-art PBEC approaches fail to show the equivalence even though behaviors are equivalent. We propose a value propagation-based PBEC method along with a new cutpoint selection scheme to overcome this limitation. Our method can also handle the scenario where adjacent conditional blocks (CBs) having an equivalent conditional expression are combined into one CB. Experimental results demonstrate the usefulness of our method over the existing methods.},
+	author = {Chouksey, R. and Karfa, C.},
+	url = {https://doi.org/10.1109/TVLSI.2020.2978242},
+	doi = {10.1109/TVLSI.2020.2978242},
+	issn = {1557-9999},
+	journaltitle = {IEEE Transactions on Very Large Scale Integration (VLSI) Systems},
+	keywords = {translation validation,high-level synthesis,verification,compiler optimisation},
+	pages = {1--14},
+	title = {Verification of Scheduling of Conditional Behaviors in High-Level Synthesis},
+	year = {2020}
+}
+
 @inproceedings{cong06_sdc,
 	abstract = {Scheduling plays a central role in the behavioral synthesis process, which automatically compiles high-level specifications into optimized hardware implementations. However, most of the existing behavior-level scheduling heuristics either have a limited efficiency in a specific class of applications or lack general support of various design constraints. In this paper we describe a new scheduler that converts a rich set of scheduling constraints into a system of difference constraints (SDC) and performs a variety of powerful optimizations under a unified mathematical programming framework. In particular, we show that our SDC-based scheduling algorithm can efficiently support resource constraints, frequency constraints, latency constraints, and relative timing constraints, and effectively optimize longest path latency, expected overall latency, and the slack distribution. Experiments demonstrate that our proposed technique provides efficient solutions for a broader range of applications with higher quality of results (in terms of system performance) when compared to the state-of-the-art scheduling heuristics},
 	author = {Cong, Jason and Zhang, Zhiru},
@@ -206,11 +228,67 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	year = {2006}
 }
 
+@inproceedings{dessouky19_hardf,
+	author = {Dessouky, Ghada and Gens, David and Haney, Patrick and Persyn, Garrett and Kanuparthi, Arun and Khattri, Hareesh and Fung, Jason M. and Sadeghi, Ahmad-Reza and Rajendran, Jeyavijayan},
+	title = {{HardFails}: Insights into {Software-Exploitable} Hardware Bugs},
+	booktitle = {28th USENIX Security Symposium (USENIX Security 19)},
+	year = {2019},
+	isbn = {978-1-939133-06-9},
+	address = {Santa Clara, CA},
+	pages = {213--230},
+	url = {https://www.usenix.org/conference/usenixsecurity19/presentation/dessouky},
+	publisher = {USENIX Association},
+	month = aug
+}
+
 @phdthesis{ellis85_bulld,
 	title = {Bulldog: A compiler for {VLIW} architectures},
 	author = {Ellis, John R},
 	year = {1985},
 	school = {Yale University}
+}
+
+@misc{ferrandi14_panda_bambu,
+	author = {Ferrandi, Fabrizio},
+	title = {PandA-Bambu release notes},
+	url = {https://github.com/ferrandi/PandA-bambu/blob/c443bf14c33a9a74008ada12f56e7a62e30e5efe/NEWS#L304},
+	urldate = {2023-11-16},
+	year = {2014}
+}
+
+@INPROCEEDINGS{ferrandi21_bambu,
+	author = {Ferrandi, Fabrizio and Castellana, Vito Giovanni 
+          and Curzel, Serena and Fezzardi, Pietro and Fiorito, Michele 
+          and Lattuada, Marco and Minutoli, Marco and Pilato, Christian 
+          and Tumeo, Antonino},
+	booktitle = {2021 58th ACM/IEEE Design Automation Conference (DAC)},
+	title = {Bambu: an Open-Source Research Framework for the 
+         High-Level Synthesis of Complex Applications},
+	year = {2021},
+	pages = {1327-1330},
+	abstract = {This paper presents the open-source high-level synthesis (HLS) research 
+              framework Bambu. Bambu provides a research environment to experiment with 
+              new ideas across HLS, high-level verification and debugging, FPGA/ASIC design,
+              design flow space exploration, and parallel hardware accelerator design. The 
+              tool accepts as input standard C/C++ specifications and compiler intermediate 
+              representations (IRs) coming from the well-known Clang/LLVM and GCC compilers. 
+              The broad spectrum and flexibility of input formats allow the electronic 
+              design automation (EDA) research community to explore and integrate new 
+              transformations and optimizations. The easily extendable modular framework 
+              already includes many optimizations and HLS benchmarks used to evaluate 
+              the QoR of the tool against existing approaches [1]. The integration with 
+              synthesis and verification backends (commercial and open-source) allows 
+              researchers to quickly test any new finding and easily obtain performance 
+              and resource usage metrics for a given application. Different FPGA devices 
+              are supported from several different vendors: AMD/Xilinx, Intel/Altera, 
+              Lattice Semiconductor, and NanoXplore. Finally, integration with the OpenRoad 
+              open-source end-to-end silicon compiler perfectly fits with the recent push 
+              towards open-source EDA.},
+	publisher = {{IEEE}},
+	doi = {10.1109/DAC18074.2021.9586110},
+	ISSN = {0738-100X},
+	month = {12},
+	pdf = {https://re.public.polimi.it/retrieve/668507/dac21_bambu.pdf}
 }
 
 @article{fisher81_trace_sched,
@@ -225,28 +303,58 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	year = {1981}
 }
 
-@inproceedings{herklotz21_empir_study_reliab_high_level_synth_tools,
-	author = {Herklotz, Yann and Du, Zewei and Ramanathan, Nadesh and Wickerson, John},
-	booktitle = {2021 IEEE 29th Annual International Symposium on Field-Programmable Custom Computing Machines (FCCM)},
-	doi = {10.1109/FCCM51124.2021.00034},
-	pages = {219--223},
-	title = {An Empirical Study of the Reliability of High-Level Synthesis Tools},
-	year = {2021}
+@misc{google23_xls,
+	author = {Google},
+	title = {{XLS: Accelerated HW Synthesis}},
+	url = {https://github.com/google/xls/blob/dde7095ff1050b09c37cb44d1977bff1af8de050/xls/scheduling/mutual_exclusion_pass.h#L112},
+	urldate = {2023-11-14},
+	year = {2023},
+	note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes}
 }
 
-@article{herklotz21_formal_verif_high_level_synth,
-	abstract = {High-level synthesis (HLS), which refers to the automatic compilation of software into hardware, is rapidly gaining popularity. In a world increasingly reliant on application-specific hardware accelerators, HLS promises hardware designs of comparable performance and energy efficiency to those coded by hand in a hardware description language such as Verilog, while maintaining the convenience and the rich ecosystem of software development. However, current HLS tools cannot always guarantee that the hardware designs they produce are equivalent to the software they were given, thus undermining any reasoning conducted at the software level. Furthermore, there is mounting evidence that existing HLS tools are quite unreliable, sometimes generating wrong hardware or crashing when given valid inputs. To address this problem, we present the first HLS tool that is mechanically verified to preserve the behaviour of its input software. Our tool, called Vericert, extends the CompCert verified C compiler with a new hardware-oriented intermediate language and a Verilog back end, and has been proven correct in Coq. Vericert supports most C constructs, including all integer operations, function calls, local arrays, structs, unions, and general control-flow statements. An evaluation on the PolyBench/C benchmark suite indicates that Vericert generates hardware that is around an order of magnitude slower (only around 2\texttimes{} slower in the absence of division) and about the same size as hardware generated by an existing, optimising (but unverified) HLS tool.},
-	author = {Herklotz, Yann and Pollard, James D. and Ramanathan, Nadesh and Wickerson, John},
-	location = {New York, NY, USA},
+@inproceedings{herzog21_price_meltd_spect,
+	author = {Herzog, Benedict and Reif, Stefan and Preis, Julian and Schr\"{o}der-Preikschat, Wolfgang and H\"{o}nig, Timo},
+	title = {The Price of Meltdown and Spectre: Energy Overhead of Mitigations at Operating System Level},
+	year = {2021},
+	isbn = {9781450383370},
 	publisher = {Association for Computing Machinery},
-	doi = {10.1145/3485494},
-	journaltitle = {Proc. ACM Program. Lang.},
-	keywords = {high-level synthesis,Coq,Verilog,CompCert,C},
-	month = oct,
-	number = {OOPSLA},
-	title = {Formal Verification of High-Level Synthesis},
-	volume = {5},
-	year = {2021}
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3447852.3458721},
+	doi = {10.1145/3447852.3458721},
+	abstract = {The Meltdown and Spectre hardware vulnerabilities shocked hardware manufacturers and system users upon discovery. Numerous attack vectors and mitigations have been developed and deployed. However, due to the deep entanglement in core CPU components they will be an important topic for years. Although the performance overhead of software mitigations has been examined closely, the energy overhead has experienced little attention---even though the energy demand is a critical cost factor in data centres.This work contributes a fine-grained energy-overhead analysis of Meltdown/Spectre software mitigations, which reveals application-specific energy overheads of up to 72 \%. We further compare energy overheads to execution time overheads. Additionally, we examine subsystem-specific effects (i.e., CPU, memory, I/O, network/interprocess communication) and develop a model that predicts energy overheads for applications.},
+	booktitle = {Proceedings of the 14th European Workshop on Systems Security},
+	pages = {8–14},
+	numpages = {7},
+	location = {Online, United Kingdom},
+	series = {EuroSec '21}
+}
+
+@article{hoare78_commun_sequen_proces,
+	author = {Hoare, C. A. R.},
+	title = {Communicating Sequential Processes},
+	year = {1978},
+	issue_date = {Aug. 1978},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {21},
+	number = {8},
+	issn = {0001-0782},
+	url = {https://doi.org/10.1145/359576.359585},
+	doi = {10.1145/359576.359585},
+	abstract = {This paper suggests that input and output are basic primitives of programming and that parallel composition of communicating sequential processes is a fundamental program structuring method. When combined with a development of Dijkstra's guarded command, these concepts are surprisingly versatile. Their use is illustrated by sample solutions of a variety of a familiar programming exercises.},
+	journal = {Commun. ACM},
+	month = {8},
+	pages = {666–677},
+	numpages = {12},
+	keywords = {programming, guarded commands, multiple entries, nondeterminacy, data representations, monitors, multiple exits, iterative arrays, coroutines, conditional critical regions, program structures, concurrency, recursion, procedures, classes, programming primitives, parallel programming, programming languages, input, output}
+}
+
+@phdthesis{hopwood78_decom,
+	author = {Hopwood, Gregory Littell},
+	title = {Decompilation},
+	year = {1978},
+	publisher = {University of California, Irvine},
+	note = {AAI7811860}
 }
 
 @inbook{hwu93_super,
@@ -284,6 +392,91 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
+@inproceedings{josipović18_dynam_sched_high_synth,
+	author = {Josipović, Lana and Ghosal, Radhika and Ienne, Paolo},
+	location = {Monterey, CALIFORNIA, USA},
+	publisher = {ACM},
+	url = {https://doi.org/10.1145/3174243.3174264},
+	booktitle = {Proceedings of the 2018 ACM/SIGDA International Symposium on Field-Programmable Gate Arrays},
+	doi = {10.1145/3174243.3174264},
+	isbn = {978-1-4503-5614-5},
+	keywords = {compiler,dynamically scheduled circuits,high-level synthesis,pipelining},
+	pages = {127--136},
+	series = {FPGA '18},
+	title = {Dynamically Scheduled High-level Synthesis},
+	year = {2018}
+}
+
+@inproceedings{karfa06_formal_verif_method_sched_high_synth,
+	author = {Karfa, C and Mandal, C and Sarkar, D and Pentakota, S R. and Reade, Chris},
+	location = {Washington, DC, USA},
+	publisher = {IEEE Computer Society},
+	url = {https://doi.org/10.1109/ISQED.2006.10},
+	booktitle = {Proceedings of the 7th International Symposium on Quality Electronic Design},
+	doi = {10.1109/ISQED.2006.10},
+	isbn = {0-7695-2523-7},
+	pages = {71--78},
+	series = {ISQED '06},
+	title = {A Formal Verification Method of Scheduling in High-level Synthesis},
+	year = {2006}
+}
+
+@article{kern99_formal_verif_hardw_desig,
+	author = {Kern, Christoph and Greenstreet, Mark R.},
+	title = {Formal Verification in Hardware Design: A Survey},
+	year = {1999},
+	issue_date = {April 1999},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {4},
+	number = {2},
+	issn = {1084-4309},
+	url = {https://doi.org/10.1145/307988.307989},
+	doi = {10.1145/307988.307989},
+	abstract = {In recent years, formal methods have emerged as an alternative approach to ensuring the quality and correctness of hardware designs, overcoming some of the limitations of traditional validation techniques such as simulation and testing.There are two main aspects to the application of formal methods in a design process: the formal framework used to specify desired properties of a design and the verification techniques and tools used to reason about the relationship between a specification and a corresponding implementation. We survey a variety of frameworks and techniques proposed in the literature and applied to actual designs. The specification frameworks we describe include temporal logics, predicate logic, abstraction and refinement, as well as containment between  ω-regular languages. The verification techniques presented include model checking, automata-theoretic techniques, automated theorem proving, and approaches that integrate the above methods.In order to provide insight into the scope and limitations of currently available techniques, we present a selection of case studies where formal methods were applied to industrial-scale designs, such as microprocessors, floating-point hardware, protocols, memory subsystems, and communications hardware.},
+	journal = {ACM Trans. Des. Autom. Electron. Syst.},
+	month = {apr},
+	pages = {123–193},
+	numpages = {71},
+	keywords = {survey, formal verification, model checking, formal methods, theorem proving, hardware verification, language containment, case studies}
+}
+
+@inproceedings{kim04_autom_fsmd,
+	author = {{Youngsik Kim} and {Kopuri}, S. and {Mansouri}, N.},
+	url = {https://doi.org/10.1109/ISQED.2004.1283659},
+	booktitle = {International Symposium on Signals, Circuits and Systems. Proceedings, SCS 2003. (Cat. No.03EX720)},
+	doi = {10.1109/ISQED.2004.1283659},
+	issn = {null},
+	keywords = {formal verification;high level synthesis;data flow graphs;finite state machines;theorem proving;automated formal verification;scheduling process;finite state machines with datapath;high-level synthesis;behavioral specification;control-data flow graph;equivalence conditions;higher-order specification language;theorem proving environment;PVS proof checker;Formal verification;Automata;High level synthesis;Processor scheduling;Computer science;Flow graphs;Mathematical model;Specification languages;Libraries;Computer applications},
+	month = mar,
+	pages = {110--115},
+	title = {Automated formal verification of scheduling process using finite state machines with datapath (FSMD)},
+	year = {2004}
+}
+
+@INPROCEEDINGS{lattner04_llvm,
+	author = {Lattner, C. and Adve, V.},
+	booktitle = {International Symposium on Code Generation and Optimization, 2004. CGO 2004.},
+	title = {LLVM: a compilation framework for lifelong program analysis \& transformation},
+	year = {2004},
+	volume = {},
+	number = {},
+	pages = {75-86},
+	doi = {10.1109/CGO.2004.1281665}
+}
+
+@inproceedings{lattner21_mlir,
+	abstract = {This work presents MLIR, a novel approach to building reusable and extensible compiler infrastructure. MLIR addresses software fragmentation, compilation for heterogeneous hardware, significantly reducing the cost of building domain specific compilers, and connecting existing compilers together. MLIR facilitates the design and implementation of code generators, translators and optimizers at different levels of abstraction and across application domains, hardware targets and execution environments. The contribution of this work includes (1) discussion of MLIR as a research artifact, built for extension and evolution, while identifying the challenges and opportunities posed by this novel design, semantics, optimization specification, system, and engineering. (2) evaluation of MLIR as a generalized infrastructure that reduces the cost of building compilers-describing diverse use-cases to show research and educational opportunities for future programming languages, compilers, execution environments, and computer architecture. The paper also presents the rationale for MLIR, its original design principles, structures and semantics.},
+	author = {Lattner, Chris and Amini, Mehdi and Bondhugula, Uday and Cohen, Albert and Davis, Andy and Pienaar, Jacques and Riddle, River and Shpeisman, Tatiana and Vasilache, Nicolas and Zinenko, Oleksandr},
+	booktitle = {2021 IEEE/ACM International Symposium on Code Generation and Optimization (CGO)},
+	doi = {10.1109/CGO51591.2021.9370308},
+	keywords = {,mlir},
+	month = feb,
+	pages = {2--14},
+	title = {MLIR: Scaling Compiler Infrastructure for Domain Specific Computation},
+	year = {2021}
+}
+
 @article{leroy09_formal_verif_compil_back_end,
 	abstract = {This article describes the development and formal verification (proof of semantic preservation) of a compiler back-end from Cminor (a simple imperative intermediate language) to PowerPC assembly code, using the Coq proof assistant both for programming the compiler and for proving its soundness. Such a verified compiler is useful in the context of formal methods applied to the certification of critical software: the verification of the compiler guarantees that the safety properties proved on the source code hold for the executable compiled code as well.},
 	author = {Leroy, Xavier},
@@ -297,6 +490,50 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	year = {2009}
 }
 
+@inproceedings{lööw19_proof_trans_veril_devel_hol,
+	author = {Lööw, Andreas and Myreen, Magnus O.},
+	location = {Montreal, Quebec, Canada},
+	publisher = {IEEE Press},
+	url = {https://doi.org/10.1109/FormaliSE.2019.00020},
+	booktitle = {Proceedings of the 7th International Workshop on Formal Methods in Software Engineering},
+	doi = {10.1109/FormaliSE.2019.00020},
+	pages = {99--108},
+	series = {FormaliSE '19},
+	title = {A Proof-producing Translator for Verilog Development in HOL},
+	year = {2019}
+}
+
+@inproceedings{lööw19_verif_compil_verif_proces,
+	author = {Lööw, Andreas and Kumar, Ramana and Tan, Yong Kiam and Myreen, Magnus O. and Norrish, Michael and Abrahamsson, Oskar and Fox, Anthony},
+	location = {Phoenix, AZ, USA},
+	publisher = {ACM},
+	url = {https://doi.org/10.1145/3314221.3314622},
+	booktitle = {Proceedings of the 40th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+	doi = {10.1145/3314221.3314622},
+	isbn = {978-1-4503-6712-7},
+	keywords = {compiler verification,hardware verification,program verification,verified stack},
+	pages = {1041--1053},
+	series = {PLDI 2019},
+	title = {Verified Compilation on a Verified Processor},
+	year = {2019}
+}
+
+@inproceedings{lööw21_lutsig,
+	abstract = {We report on a new verified Verilog compiler called Lutsig. Lutsig currently targets (a class of) FPGAs and is capable of producing technology mapped netlists for FPGAs. We have connected Lutsig to existing Verilog development tools, and in this paper we show how Lutsig, as a consequence of this connection, fits into a hardware development methodology for verified circuits in the HOL4 theorem prover. One important step in the methodology is transporting properties proved at the behavioral Verilog level down to technology mapped netlists, and Lutsig is the component in the methodology that enables such transportation.},
+	author = {Lööw, Andreas},
+	location = {Virtual, Denmark},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/3437992.3439916},
+	booktitle = {Proceedings of the 10th ACM SIGPLAN International Conference on Certified Programs and Proofs},
+	doi = {10.1145/3437992.3439916},
+	isbn = {9781450382991},
+	keywords = {hardware verification,hardware synthesis,compiler verification},
+	pages = {46--60},
+	series = {CPP 2021},
+	title = {Lutsig: A Verified Verilog Compiler for Verified Circuit Development},
+	year = {2021}
+}
+
 @article{mahlke92_effec_compil_suppor_predic_execut_using_hyper,
 	author = {Mahlke, Scott A. and Lin, David C. and Chen, William Y. and Hank, Richard E. and Bringmann, Roger A.},
 	location = {New York, NY, USA},
@@ -305,12 +542,20 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	issn = {1050-916X},
 	journaltitle = {SIGMICRO Newsl.},
 	keywords = {speculative execution,static scheduling,hyperblocks},
-	month = 12,
+	month = dec,
 	number = {1-2},
 	pages = {45--54},
 	title = {Effective Compiler Support for Predicated Execution Using the Hyperblock},
 	volume = {23},
 	year = {1992}
+}
+
+@misc{mentor20_catap_high_level_synth,
+	author = {Siemens},
+	title = {Catapult High-Level Synthesis},
+	url = {https://eda.sw.siemens.com/en-US/ic/catapult-high-level-synthesis/hls/c-cplus/},
+	urldate = {2023-11-14},
+	year = 2021
 }
 
 @article{pangrle87_desig_tools_intel_silic_compil,
@@ -329,13 +574,31 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-
-
 @misc{pouchet20_polyb_c,
 	author = {Pouchet, Louis-No\"el},
 	title = {PolyBench/C: the Polyhedral Benchmark suite},
 	url = {http://web.cse.ohio-state.edu/~pouchet.2/software/polybench/},
 	year = {2020}
+}
+
+@InProceedings{rizzi23_iterat_method_mappin_aware_frequen,
+	keywords = {delay prediction},
+	author = {Rizzi, Carmine and Guerrieri, Andrea and Josipović, Lana},
+	booktitle = {Proceedings of the 60rd ACM/IEEE Design Automation Conference},
+	title = {An Iterative Method for Mapping-Aware Frequency Regulation in Dataflow Circuits},
+	year = {2023},
+	month = jul,
+	address = {San Francisco, CA}
+}
+
+@TechReport{roane23_autom_hw_sw_co_desig,
+	institution = {Cadence},
+	urldate = {2023-12-14},
+	keywords = {high-level synthesis},
+	url = {https://www.cadence.com/en_US/home/resources/white-papers/automated-hw-sw-co-design-of-dsp-systems-composed-of-processors-and-hardware-accelerators-wp.html},
+	year = {2023},
+	title = {Automated HW/SW Co-Design of DSP Systems Composed of Processors and Hardware Accelerators},
+	author = {Roane, Jeff}
 }
 
 @inproceedings{sen15_multis,
@@ -386,6 +649,32 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	year = {2022}
 }
 
+@InProceedings{tan15_mappin_lut_fpgas,
+	keywords = {delay prediction},
+	author = {Tan, Mingxing and Dai, Steve and Gupta, Udit and Zhang, Zhiru},
+	title = {Mapping-aware constrained scheduling for {LUT-based FPGAs}},
+	booktitle = {Proceedings of the 23rd {ACM}/{SIGDA} International
+                  Symposium on Field Programmable Gate Arrays},
+	year = 2015,
+	address = {Monterey, CA},
+	month = feb,
+	pages = {190--9}
+}
+
+@article{tiemeyer19_crest,
+	author = {Andreas Tiemeyer and Tom Melham and Daniel Kroening and John O'Leary},
+	title = {{CREST:} Hardware Formal Verification with {ANSI-C} Reference Specifications},
+	journal = {CoRR},
+	volume = {abs/1908.01324},
+	year = {2019},
+	url = {http://arxiv.org/abs/1908.01324},
+	eprinttype = {arXiv},
+	eprint = {1908.01324},
+	timestamp = {Fri, 09 Aug 2019 12:15:56 +0200},
+	biburl = {https://dblp.org/rec/journals/corr/abs-1908-01324.bib},
+	bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
 @inproceedings{tristan08_formal_verif_trans_valid,
 	author = {Tristan, Jean-Baptiste and Leroy, Xavier},
 	location = {San Francisco, California, USA},
@@ -398,6 +687,27 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	series = {POPL '08},
 	title = {Formal Verification of Translation Validators: A Case Study on Instruction Scheduling Optimizations},
 	year = {2008}
+}
+
+@InProceedings{ustun20_accur_fpga_hls,
+	keywords = {delay prediction},
+	author = {Ustun, Ecenur and Deng, Chenhui and Pal, Debjit and Li, Zhijing and Zhang, Zhiru},
+	title = {Accurate operation delay prediction for {FPGA HLS} using graph neural networks},
+	booktitle = {Proceedings of the 39th International Conference on Computer-Aided Design},
+	year = 2020,
+	address = {Virtual},
+	month = nov,
+	pages = {1--9}
+}
+
+@InProceedings{wang23_mapbuf,
+	keywords = {delay prediction},
+	author = {Wang, Hanyu and Rizzi, Carmine and Josipović, Lana},
+	booktitle = {Proceedings of the 42nd IEEE/ACM Intl. Conference on Computer-Aided Design},
+	title = {{MapBuf}: Simultaneous Technology Mapping and Buffer Insertion for {HLS} Performance Optimization},
+	year = {2023},
+	month = 10,
+	address = {San Francisco, CA}
 }
 
 @inproceedings{zhang13_sdc,
@@ -413,192 +723,27 @@ note = {The XLS scheduler refers to using an SMT solver to merge mutually exclus
 	year = {2013}
 }
 
-
-@phdthesis{hopwoodthesis,
-author = {Hopwood, Gregory Littell},
-title = {Decompilation},
-year = {1978},
-publisher = {University of California, Irvine},
-note = {AAI7811860}
+@inproceedings{zheng14_fast_effec_placem_routin_direc,
+	author = {Zheng, Hongbin and Gurumani, Swathi T. and Rupnow, Kyle and Chen, Deming},
+	title = {Fast and Effective Placement and Routing Directed High-Level Synthesis for FPGAs},
+	year = {2014},
+	isbn = {9781450326711},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/2554688.2554775},
+	doi = {10.1145/2554688.2554775},
+	abstract = {Achievable frequency (fmax) is a widely used input constraint for designs targeting Field-Programmable Gate Arrays (FPGA), because of its impact on design latency and throughput. Fmax is limited by critical path delay, which is highly influenced by lower-level details of the circuit implementation such as technology mapping, placement and routing. However, for high-level synthesis~(HLS) design flows, it is challenging to evaluate the real critical delay at the behavioral level. Current HLS flows typically use module pre-characterization for delay estimates. However, we will demonstrate that such delay estimates are not sufficient to obtain high fmax and also minimize total execution latency.In this paper, we introduce a new HLS flow that integrates with Altera's Quartus synthesis and fast placement and routing (PAR) tool to obtain realistic post-PAR delay estimates. This integration enables an iterative flow that improves the performance of the design with both behavioral-level and circuit-level optimizations using realistic delay information. We demonstrate our HLS flow produces up to 24\% (on average 20\%) improvement in fmax and upto 22\% (on average 20\%) improvement in execution latency. Furthermore, results demonstrate that our flow is able to achieve from 65\% to 91\% of the theoretical fmax on Stratix IV devices (550MHz).},
+	booktitle = {Proceedings of the 2014 ACM/SIGDA International Symposium on Field-Programmable Gate Arrays},
+	pages = {1–10},
+	numpages = {10},
+	keywords = {high-level synthesis, scheduling, delay prediction},
+	location = {Monterey, California, USA},
+	series = {FPGA '14}
 }
 
-@article{chouksey20_verif_sched_condit_behav_high_level_synth,
-  author          = {R. {Chouksey} and C. {Karfa}},
-  title           = {Verification of Scheduling of Conditional Behaviors in
-                  High-Level Synthesis},
-  journal         = {IEEE Transactions on Very Large Scale Integration (VLSI)
-                  Systems},
-  volume          = {},
-  number          = {},
-  pages           = {1-14},
-  year            = {2020},
-  doi             = {10.1109/TVLSI.2020.2978242},
-  url             = {https://doi.org/10.1109/TVLSI.2020.2978242},
-  ISSN            = {1557-9999},
-  month           = {},
+@Comment{
+Local Variables:
+bibtex-dialect: biblatex
+End:
 }
 
-@inproceedings{karfa06_formal_verif_method_sched_high_synth,
-  author =       {Karfa, C and Mandal, C and Sarkar, D and Pentakota, S R. and
-                  Reade, Chris},
-  title =        {A Formal Verification Method of Scheduling in High-level
-                  Synthesis},
-  booktitle =    {Proceedings of the 7th International Symposium on Quality
-                  Electronic Design},
-  year =         2006,
-  pages =        {71--78},
-  doi =          {10.1109/ISQED.2006.10},
-  acmid =        1126731,
-  address =      {Washington, DC, USA},
-  isbn =         {0-7695-2523-7},
-  numpages =     8,
-  publisher =    {IEEE Computer Society},
-  series =       {ISQED '06},
-}
-
-@inproceedings{kim04_autom_fsmd,
-  author = { {Youngsik Kim} and S. {Kopuri} and N. {Mansouri}},
-  title = {Automated formal verification of scheduling process using
-                  finite state machines with datapath (FSMD)},
-  booktitle = {International Symposium on Signals, Circuits and
-                  Systems. Proceedings, SCS 2003. (Cat. No.03EX720)},
-  year = 2004,
-  pages = {110-115},
-  doi = {10.1109/ISQED.2004.1283659},
-  month = {3}
-}
-
-@misc{mentor20_catap_high_level_synth,
-  author          = {Siemens},
-  title           = {Catapult High-Level Synthesis},
-  url             = {https://eda.sw.siemens.com/en-US/ic/catapult-high-level-synthesis/hls/c-cplus/},
-  urldate         = {2023-11-14},
-  year            = 2021,
-}
-
-@misc{bambu_ifc,
-author = {Ferrandi, Fabrizio},
-title = {PandA-Bambu release notes},
-url = {https://github.com/ferrandi/PandA-bambu/blob/c443bf14c33a9a74008ada12f56e7a62e30e5efe/NEWS#L304},
-urldate = {2023-11-16},
-year = {2014},
-}
-
-@article{crest,
-  author       = {Andreas Tiemeyer and
-                  Tom Melham and
-                  Daniel Kroening and
-                  John O'Leary},
-  title        = {{CREST:} Hardware Formal Verification with {ANSI-C} Reference Specifications},
-  journal      = {CoRR},
-  volume       = {abs/1908.01324},
-  year         = {2019},
-  url          = {http://arxiv.org/abs/1908.01324},
-  eprinttype    = {arXiv},
-  eprint       = {1908.01324},
-  timestamp    = {Fri, 09 Aug 2019 12:15:56 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-1908-01324.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
-
-@inproceedings{dynamatic,
-  author       = {Lana Josipovic and
-                  Radhika Ghosal and
-                  Paolo Ienne},
-  editor       = {Jason Helge Anderson and
-                  Kia Bazargan},
-  title        = {Dynamically Scheduled High-level Synthesis},
-  booktitle    = {Proceedings of the 2018 {ACM/SIGDA} International Symposium on Field-Programmable
-                  Gate Arrays, {FPGA} 2018, Monterey, CA, USA, February 25-27, 2018},
-  pages        = {127--136},
-  publisher    = {{ACM}},
-  year         = {2018},
-  url          = {https://doi.org/10.1145/3174243.3174264},
-  doi          = {10.1145/3174243.3174264},
-  timestamp    = {Wed, 07 Dec 2022 23:11:53 +0100},
-  biburl       = {https://dblp.org/rec/conf/fpga/JosipovicGI18.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
-
-@INPROCEEDINGS{ferrandi2021bambu,
-  author={Ferrandi, Fabrizio and Castellana, Vito Giovanni 
-          and Curzel, Serena and Fezzardi, Pietro and Fiorito, Michele 
-          and Lattuada, Marco and Minutoli, Marco and Pilato, Christian 
-          and Tumeo, Antonino},
-  booktitle={2021 58th ACM/IEEE Design Automation Conference (DAC)}, 
-  title={Bambu: an Open-Source Research Framework for the 
-         High-Level Synthesis of Complex Applications}, 
-  year={2021},
-  pages={1327-1330},
-  abstract = {This paper presents the open-source high-level synthesis (HLS) research 
-              framework Bambu. Bambu provides a research environment to experiment with 
-              new ideas across HLS, high-level verification and debugging, FPGA/ASIC design,
-              design flow space exploration, and parallel hardware accelerator design. The 
-              tool accepts as input standard C/C++ specifications and compiler intermediate 
-              representations (IRs) coming from the well-known Clang/LLVM and GCC compilers. 
-              The broad spectrum and flexibility of input formats allow the electronic 
-              design automation (EDA) research community to explore and integrate new 
-              transformations and optimizations. The easily extendable modular framework 
-              already includes many optimizations and HLS benchmarks used to evaluate 
-              the QoR of the tool against existing approaches [1]. The integration with 
-              synthesis and verification backends (commercial and open-source) allows 
-              researchers to quickly test any new finding and easily obtain performance 
-              and resource usage metrics for a given application. Different FPGA devices 
-              are supported from several different vendors: AMD/Xilinx, Intel/Altera, 
-              Lattice Semiconductor, and NanoXplore. Finally, integration with the OpenRoad 
-              open-source end-to-end silicon compiler perfectly fits with the recent push 
-              towards open-source EDA.},
-  publisher={{IEEE}},
-  doi={10.1109/DAC18074.2021.9586110},
-  ISSN={0738-100X},
-  month={12},
-  pdf={https://re.public.polimi.it/retrieve/668507/dac21_bambu.pdf}
-}
-
-@InProceedings{TanFeb15,
- author={Tan, Mingxing and Dai, Steve and Gupta, Udit and Zhang, Zhiru},
- title =	 {Mapping-aware constrained scheduling for {LUT-based FPGAs}},
- booktitle = {Proceedings of the 23rd {ACM}/{SIGDA} International
-                  Symposium on Field Programmable Gate Arrays},
- year =	 2015,
- address =	 {Monterey, CA},
- month =	 feb,
- pages =	 {190--9}
-}
-@InProceedings{RizziJul23,
-author={Rizzi, Carmine and Guerrieri, Andrea and Josipović, Lana},  
-booktitle={Proceedings of the 60rd ACM/IEEE Design Automation Conference}, 
-title={An Iterative Method for Mapping-Aware Frequency Regulation in Dataflow Circuits}, 
-year={2023},
-month=jul,
-address ={San Francisco, CA},
- note =  {To appear.}}
-
-@InProceedings{WangOct23,
-author={Wang, Hanyu and Rizzi, Carmine and Josipović, Lana},  
-booktitle={Proceedings of the 42nd IEEE/ACM Intl. Conference on Computer-Aided Design}, 
-title={{MapBuf}: Simultaneous Technology Mapping and Buffer Insertion for {HLS} Performance Optimization}, 
-year={2023},
-month=oct,
-address ={San Francisco, CA},
- note =  {To appear.}}
-
-@InProceedings{UstunNov20,
- author={Ustun, Ecenur and Deng, Chenhui and Pal, Debjit and Li, Zhijing and Zhang, Zhiru},
- title =  {Accurate operation delay prediction for {FPGA HLS} using graph neural networks},
- booktitle = {Proceedings of the 39th International Conference on Computer-Aided Design},
- year =   2020,
- address =  {Virtual},
- month =  nov,
- pages={1--9},
-}
-
-@inproceedings{ZhengFeb14,
-author = {Zheng, Hongbin and Gurumani, Swathi T. and Rupnow, Kyle and Chen, Deming},
-title = {Fast and Effective Placement and Routing Directed High-Level Synthesis for {FPGA}s},
-booktitle = {Proceedings of the 2014 ACM/SIGDA International Symposium on Field-Programmable Gate Arrays},
-pages = {1--10},
-month =  feb,
-address = {Monterey, CA},
-year = 2014
-}

@@ -1,4 +1,5 @@
-\chapter{Introduction to Vericert}
+\chapter{Introduction to Vericert}%
+\label{sec:introduction-to-vericert}
 
 This section describes the main architecture of the HLS tool, and the way in which the Verilog back end was added to \compcert{}.  This section also covers an example of converting a simple C program into hardware, expressed in the Verilog language.
 
@@ -17,16 +18,35 @@ We also considered using a language with built-in parallel constructs that map w
 
 
 \paragraph{Choice of target language}
-Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an HDL that can be synthesised into logic cells which can either be placed onto a field-programmable gate array (FPGA) or turned into an application-specific integrated circuit (ASIC).  Verilog was chosen as the output language for \vericert{} because it is one of the most popular HDLs and there already exist a few formal semantics for it that could be used as a target~\cite{loow19_verif_compil_verif_proces, meredith10_veril}.  Bluespec, previously ruled out as a source language, is another possible target and there exists a formally verified translation to circuits using K\^{o}ika~\cite{bourgeat20_essen_blues}. %\JP{This needs an extra comment maybe?}\YH{Maybe about bluespec not being an ideal target language because it's quite high-level?} % but targeting this language would not be trivial as it is not meant to be targeted by an automatic tool, instead strives to a formally verified high-level hardware description language instead.
+Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an HDL that can be
+synthesised into logic cells which can either be placed onto a
+field-programmable gate array (FPGA) or turned into an application-specific
+integrated circuit (ASIC).  Verilog was chosen as the output language for
+\vericert{} because it is one of the most popular HDLs and there already exist a
+few formal semantics for it that could be used as a
+target~\cite{lööw19_verif_compil_verif_proces, meredith10_veril}.  Bluespec,
+previously ruled out as a source language, is another possible target and there
+exists a formally verified translation to circuits using
+K\^{o}ika~\cite{bourgeat20_essen_blues}. %\JP{This needs an extra comment maybe?}\YH{Maybe about bluespec not being an ideal target language because it's quite high-level?} % but targeting this language would not be trivial as it is not meant to be targeted by an automatic tool, instead strives to a formally verified high-level hardware description language instead.
 
 %\JW{Can we mention one or two alternatives that we considered? Bluespec or Chisel or one of Adam Chlipala's languages, perhaps?}
 
 \paragraph{Choice of implementation language}
-We chose Coq as the implementation language because of its mature support for code extraction; that is, its ability to generate OCaml programs directly from the definitions used in the theorems.
-We note that other authors have had some success reasoning about the HLS process using other theorem provers such as Isabelle~\cite{ellis08}.
-\compcert{}~\cite{leroy09_formal_verif_realis_compil} was chosen as the front end because it has a well established framework for simulation proofs about intermediate languages, and it already provides a validated C parser~\cite{jourdan12_valid_lr_parser}.
-The Vellvm framework~\cite{zhao12_formal_llvm_inter_repres_verif_progr_trans} was also considered because several existing HLS tools are already LLVM-based, but additional work would be required to support a high-level language like C as input.
-The .NET framework has been used as a basis for other HLS tools, such as Kiwi~\cite{kiwi}, and LLHD~\cite{schuiki20_llhd} has been recently proposed as an intermediate language for hardware design, but neither are suitable for us because they lack formal semantics.
+We chose Coq as the implementation language because of its mature support for
+code extraction; that is, its ability to generate OCaml programs directly from
+the definitions used in the theorems.  We note that other authors have had some
+success reasoning about the HLS process using other theorem provers such as
+Isabelle~\cite{ellis08}.  \compcert{}~\cite{leroy09_formal_verif_realis_compil}
+was chosen as the front end because it has a well established framework for
+simulation proofs about intermediate languages, and it already provides a
+validated C parser~\cite{jourdan12_valid_lr_parser}.  The Vellvm
+framework~\cite{zhao12_formal_llvm_inter_repres_verif_progr_trans} was also
+considered because several existing HLS tools are already LLVM-based, but
+additional work would be required to support a high-level language like C as
+input.  The .NET framework has been used as a basis for other HLS tools, such as
+Kiwi~\cite{kiwi}, and LLHD~\cite{schuiki20_llhd} has been recently proposed as
+an intermediate language for hardware design, but neither are suitable for us
+because they lack formal semantics.
 
 \begin{figure}
   \centering

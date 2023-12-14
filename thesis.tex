@@ -1,6 +1,18 @@
-\documentclass[12pt,svgnames,openany,twoside=semi]{scrbook}
+\documentclass[
+  svgnames,
+  fontsize=12pt,
+  headings=openany,
+%  headings=twolinechapter,
+  twoside=semi,
+  bibliography=totoc,
+%  draft=true,
+  ]{scrbook}
 
-%\KOMAoption{draft}{on}
+\setkomafont{publishers}{\large\itshape}
+
+\renewcommand\chapterlinesformat[3]{%
+  \leavevmode\marginpar{\fontsize{96}{106}\selectfont\textcolor{teal}{#2}}#3%
+}
 
 %\usepackage[autooneside=false]{scrlayer-scrpage}
 %\pagestyle{scrheadings}
@@ -10,10 +22,11 @@
 \usepackage{polyglossia}
 \setdefaultlanguage[variant=british]{english}
 
-\usepackage[backend=biber,backref=true]{biblatex}
+\usepackage[backend=biber,backref=true,maxbibnames=9]{biblatex}
 \addbibresource{thesis-refs.bib}
 \addbibresource{oopsla-refs.bib}
 \addbibresource{lsr-refs.bib}
+\addbibresource{ymh-refs.bib}
 
 \usepackage{lineno}
 \linenumbers
@@ -32,7 +45,7 @@
 
 \usepackage{pgfplotstable}
 \usepackage{pgfplots}
-\pgfplotsset{compat=1.16}
+\pgfplotsset{compat=1.18}
 
 \usepackage{tikz-timing}
 \usepackage{tikz}
@@ -56,12 +69,19 @@
 
 \usepackage{url}
 \usepackage[colorlinks=true,pdfa]{hyperref}
-\hypersetup{linkcolor=teal}
-\hypersetup{urlcolor=teal}
-\hypersetup{citecolor=teal}
+\hypersetup{allcolors=teal}
 
 \usepackage[acronym,index,xindy]{glossaries}
 \usepackage{glossary-bookindex}
+\makeatletter
+\newcommand*{\glsplainhyperlink}[2]{%
+    \begingroup%
+      \hypersetup{hidelinks}%
+      \hyperlink{#1}{#2}%
+    \endgroup%
+}
+\let\@glslink\glsplainhyperlink
+\makeatother
 \makeglossaries
 
 \usepackage{cleveref}
@@ -72,8 +92,22 @@
 \usepackage{hyperxmp}
 %\usepackage{embedfile}
 
+%\usepackage{uni-titlepage}
+%\TitlePageStyle{UKoLa}
+
+\subject{PhD Thesis}
 \title{Formal Verification of High-Level Synthesis}
 \author{Yann Herklotz Grave}
+
+\publishers{Supervised by \\ Dr John Wickerson}
+
+\makeatletter
+\newcommand\@titlefooter{Submitted in part fulfilment of the requirements for
+the degree of Doctor of Philosophy in Electrical and Electronic Engineering of
+Imperial College London.}
+\makeatother
+
+%\university{Imperial College London}
 
 \hypersetup{%
     pdflang=la,
@@ -122,22 +156,51 @@
 \newacronym{MRT}{MRT}{modulo reservation table}
 \newacronym{LSQ}{LSQ}{load-store queue}
 \newacronym{BRAM}{BRAM}{block random access memory}
+\newacronym{ASIC}{ASIC}{application-specific integrated circuit}
+\newacronym{IR}{IR}{intermediate representation}
+\newacronym{DSL}{DSL}{domain-specific language}
 
-\newterm[name={plus forward simulation}]{plus-forward-simulation}
-\newterm[name={star forward simulation}]{star-forward-simulation}
+\newterm[name={``plus'' forward simulation}]{plus-forward-simulation}
+\newterm[name={``star'' forward simulation}]{star-forward-simulation}
 \newterm{CompCert}
+\newterm[name={translation validation}]{translation-validation}
+
+\hyphenation{Comp-Cert Veri-cert Comp-Cert-GSA Comp-Cert-SSA}
 
 %\newterm
 
-%\includeonly{chapters/6-hardware-generation}
+\includeonly{%
+  % titlepage,
+  % copyright-assignment,
+  % abstract,
+  % acknowledgements,
+  chapters/1-introduction,
+  chapters/2-background,
+  % chapters/3-introduction-to-vericert,
+  % chapters/4-trusted-computing-base,
+  % chapters/5-hyperblock-scheduling,
+  % chapters/6-hardware-generation,
+  % chapters/7-evaluation,
+  % chapters/8-conclusion,
+}
 
 \begin{document}
 
-\maketitle
+\include{titlepage}
+
+\include{copyright-assignment}
+
+\include{abstract}
+
+\include{acknowledgements}
 
 \tableofcontents
 
-\printglossary[type=\acronymtype]
+\listoffigures
+
+\listoftables
+
+\printglossary[type=\acronymtype,nonumberlist]
 
 \include{chapters/1-introduction}
 
@@ -158,9 +221,9 @@
 \begingroup
 \singlespacing
 \printbibliography
-\endgroup
 
 \printindex
+\endgroup
 
 \end{document}
 
