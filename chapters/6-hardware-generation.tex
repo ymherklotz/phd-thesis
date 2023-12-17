@@ -479,10 +479,10 @@ There is quite a large mismatch between the \htl{} semantics and the
 \rtlsubpar{} semantics.  This is mainly due to the following two points:
 
 \begin{itemize}
-\item As already mentioned in Section~\ref{sec:hg:translating-memory}, because
-  the memory model in our \htl{} semantics is finite and concrete, but the
-  CompCert memory model is more abstract and infinite with additional bounds,
-  the equivalence of these models needs to be proven.  Moreover, our memory is
+\item As already mentioned in \cref{sec:hg:translating-memory}, because the
+  memory model in our \htl{} semantics is finite and concrete, but the CompCert
+  memory model is more abstract and infinite with additional bounds, the
+  equivalence of these models needs to be proven.  Moreover, our memory is
   word-addressed for efficiency reasons, whereas CompCert's memory is
   byte-addressed.
 
@@ -506,7 +506,7 @@ from \rtlsubpar{} instructions to Verilog statements needs to be proven correct
 in this step.  In addition to that, the semantics of \htl{} are also quite
 different to the \rtlsubpar{} semantics. Instead of defining small-step
 semantics for each construct in Verilog, the semantics are defined over one
-clock cycle and mirror the semantics defined for Verilog.  Lemma~\ref{lemma:htl}
+clock cycle and mirror the semantics defined for Verilog.  \Cref{lemma:htl}
 shows the result that needs to be proven in this subsection.
 
 \begin{lemma}[Forward simulation from \rtlsubpar{} to \htl{}]\label{lemma:htl}
@@ -675,22 +675,22 @@ The simplest way to implement loads and stores in \vericert{} would be to access
 the Verilog array directly from within the data path as is currently the case
 after the \htl{} generation. This would be correct, but when a Verilog array is
 accessed at several program points, the synthesis tool is unlikely to detect
-that it can be implemented as an \gls{BRAM}, and will resort to using lots of registers
-instead, ruining the circuit's area and performance.  This is because reads and
-writes to a \gls{BRAM} need to follow a certain pattern to be suitable to be replaced
-by \gls{BRAM} reads and writes.  For example, the synthesis tool will have to check
-that the array is only written to once per clock cycle, and is only read from
-once as well.  To avert this, we arrange that the data-path does not access
-memory directly, but simply sets the address it wishes to access and then
-toggles the \texttt{u\_en} flag. This activates the \gls{BRAM} interface (lines 9--15
-of Fig.~\ref{fig:accumulator_v}) on the next falling clock edge, which performs
-the requested load or store. By factoring all the memory accesses out into a
-separate interface, we ensure that the underlying array is only accessed from a
-single program point in the Verilog code, and thus ensure that the synthesis
-tool will correctly infer a \gls{BRAM} block.\footnote{Interestingly, the Verilog code
-  shown for the \gls{BRAM} interface must not be modified, because the synthesis tool
-  will only generate a \gls{BRAM} when the code matches a small set of specific
-  patterns.}
+that it can be implemented as an \gls{BRAM}, and will resort to using lots of
+registers instead, ruining the circuit's area and performance.  This is because
+reads and writes to a \gls{BRAM} need to follow a certain pattern to be suitable
+to be replaced by \gls{BRAM} reads and writes.  For example, the synthesis tool
+will have to check that the array is only written to once per clock cycle, and
+is only read from once as well.  To avert this, we arrange that the data-path
+does not access memory directly, but simply sets the address it wishes to access
+and then toggles the \texttt{u\_en} flag. This activates the \gls{BRAM}
+interface (lines 9--15 of \cref{fig:accumulator_v}) on the next falling clock
+edge, which performs the requested load or store. By factoring all the memory
+accesses out into a separate interface, we ensure that the underlying array is
+only accessed from a single program point in the Verilog code, and thus ensure
+that the synthesis tool will correctly infer a \gls{BRAM}
+block.\footnote{Interestingly, the Verilog code shown for the \gls{BRAM}
+  interface must not be modified, because the synthesis tool will only generate
+  a \gls{BRAM} when the code matches a small set of specific patterns.}
 
 This transformation pass therefore translates direct accesses to the Verilog
 array in \htl{} and replaces them by signals that access the \gls{BRAM} interface in a
@@ -758,14 +758,15 @@ modify any other states.
 \subsection{BRAM Model Semantics}%
 \label{sec:hg:bram-model-semantics}
 
-Fig.~\ref{fig:ram_load_store} gives an example of how the \gls{BRAM} interface behaves
-when values are loaded and stored.  There is a \texttt{wr\_en} signal that
-determines if a load or store is being performed.  Then, if at the falling edge
-\texttt{u\_en} and \texttt{en} are different, the read or write at address
+\Cref{fig:ram_load_store} gives an example of how the \gls{BRAM} interface
+behaves when values are loaded and stored.  There is a \texttt{wr\_en} signal
+that determines if a load or store is being performed.  Then, if at the falling
+edge \texttt{u\_en} and \texttt{en} are different, the read or write at address
 \texttt{addr} is executed.  At the same time, the value of \texttt{u\_en} is
 then assigned to \texttt{en}, which would disable it if there is no other action
 by the data path on the next clock cycle.  However, if the data path toggles the
-value of \texttt{u\_en} on the next clock cycle, the \gls{BRAM} would be enabled again.
+value of \texttt{u\_en} on the next clock cycle, the \gls{BRAM} would be enabled
+again.
 
 \begin{figure}
   \centering
@@ -829,15 +830,15 @@ value of \texttt{u\_en} on the next clock cycle, the \gls{BRAM} would be enabled
 
 \YH{TODO: Link the \gls{BRAM} from \htl{} to the ram instantiated here.}
 
-\htl{} can only represent a single state machine, so we must model the \gls{BRAM}
-abstractly to reason about the correctness of replacing the direct read and
-writes to the array by loads and stores to a \gls{BRAM}.  The specification for the \gls{BRAM}
-is shown in Fig.~\ref{fig:htl_ram_spec}, which defines how the \gls{BRAM} $r$ will
-behave for all the possible combinations of the input signals.  This
-specification is part of the \htl{} semantics and runs in parallel to the state
-machine.  However, as the \gls{BRAM} is triggered by the falling edge of the clock, it
-will execute in between standard clock cycles, and a merge of the association
-maps is performed in between each.
+\htl{} can only represent a single state machine, so we must model the
+\gls{BRAM} abstractly to reason about the correctness of replacing the direct
+read and writes to the array by loads and stores to a \gls{BRAM}.  The
+specification for the \gls{BRAM} is shown in \cref{fig:htl_ram_spec}, which
+defines how the \gls{BRAM} $r$ will behave for all the possible combinations of
+the input signals.  This specification is part of the \htl{} semantics and runs
+in parallel to the state machine.  However, as the \gls{BRAM} is triggered by
+the falling edge of the clock, it will execute in between standard clock cycles,
+and a merge of the association maps is performed in between each.
 
 \subsubsection{From Implementation to Specification}
 
@@ -942,12 +943,12 @@ applies to the translation of loads.)
 
 \subsubsection{From Specification to Simulation}
 
-Another simulation proof is performed to prove that the insertion of the \gls{BRAM} is
-semantics preserving.  As in Lemma~\ref{lemma:simulation_diagram}, we require
-some invariants that always hold at the start and end of the simulation.  The
-invariants needed for the simulation of the \gls{BRAM} insertion are quite different to
-the previous ones, so we can define these invariants $\mathcal{I}_{\mathrm{r}}$ to be the
-following:
+Another simulation proof is performed to prove that the insertion of the
+\gls{BRAM} is semantics preserving.  As in \cref{lemma:simulation_diagram}, we
+require some invariants that always hold at the start and end of the simulation.
+The invariants needed for the simulation of the \gls{BRAM} insertion are quite
+different to the previous ones, so we can define these invariants
+$\mathcal{I}_{\mathrm{r}}$ to be the following:
 
 \begin{itemize}
 \item The association map for arrays $\Gamma_{\mathrm{a}}$ always needs to have
@@ -956,12 +957,12 @@ following:
   step. (This is why self-disabling \gls{BRAM} is needed.)
 \end{itemize}
 
-The other invariants and assumptions for defining two matching states in \htl{} are
-quite similar to the simulation performed in
-Lemma~\ref{lemma:simulation_diagram}, such as ensuring that the states have the
-same value, and that the values in the registers are less defined.  In
-particular, the less defined relation matches up all the registers, except for
-the new registers introduced by the \gls{BRAM}.
+The other invariants and assumptions for defining two matching states in \htl{}
+are quite similar to the simulation performed in
+\cref{lemma:simulation_diagram}, such as ensuring that the states have the same
+value, and that the values in the registers are less defined.  In particular,
+the less defined relation matches up all the registers, except for the new
+registers introduced by the \gls{BRAM}.
 
 \begin{lemma}[Forward simulation from \htl{} to \htl{} after inserting the \gls{BRAM}]\label{lemma:htl_ram}
   Given an \htl{} program, the forward-simulation relation should hold after

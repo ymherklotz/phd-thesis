@@ -19,35 +19,53 @@
 % the bottom of this file.}\YH{The original intro is in the archive, we can
 % maybe merge them in the future a bit.}
 
-Latency, throughput, and energy efficiency are become increasingly important,
-leading to more custom hardware accelerators being designed for numerous
-applications.  Alas, designing these accelerators can be a tedious and
-error-prone process, especially when using a \gls{HDL} such as Verilog, which
-operates at the register transfer level, where the hardware needs to be laid out
-manually.  As the complexity of these hardware designs increases, designing
-hardware at this level can hamper productivity.  An increasingly attractive
-alternative is \emph{\gls{HLS}}, where hardware designs are automatically
-compiled from software written in a high-level language like C.  Modern
-\gls{HLS} tools such as \legup{}~\cite{canis11_legup}, Vitis
-HLS~\cite{amd23_vitis_high_synth}, Intel i++~\cite{intel_hls}, Stratus
-HLS~\cite{roane23_autom_hw_sw_co_desig} and Bambu HLS~\cite{bambu_hls} promise
-designs with comparable performance and energy-efficiency to those hand-written
-in an \gls{HDL}~\cite{homsirikamol+14, silexicahlshdl, 7818341}.  They also
-promise to reduce the time taken to design hardware and make the design more
-flexible so that different architectures can be explored.
+As latency, throughput, and energy efficiency are becoming increasingly
+important, we are seeing companies move towards designing their own
+application-specific hardware accelerators tailored to their workloads instead
+of relying on general purpose \glspl{CPU} or \glspl{GPU}.  By specialising the
+hardware to the application, the hardware can be optimised further than general
+purpose processors, unlocking better performance while often using less power.
+Apple and Google, for example, are integrating machine learning accelerators
+into consumer hardware to allow models to run more efficiently than if they used
+the \gls{CPU} or \gls{GPU}.  Machine learning is an example of an application
+that benefits greatly from having dedicated and specialised hardware
+accelerators designed for it~\cite{reuther20_survey_machin_learn_accel}.
 
-\gls{HLS} should ideally also benefit verification of the functionality of the
-hardware design.  Checking the functionality of designs written using
-\glspl{HDL} often cannot be fully verified because of their size and the
-additional detail that needs to be taken into account.  \gls{HLS} moves the
-functional verification problem to a higher-level, allowing for a much deeper
-understanding about the functional behaviour of the design.  A recent survey by
-\textcite{lahti19_are_we_there_yet} describes that verification is still a
-time-consuming part of the design process though, even with the use of
-\gls{HLS}, however, that in general it still reduced the verification effort by
-half.  Most papers that were surveyed did not mention verification of designs
-though and it therefore still remains an underexplored area in \gls{HLS}
-research.
+Alas, designing these accelerators can be a tedious and error-prone process.
+Designing hardware is normally done using a \gls{HDL} such as Verilog or VHDL,
+which operate at the register transfer level where the hardware needs to be
+described manually.  As the complexity of these hardware designs increases,
+designing hardware at this level becomes increasingly difficult, as the
+low-level description of the hardware can be difficult to test to ensure that it
+behaves as expected.  An attractive alternative is \emph{\gls{HLS}}, where
+hardware designs are automatically compiled from software written in a
+high-level language like C.  This way, hardware design can benefit from mature
+software development tools while working on the general functionality of the
+hardware design, and then use a modern \gls{HLS} tools such as
+\legup{}~\cite{canis11_legup}, Vitis HLS~\cite{amd23_vitis_high_synth}, Intel
+i++~\cite{intel_hls}, Stratus HLS~\cite{roane23_autom_hw_sw_co_desig} and Bambu
+HLS~\cite{bambu_hls} to produce the hardware design at the register transfer
+level.  These \gls{HLS} tools promise designs with comparable performance and
+energy-efficiency to those hand-written in an \gls{HDL}~\cite{homsirikamol+14,
+  silexicahlshdl, 7818341}.  This reduces the time needed to design new hardware
+accelerators and as the design is performed at a higher level, this should also
+make the process less error-prone.
+
+In addition to that, \gls{HLS} should also benefit the process of verifying the
+functionality of the hardware design.  At the register transfer level, hardware
+designs often cannot be fully formally verified because of their size and the
+level of detail that is present at this level.  In addition to that, it may also
+be difficult to test them by running the whole design in a simulator, as the
+size of the design often means one cannot simulate running the hardware for more
+than a few seconds.  Instead, \gls{HLS} moves the verification of the
+functionality of the design to a higher-level, where less details are exposed,
+making it possible for software tools to reason about the behaviour of the
+program.  A recent survey by \textcite{lahti19_are_we_there_yet} describes that
+verification is still a time-consuming part of the design process though, even
+with the use of \gls{HLS}, however, that in general it still reduced the
+verification effort by half.  Most papers that were surveyed did not mention
+verification of designs though and it therefore still remains an underexplored
+area in \gls{HLS} research.
 
 % \YH{TODO: Talk about the history of HLS to motivate it better.}
 
@@ -130,60 +148,77 @@ been the case in \gls{HLS} tools to date.
 %possible to write a verified validator that is also believed to be complete and
 %should not fail on valid transformations unless bugs are present.
 
-Our position is that none of the above workarounds are necessary if the HLS tool
-can simply be trusted to work correctly.  The thesis for this dissertation is
-therefore the following.
+The main thesis of this dissertation is therefore the following.
 
 \begin{samepage}
   \begin{quote}
-    \textbf{Thesis}\quad An optimising high-level synthesis tool can be proven
-    correct using an interactive theorem prover, guaranteeing the correctness of
-    the hardware while also remaining practical and efficient.
+    \textbf{Thesis}\quad A realistic and optimising high-level synthesis tool
+    can be proven correct using an interactive theorem prover, guaranteeing the
+    correctness of the hardware while also remaining practical and efficient.
   \end{quote}
 \end{samepage}
+
+Our position is that none of the above workarounds are necessary if the
+\gls{HLS} tool can simply be trusted to work correctly.  This dissertation
+explores the implementation of a mechanically verified and optimising \gls{HLS}
+tool built on the \compcert{} verified C
+compiler~\cite{leroy09_formal_verif_realis_compil}.
 
 % \NR{Perhaps, we can add something like: `... and our efforts are the first
 % step towards building this trust within HLS
 % tools.'.} %JW: I think that would be over-egging the cake.
 
-\paragraph{Our solution}
-We have designed a new HLS tool in the Coq theorem prover and proved that any
-output design it produces always has the same behaviour as its input program.
-Our tool, called \vericert{}, is automatically extracted to an OCaml program
-from Coq, which ensures that the object of the proof is the same as the
-implementation of the tool.  \vericert{} is built by extending the \compcert{}
-verified C compiler~\cite{leroy09_formal_verif_realis_compil} with a new
-hardware-specific intermediate language and a Verilog back end.  It supports
-many C constructs, including integer operations, function calls (which are all
-inlined), local arrays, structs, unions, and general control-flow statements,
-but currently excludes support for case statements, function pointers, recursive
-function calls, non-32-bit integers, floats, and global variables.
 
 \section{Research Contributions}%
 \label{sec:intro:research-contributions}
 
-The main contributions of this dissertation is \vericert{}, the formally
-verified \gls{HLS} tool, which can be split up into the following research
-contributions of the project.
+The main contributions of this dissertation is \vericert{}, a formally verified
+and optimising \gls{HLS} tool.  \vericert{} is written in the Coq theorem prover
+and we have proved that any output design it produces always has the same
+behaviour as the input C program.  \vericert{} is automatically extracted to an
+OCaml program from Coq, which ensures that the object of the proof is the same
+as the implementation of the tool.  \vericert{} is built by extending the
+\compcert{} verified C compiler~\cite{leroy09_formal_verif_realis_compil} with a
+new hardware-specific intermediate language and a Verilog back end.  It supports
+many C constructs, including integer operations, function calls (which are all
+inlined), local arrays, structs, unions, and general control-flow statements,
+but currently excludes support for case statements, function pointers, recursive
+function calls, non-32-bit integers, floats, and global variables.  The main
+research contributions of \vericert{} are the following:
 
-First, We state the correctness theorem of \vericert{} with respect to an
-existing semantics for Verilog due to
-\textcite{lööw19_proof_trans_veril_devel_hol}. In
-\cref{sec:trusted-computing-base}, we describe how we extended this semantics to
-make it suitable as an \gls{HLS} target.  We also describe how the Verilog
-semantics is integrated into \compcert{}'s language execution model and its
-framework for performing simulation proofs.  We also describe how memory is
-represented in Verilog, and describe how CompCert's infinite memory model is
-mapped onto a finite Verilog array.
+\begin{itemize}
+\item First, We state the correctness theorem of \vericert{} with respect to an
+  existing semantics for Verilog due to
+  \textcite{lööw19_proof_trans_veril_devel_hol}. In
+  \cref{sec:trusted-computing-base}, we describe how we extended this semantics
+  to make it a suitable \gls{HLS} target.  We also describe how the Verilog
+  semantics is integrated into \compcert{}'s language execution model and its
+  framework for performing simulation proofs.  We also describe how memory is
+  represented in Verilog, and how CompCert's infinite memory model is mapped
+  onto a finite Verilog array.
 
-Next, we present the first verified implementation of hyperblock scheduling,
-which is a critical optimisation in \gls{HLS} tools to make use of the parallel
-nature of hardware.  In addition to that, we describe a general if-conversion
-transformation used to generate these hyperblocks.
+\item We also describe a general if-conversion transformation used to generate
+  hyperblocks, which are sequences of possibly branching instructions without
+  back edges.
 
-Finally, we evaluate different versions of \vericert{} against the
-state-of-the-art open source \gls{HLS} tool Bambu HLS~\cite{bambu_hls}.\YH{TODO:
-Add numbers about the performance here.}
+\item Next, we present the first verified implementation of hyperblock
+  scheduling, a critical optimisation for any \gls{HLS} tool, taking advantage
+  of the parallel nature of the hardware that is generated.  We implement and
+  validate the \gls{SDC} scheduling algorithm~\cite{cong06_sdc}, which is the
+  base of the scheduling algorithm used by most \gls{HLS} tools.
+
+\item We also present a novel use of a SAT and SMT solver during translation
+  validation to reason about the equivalence of functions before and after the
+  scheduling transformations.
+
+\item We also describe how the scheduled instructions are then converted into
+  Verilog through a number of verified transformations, by first destroying the
+  hyperblock structure, then building up a \gls{FSMD},
+
+\item Finally, we evaluate different versions of \vericert{} against the
+  state-of-the-art open source \gls{HLS} tool Bambu
+  HLS~\cite{bambu_hls}.\YH{TODO: Add numbers about the performance here.}
+\end{itemize}
 
 \paragraph{Companion material}
 \vericert{} is fully open source and available on GitHub at
@@ -214,12 +249,11 @@ This thesis is organised into the following chapters.
   correctness theorem.
 \item \Cref{sec:hyperblock-scheduling} then describes the front end of Vericert,
   which hooks into the middle end of CompCert.  This chapter describes the
-  implementation of hyperblock scheduling, a critical optimisation in \gls{HLS}
-  tools to parallelise the inherently sequential instructions.  First,
-  \cref{sec:hs:overview} gives an overview of the scheduling optimisation, then
-  \cref{sec:hs:rtlblockdef} introduces the new intermediate languages used for
-  the scheduling transformation.  \Cref{sec:hs:if-conversion} then describes
-  hyperblock construction using if-conversion followed by
+  implementation of hyperblock scheduling.  First, \cref{sec:hs:overview} gives
+  an overview of the scheduling optimisation, then \cref{sec:hs:rtlblockdef}
+  introduces the new intermediate languages used for the scheduling
+  transformation.  \Cref{sec:hs:if-conversion} then describes hyperblock
+  construction using if-conversion followed by
   \cref{sec:hs:implementing-scheduling,sec:hs:verifying-scheduling,sec:hs:overview-validator-correctness-proof}
   describing the implementation, validation and verification of the actual
   hyperblock transformation.  Finally,

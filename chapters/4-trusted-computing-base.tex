@@ -37,12 +37,12 @@ answer.  To start the execution of the hardware and to signal to the HLS
 component that the inputs are ready, the $\mathit{rst}$ signal is set and unset.
 Then, once the result is ready, the $\mathit{fin}$ signal is set and the result
 value is placed in $\mathit{ret}$.  These signals are also present in the
-semantics of execution shown in Fig.~\ref{fig:inference_module}.  The
-correctness theorem therefore also uses these signals, and the proof shows that
-once the $\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct
-according to the semantics of Verilog and Clight.  Note that the compiler is
-allowed to fail and not produce any output; the correctness theorem only applies
-when the translation succeeds.
+semantics of execution shown in \cref{fig:inference_module}.  The correctness
+theorem therefore also uses these signals, and the proof shows that once the
+$\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct according to
+the semantics of Verilog and Clight.  Note that the compiler is allowed to fail
+and not produce any output; the correctness theorem only applies when the
+translation succeeds.
 
 How can we prove this theorem? First, note that the theorem is a `backwards
 simulation' result (every target behaviour must also be a source behaviour),
@@ -57,13 +57,12 @@ correctness theorem above as a forwards simulation result (following standard
 simulation, it suffices to prove forward simulations between each pair of
 consecutive intermediate languages, as these results can be composed to prove
 the correctness of the whole HLS tool.  The forward simulation from 3AC to HTL
-is stated in Lemma~\ref{lemma:htl} (Section~\ref{sec:proof:3ac_htl}), the
-forward simulation for the \gls{BRAM} insertion is shown in Lemma~\ref{lemma:htl_ram}
-(Section~\ref{sec:proof:ram_insertion}), then the forward simulation between HTL
-and Verilog is shown in Lemma~\ref{lemma:verilog}
-(Section~\ref{sec:proof:htl_verilog}), and finally, the proof that Verilog is
-deterministic is given in Lemma~\ref{lemma:deterministic}
-(Section~\ref{sec:proof:deterministic}).
+is stated in \cref{lemma:htl} (\cref{sec:proof:3ac_htl}), the forward simulation
+for the \gls{BRAM} insertion is shown in \cref{lemma:htl_ram}
+(\cref{sec:proof:ram_insertion}), then the forward simulation between HTL and
+Verilog is shown in \cref{lemma:verilog} (\cref{sec:proof:htl_verilog}), and
+finally, the proof that Verilog is deterministic is given in
+\cref{lemma:deterministic} (\cref{sec:proof:deterministic}).
 
 \section{A Formal Semantics for Verilog}\label{sec:verilog}
 
@@ -127,7 +126,7 @@ always @(posedge clk) begin x[0] = 1; x[1] <= 1; end
 which modifies one array element using blocking assignment and then a second using nonblocking assignment. If the existing semantics were used to update the array, then during the merge, the entire array \texttt{x} from the nonblocking association map would replace the entire array from the blocking association map.  This would replace \texttt{x[0]} with its original value and therefore behave incorrectly. Accordingly, we modified the maps so they record updates on a per-el\-em\-ent basis. Our state $\Gamma$ is therefore further split up into $\Gamma_{r}$ for instantaneous updates to variables, and $\Gamma_{a}$ for instantaneous updates to arrays ($\Gamma = (\Gamma_{r}, \Gamma_{a})$); $\Delta$ is split similarly ($\Delta = (\Delta_{r}, \Delta_{a})$). The merge function then ensures that only the modified indices get updated when $\Gamma_{a}$ is merged with the nonblocking map equivalent $\Delta_{a}$.
 
 \paragraph{Adding negative edge support}
-To reason about circuits that execute on the negative edge of the clock (such as our \gls{BRAM} interface described in Section~\ref{sec:algorithm:optimisation:ram}),  support for negative-edge-triggered \alwaysblock{}s was added to the semantics. This is shown in the modifications of the \textsc{Module} rule shown below:
+To reason about circuits that execute on the negative edge of the clock (such as our \gls{BRAM} interface described in \cref{sec:algorithm:optimisation:ram}),  support for negative-edge-triggered \alwaysblock{}s was added to the semantics. This is shown in the modifications of the \textsc{Module} rule shown below:
 
 \begin{equation*}
   \inferrule[Module]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}
@@ -181,10 +180,10 @@ To support this computational model, we extend the Verilog module we generate wi
 %\JW{Is there a mismatch between `st' in the figure and `stk' in the text?}\YH{It was actually between $\Gamma_{a}$ and \mathit{stk}.  The \mathit{st} should have been $\sigma$.}
 \end{description}
 
-Fig.~\ref{fig:inference_module} shows the inference rules for moving between the computational states.  The first, \textsc{Step}, is the normal rule of execution.  It defines one step in the \texttt{State} state, assuming that the module is not being reset, that the finish state has not been reached yet, that the current and next state are $v$ and $v'$, and that the module runs from state $\Gamma$ to $\Gamma'$ using the \textsc{Step} rule.  The \textsc{Finish} rule returns the final value of running the module and is applied when the $\mathit{fin}$ register is set; the return value is then taken from the $\mathit{ret}$ register.
+\Cref{fig:inference_module} shows the inference rules for moving between the computational states.  The first, \textsc{Step}, is the normal rule of execution.  It defines one step in the \texttt{State} state, assuming that the module is not being reset, that the finish state has not been reached yet, that the current and next state are $v$ and $v'$, and that the module runs from state $\Gamma$ to $\Gamma'$ using the \textsc{Step} rule.  The \textsc{Finish} rule returns the final value of running the module and is applied when the $\mathit{fin}$ register is set; the return value is then taken from the $\mathit{ret}$ register.
 
 Note that there is no step from \texttt{State} to \texttt{Callstate}; this is because function calls are not supported, and it is therefore impossible in our semantics ever to reach a \texttt{Callstate} except for the initial call to main. So the \textsc{Call} rule is only used at the very beginning of execution; likewise, the \textsc{Return} rule is only matched for the final return value from the main function.
-Therefore, in addition to the rules shown in Fig.~\ref{fig:inference_module}, an initial state and final state need to be defined:
+Therefore, in addition to the rules shown in \cref{fig:inference_module}, an initial state and final state need to be defined:
 
 \begin{gather*}
   \inferrule[Initial]{\yhfunction{is\_internal}\ P.\texttt{main}}{\yhfunction{initial\_state}\ (\yhconstant{Callstate}\ []\ P.\texttt{main}\ [])}\qquad
@@ -276,7 +275,7 @@ The Verilog semantics do not define a memory model for Verilog, as this is not n
 
 %\JW{It's not completely clear what the relationship is between your work and those works. The use of `only' suggests that you've re-done a subset of work that has already been done -- is that the right impression?}\YH{Hopefully that's more clear.}
 
-This translation is represented in Fig.~\ref{fig:memory_model_transl}.  \compcert{} defines a map from blocks to maps from memory addresses to memory contents.  Each block represents an area in memory; for example, a block can represent a global variable or a stack for a function. As there are no global variables, the main stack can be assumed to be block 0, and this is the only block we translate.
+This translation is represented in \cref{fig:memory_model_transl}.  \compcert{} defines a map from blocks to maps from memory addresses to memory contents.  Each block represents an area in memory; for example, a block can represent a global variable or a stack for a function. As there are no global variables, the main stack can be assumed to be block 0, and this is the only block we translate.
 %\JW{So the stack frame for a function called by main would be in a different block, is that the idea? Seems unusual not to have a single stack.}
 %\YH{Yeah exactly, it makes it much easier to reason about though, because everything is nicely isolated.  This is exactly what CompCertELF and CompCertS try and solve though.}
 %\JW{Would global variables normally be put in blocks 1, 2, etc.?}
@@ -327,7 +326,7 @@ backwards simulation we desire.
   The Verilog semantics is deterministic because the order of operation of all
   the constructs is defined, so there is only one way to evaluate the module,
   and hence only one possible behaviour. This was proven for the small-step
-  semantics shown in Fig.~\ref{fig:inference_module}.
+  semantics shown in \cref{fig:inference_module}.
 \end{proof}
 
 %%% Local Variables:

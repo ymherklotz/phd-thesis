@@ -1,17 +1,19 @@
 \documentclass[
   svgnames,
   fontsize=12pt,
-  headings=openany,
+%  headings=openany,
 %  headings=twolinechapter,
   twoside=semi,
   bibliography=totoc,
 %  draft=true,
+%  headsepline=true,
   ]{scrbook}
 
 \setkomafont{publishers}{\large\itshape}
 
 \renewcommand\chapterlinesformat[3]{%
-  \leavevmode\marginpar{\fontsize{96}{106}\selectfont\textcolor{teal}{#2}}#3%
+  \leavevmode\marginpar{\fontsize{96}{115}\selectfont\textcolor{teal}{#2}}%
+  {\raggedleft #3\par}%
 }
 
 %\usepackage[autooneside=false]{scrlayer-scrpage}
@@ -28,8 +30,8 @@
 \addbibresource{lsr-refs.bib}
 \addbibresource{ymh-refs.bib}
 
-\usepackage{lineno}
-\linenumbers
+%\usepackage{lineno}
+%\linenumbers
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -71,8 +73,9 @@
 \usepackage[colorlinks=true,pdfa]{hyperref}
 \hypersetup{allcolors=teal}
 
-\usepackage[acronym,index,xindy]{glossaries}
+\usepackage[acronym,index,xindy]{glossaries-extra}
 \usepackage{glossary-bookindex}
+\setabbreviationstyle[acronym]{long-short}
 \makeatletter
 \newcommand*{\glsplainhyperlink}[2]{%
     \begingroup%
@@ -146,7 +149,7 @@ Imperial College London.}
 \newacronym{CNF}{CNF}{conjunctive normal form}
 \newacronym{SAT}{SAT}{satisfiability}
 \newacronym{SMT}{SMT}{satisfiability modulo theory}
-\newacronym{DSP}{DSP}{digital signal processing}
+\newacronym{DSP}{DSP}{digital signal processor}
 \newacronym{ITP}{ITP}{interactive theorem prover}
 \newacronym{FSMD}{FSMD}{finite-state machine with data path}
 \newacronym{II}{II}{initiation interval}
@@ -159,6 +162,10 @@ Imperial College London.}
 \newacronym{ASIC}{ASIC}{application-specific integrated circuit}
 \newacronym{IR}{IR}{intermediate representation}
 \newacronym{DSL}{DSL}{domain-specific language}
+\newacronym{CPU}{CPU}{central processing unit}
+\newacronym{GPU}{GPU}{graphics processing unit}
+\newacronym{IPcore}{IP core}{intellectual property core}
+\newacronym{AST}{AST}{abstract syntax tree}
 
 \newterm[name={``plus'' forward simulation}]{plus-forward-simulation}
 \newterm[name={``star'' forward simulation}]{star-forward-simulation}
@@ -170,18 +177,18 @@ Imperial College London.}
 %\newterm
 
 \includeonly{%
-  % titlepage,
-  % copyright-assignment,
-  % abstract,
-  % acknowledgements,
+%  titlepage,
+%  copyright-assignment,
+%  abstract,
+%  acknowledgements,
   chapters/1-introduction,
   chapters/2-background,
-  % chapters/3-introduction-to-vericert,
-  % chapters/4-trusted-computing-base,
-  % chapters/5-hyperblock-scheduling,
-  % chapters/6-hardware-generation,
-  % chapters/7-evaluation,
-  % chapters/8-conclusion,
+%  chapters/3-introduction-to-vericert,
+%  chapters/4-trusted-computing-base,
+%  chapters/5-hyperblock-scheduling,
+%  chapters/6-hardware-generation,
+%  chapters/7-evaluation,
+%  chapters/8-conclusion,
 }
 
 \begin{document}
@@ -200,7 +207,9 @@ Imperial College London.}
 
 \listoftables
 
-\printglossary[type=\acronymtype,nonumberlist]
+\printglossary[type=acronym,nonumberlist]
+
+\glsresetall
 
 \include{chapters/1-introduction}
 

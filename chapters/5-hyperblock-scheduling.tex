@@ -1227,7 +1227,7 @@ predicates. Applying this approach to the example in
 
 \begin{table}
 \centering
-  \caption{First attempt: basic symbolic execution}
+  \captionabove{First attempt: basic symbolic execution}
   \label{tab:symbex1}
   \begin{tabular}{r|l|l}
     \toprule
@@ -1333,11 +1333,9 @@ following three SAT queries:
 \end{aligned}
 \end{equation}
 
-.
-
 \begin{table}
 \centering
-\caption{Second attempt: using value summaries}
+\captionabove{Second attempt: using value summaries}
 \label{tab:symbex2}
   \begin{tabular}{r|l|l}
     \toprule
@@ -1467,7 +1465,7 @@ because:
 
 \begin{table}
   \centering
-  \caption{Third attempt: using value summaries and final values in guards.}\label{tab:third-attempt}
+  \captionabove{Third attempt: using value summaries and final values in guards.}\label{tab:third-attempt}
   \begin{tabular}{r|l|l}
     \toprule
     & \textbf{Pre-scheduling symbolic state} & \textbf{Post-scheduling symbolic state} \\ \midrule
@@ -2634,8 +2632,8 @@ three steps of that chain are captured by the following three lemmas.
     original block necessarily produces a value, which follows from the
     semantics of encountered expressions.  From this, we can show that the
     execution of $\rtlpb$ in the current context must produce a state. Next, we
-    use lemma~\ref{thm:soundness} to show that $\symbolic{\rtlpb}$ must produce
-    a state that is equivalent to $\rtlpb$. Finally, because our semantics of
+    use \cref{thm:soundness} to show that $\symbolic{\rtlpb}$ must produce a
+    state that is equivalent to $\rtlpb$. Finally, because our semantics of
     symbolic states is deterministic, we can show that this state must be
     unique, therefore they must be equivalent.
   \end{proof}
@@ -2686,8 +2684,8 @@ Finally, we can show the correctness of the verified scheduling implementation.
 % \]
 
   \begin{proof}
-    This follows from lemmas~\ref{thm:soundness}, \ref{thm:correctness}, and
-    \ref{thm:completeness}, and the transitivity of $\curly$.
+    This follows from \cref{thm:soundness,thm:correctness,thm:completeness} and
+    the transitivity of $\curly$.
   \end{proof}
 
 %  \begin{proof}[Proof sketch]
@@ -2866,112 +2864,7 @@ was simply unworkable.
 
 \YH{TODO: Fill in this Section.  This could probably be a chapter as well.}
 
-\section{Related Work}%
-\label{sec:related-work}
-
-The most closely related works to ours are those by
-\textcite{tristan08_formal_verif_trans_valid} and by
-\textcite{six22_formal_verif_super_sched}, so we begin this section by recapping
-our main points of similarity and difference.
-
-\textcite{tristan08_formal_verif_trans_valid} were the first to propose adding
-scheduling to a verified compiler, and we adopt their method for validating
-schedules -- running symbolic execution before and after scheduling and
-comparing the resultant symbolic states. Their scheduler only \emph{reorders}
-instructions, so syntactic equality suffices for comparing symbolic states,
-whereas our scheduler can also \emph{modify} instructions (by manipulating
-predicates). This means that our state comparisons are more involved, and we
-turn to a SAT solver to help resolve them
-(\cref{sec:value_summaries}). \citeauthor{tristan08_formal_verif_trans_valid}
-also devised the use of constraints to prevent the scheduler introducing
-undefined behaviour; we adopt this technique too, taking care to extend it to
-handle predicates in such a way that valid schedules can still be validated
-(\cref{sec:handling-discarded-expressions}). We remark that a direct empirical
-comparison with \citeauthor{tristan08_formal_verif_trans_valid}'s work is not
-feasible because their method was implemented for an old version of CompCert and
-was not incorporated into its main branch.
-
-\textcite{six22_formal_verif_super_sched} formalise superblock scheduling, which
-is a restricted form of trace scheduling that is well-suited for VLIW
-processors. Hyperblock scheduling is more general than superblock scheduling and
-is well-suited to our application domain,
-HLS. \citeauthor{six22_formal_verif_super_sched}'s scheduler reorders
-instructions, and also combines them where it is advantageous to do so, so
-comparing symbolic states is more involved than it was for
-\citeauthor{tristan08_formal_verif_trans_valid}, but it still does not require a
-SAT solver because there are no predicates to reason about. A direct empirical
-comparison between our scheduler and
-\citeauthor{six22_formal_verif_super_sched}'s is difficult because
-\citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
-of CompCert called CompCertKVX.
-
-Outside of the realm of mechanised proof, most HLS tools implement some form of
-static scheduling. For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
-LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls} and
-Bambu~\cite[line~304]{ferrandi21_bambu} all employ SDC-based hyperblock
-scheduling. Other HLS tools, such as
-Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
-until runtime. It is notable that these unverified tools tend towards fewer,
-larger passes, where several optimisations are packed into `scheduling'. This
-minimises the number of times the solver needs to be invoked, and gives it the
-best chance of finding a global optimum. Verified tools such as CompCert and
-Vericert, on the other hand, tend towards more, smaller passes that are
-individually feasible to prove correct.
-
-Several HLS tools are associated with translation validators, either for an
-individual scheduling
-pass~\cite{chouksey20_verif_sched_condit_behav_high_level_synth,
-  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the HLS
-tool as a whole~\cite{mentor20_catap_high_level_synth, tiemeyer19_crest}. These
-typically work by establishing equivalence at the level of state machines,
-whereas we take the approach of comparing symbolic states, because
-\textcite{tristan08_formal_verif_trans_valid} showed it to be viable in the
-context of a verified compiler. Unlike our work, none of these translation
-validators provide mechanised proofs of equivalence, so might produce false
-positives.
-
-% \subsection{Diffs w.r.t. superblock scheduling}
-
-% \begin{itemize}
-
-% \item Superblocks are well suited to VLIW processors [citation needed];
-%  hyperblocks are well suited to HLS [citation needed].  Direct comparison is
-%  tricky because the two tools are based on incompatible versions of CompCert.
-
-%\item Both use translation validation, but we use a verified SAT solver as part
-% of this.  (Superblock scheduling doesn't use predicates so doesn't need a SAT
-% solver.)
-
-% \item We introduce two intermediate languages (RTLBlock and RTLPar) that we
-%   argue are easier to work with than the RTLPath language used in the superblock
-%   scheduling work.
-
-% \end{itemize}
-
-% \JW{What's the link between hyperblocks and SDC-based scheduling? Are these
-% orthogonal?}\YH{Well the original SDC papers only talk about basic blocks, and
-% not SDC hyperblock scheduling.  But it is easy enough to adapt.  SDC just
-% requires some kind of blocks without control-flow.} \JW{Ok cool, so you can
-% have SDC scheduling without hyperblocks. Can you have hyperblocks without SDC
-% scheduling? (I guess so, but just wanted to be completely sure.)}\YH{Yes
-% exactly, you can perform any type of basic block scheduling on hyperblocks as
-% well I think, as long as you mark the dependencies correctly.  But in the
-% worst case you could even just see hyperblocks as basic blocks and ignore
-% predicates.  It would still be correct but just less efficient.}
-%
-% \JW{It would be interesting to make the case for SDC-based scheduling. Is it
-% superior to other scheduling mechanisms? Is it so much superior that it's
-% worth the additional complexity, compared to, say, list scheduling? }\YH{SDC
-% scheduling is more flexible with the type of constraint to optimise for
-% (latency / throughput). I don't think it's too meaningful for compilers, where
-% there isn't as much flexibility.}  \JW{Thanks. Does Vericert have any idea
-% that the scheduling is being performed using SDC? Or is the SDC stuff entirely
-% internal to your unverified OCaml code? That is, could you swap your scheduler
-% with a different one that isn't based on SDC, and not have to change anything
-% in Vericert?}\YH{The verified part doesn't know about SDC at all, so it could
-% be changed to any other scheduler that acts on hyperblocks.}
-
-\section{Conclusion}
+\section{Summary}
 
 We have presented the first verified implementations of general if-conversion
 and hyperblock scheduling, and incorporated them into the Vericert verified HLS

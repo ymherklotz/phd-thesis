@@ -30,7 +30,7 @@ For instance, our HTL language already allows arbitrary Verilog to appear in eac
 
 \paragraph{Lack of pipelined division}
 Pipelined operators can execute different stages of an operation in parallel, and thus perform several long-running operations simultaneously while sharing the same hardware.
-The introduction of pipelined operators to \vericert{}, especially for division, would alleviate the slow clock speed observed in the \polybench{} benchmarks when divisions were included (Fig.~\ref{fig:polybench-div}). In HTL, pipelined operations could be represented in a similar fashion to load and store instructions, by using wires to communicate with an abstract computation block modelled in HTL and later replaced by a hardware implementation.
+The introduction of pipelined operators to \vericert{}, especially for division, would alleviate the slow clock speed observed in the \polybench{} benchmarks when divisions were included (\cref{fig:polybench-div}). In HTL, pipelined operations could be represented in a similar fashion to load and store instructions, by using wires to communicate with an abstract computation block modelled in HTL and later replaced by a hardware implementation.
 %\NR{Are you describing using IP blocks? If so, you can generalise it to any IP block rather than just division.}\YH{I think I prefer just focusing on pipelined division for now, as that's specifically the issue, so that people know we have a plan to resolve specifically that.}
 %JW I've chopped the following sentence because it felt like it was going into too much detail.
 %However, 3ACPar would have to be modified to also describe such instructions so that these can be placed optimally using the external scheduling algorithm.
@@ -62,7 +62,7 @@ constant propagation will allow these programs to pass without error.
 
 \begin{table}
   \centering
-  \caption{Statistics about the numbers of lines of code in the proof and implementation of \vericert{}.}\label{tab:proof_statistics}
+  \captionabove{Statistics about the numbers of lines of code in the proof and implementation of \vericert{}.}\label{tab:proof_statistics}
   \begin{tabular}{lrrrrr}
     \toprule
     & \textbf{Coq code} & \multicolumn{1}{p{1cm}}{\raggedleft\textbf{OCaml code}} & \textbf{Spec} & \multicolumn{1}{p{2cm}}{\raggedleft\textbf{Theorems \& Proofs}} & \textbf{Total}\\
@@ -82,7 +82,7 @@ constant propagation will allow these programs to pass without error.
 \end{table}
 
 The lines of code for the implementation and proof of \vericert{} can be found
-in Table~\ref{tab:proof_statistics}.  Overall, it took about 1.5 person-years to
+in \cref{tab:proof_statistics}.  Overall, it took about 1.5 person-years to
 build \vericert{} -- about three person-months on implementation and 15
 person-months on proofs.  The largest proof is the correctness proof for the HTL
 generation, which required equivalence proofs between all integer operations

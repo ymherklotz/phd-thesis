@@ -2,23 +2,32 @@
 \label{sec:background}
 
 \begin{quote}\itshape
-  This chapter describes high-level synthesis and the current state-of-the-art
-  optimisations used by \gls{HLS} tools, focusing in particular on static
-  scheduling.  Next, common testing and verification workflows for \gls{HLS} are
-  also described.  Finally, an overview of \compcert{} is given, on which
-  \vericert{} is built.
+  This chapter briefly describes \glspl{FPGA} followed by introducing
+  \glsfirst{HLS} and the current state-of-the-art optimisations used by
+  \gls{HLS} tools, focusing in particular on static scheduling.  Next, common
+  testing and verification workflows for \gls{HLS} are also described.  Finally,
+  an overview of \compcert{} is given, on which \vericert{} is built.
 \end{quote}
 
 \section{Field Programmable Gate Arrays}%
 \label{sec:bg:fpga}
 
-This section briefly introduces \glspl{FPGA}, which is assumed to be the
-final target for the hardware produced by Vericert, as well as the \gls{HLS}
-tools that Vericert is directly compared against.
+This section introduces \glsfirstplural{FPGA}, which is assumed to be the final
+target for the hardware produced by Vericert, as well as the \gls{HLS} tools
+that Vericert is directly compared against.
 
 \Glspl{FPGA} are programmable hardware chips that can be used to implement and
-run custom hardware without having to tape-out an actual integrated circuit.
-\glspl{FPGA} comprise four main components:
+run custom hardware without having to tape-out an \gls{ASIC}, which may take
+years of development time.  \Glspl{FPGA} instead provide a platform to test
+custom hardware quickly without these turnaround times, and can be reprogrammed
+at will in case the hardware ever needs to change.  Because they still allow for
+reprogrammability, they can never be as efficient as an equivalent \gls{ASIC}
+design, however, for many application having the chance to reprogram the
+hardware is an advantage.  In addition to that, an \gls{FPGA} will still
+generally be more efficient and more performant than running the same workload
+on a general purpose processor.  \Glspl{FPGA} comprise the following four main
+components~\cite{boutros21_fpga_archit}, which are also shown in
+\cref{fig:bg:fpga-layout}.
 
 \begin{description}
 \item[\gls{LUT}] A \gls{LUT} can implement any kind of logic with a set number
@@ -31,96 +40,497 @@ run custom hardware without having to tape-out an actual integrated circuit.
   hardware design.
 \item[\gls{BRAM}] Instead of relying on implementing memories to store a large
   amount of data using \glspl{LUT}, there is often \gls{BRAM} on the \gls{FPGA},
-  which provides efficient storage for a large amount of data.
-\item[\gls{DSP} blocks] Finally, \glspl{FPGA} also often contain \gls{DSP}
-  blocks, which can be used to implement common arithmetic functions
-  efficiently, that may otherwise take up a lot of space if implemented using
-  \glspl{LUT}.  Some common arithmetic functions that are often implemented
-  using \gls{DSP} blocks include integer multipliers and multiply-accumulate
-  operations.
+  which provides efficient storage for data.
+\item[\gls{DSP}] Finally, \glspl{FPGA} also often contain \glspl{DSP}, which can
+  be used to implement common arithmetic functions efficiently, that may
+  otherwise take up a lot of space if implemented using \glspl{LUT}.  Some
+  common arithmetic functions that are often implemented using \gls{DSP} include
+  integer multipliers and multiply-accumulate operations.
 \end{description}
 
-\section{High-level Synthesis}%
+\definecolor{connblockcolour}{HTML}{E6CEE9}
+\definecolor{lutcolour}{HTML}{E9D8CE}
+\definecolor{dspcolour}{HTML}{D2E9CE}
+\definecolor{switchcolour}{HTML}{CEDFE9}
+\definecolor{bramcolour}{HTML}{D2D1E9}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[yscale=-1,connblock/.style={draw=black,fill=connblockcolour},
+    lut/.style={draw=black,fill=lutcolour},switch/.style={draw=black,fill=switchcolour},
+    dsp/.style={draw=black,fill=dspcolour},bram/.style={draw=black,fill=bramcolour},
+    emphasize/.style={very thick,draw=Tomato},
+    blocklabel/.style={font=\ttfamily\small}]
+    \foreach \w in {0,...,3}
+    {\pgfmathtruncatemacro{\sw}{2 * \w}
+     \foreach \z in {0,...,2}
+     {\pgfmathtruncatemacro{\sz}{\z}
+       \draw ($(0.5,\sw)+(0,0.\sz)+(0,0.4)$) -- ($(6.5,\sw)+(0,0.\sz)+(0,0.4)$);
+       \draw ($(\sw,0.5)+(0.\sz,0)+(0.4,0)$) -- ($(\sw,6.5)+(0.\sz,0)+(0.4,0)$);
+       \ifnum\w=3
+       \else
+         \draw ($(\sw,0.5)+(0.\sz,0)+(1.4,0)$) -- ($(\sw,6.5)+(0.\sz,0)+(1.4,0)$);
+         \draw ($(0.5,\sw)+(0,0.\sz)+(0,1.4)$) -- ($(6.5,\sw)+(0,0.\sz)+(0,1.4)$);
+       \fi
+       }}
+    \foreach \z in {0,...,2}
+     {\pgfmathtruncatemacro{\sz}{\z}
+       \draw[emphasize] ($(2.5,0.5)+(0,0.\sz)-(0,0.1)$) --
+       ($(6.5,0.5)+(0,0.\sz)-(0,0.1)$);
+       \draw[emphasize] ($(2.5,2.5)+(0,0.\sz)-(0,0.1)$) --
+       ($(4.5,2.5)+(0,0.\sz)-(0,0.1)$);
+       \draw[emphasize] ($(3.5,1.5)+(0,0.\sz)-(0,0.1)$) --
+       ($(5.5,1.5)+(0,0.\sz)-(0,0.1)$);
+       \draw[emphasize] ($(3.5,0.5)+(0.\sz,0)-(0.1,0)$) --
+       ($(3.5,2.5)+(0.\sz,0)-(0.1,0)$);
+       \draw[emphasize] ($(5.5,0.5)+(0.\sz,0)-(0.1,0)$) --
+       ($(5.5,1.5)+(0.\sz,0)-(0.1,0)$);
+%       \draw ($(\sw,0.5)+(0.\sz,0)+(0.4,0)$) -- ($(\sw,6.5)+(0.\sz,0)+(0.4,0)$);
+%       \draw ($(\sw,0.5)+(0.\sz,0)+(1.4,0)$) -- ($(\sw,6.5)+(0.\sz,0)+(1.4,0)$);
+%       \draw ($(0.5,\sw)+(0,0.\sz)+(0,1.4)$) -- ($(6.5,\sw)+(0,0.\sz)+(0,1.4)$);
+       }
+    \foreach \x in {0,...,3}
+    \foreach \y in {0,...,3}
+    {\pgfmathtruncatemacro{\sx}{2 * \x}
+      \pgfmathtruncatemacro{\sy}{2 * \y}
+      \filldraw[lut] (\sx,\sy) rectangle ($(\sx,\sy)+(1,1)$);
+      \node[blocklabel] at ($(\sx,\sy)+(0.5,0.5)$) {LUT};
+      \ifnum\x=3
+        \ifnum\y=3
+          %
+        \else
+          \filldraw[connblock] ($(\sx,\sy)+(0.3,1.3)$) rectangle ($(\sx,\sy)+(0.7,1.7)$);
+        \fi
+        \else
+        \ifnum\y=3
+          \filldraw[connblock] ($(\sx,\sy)+(1.3,0.3)$) rectangle ($(\sx,\sy)+(1.7,0.7)$);
+        \else
+          \filldraw[connblock] ($(\sx,\sy)+(1.3,0.3)$) rectangle ($(\sx,\sy)+(1.7,0.7)$);
+          \filldraw[connblock] ($(\sx,\sy)+(0.3,1.3)$) rectangle ($(\sx,\sy)+(0.7,1.7)$);
+          \filldraw[switch] ($(\sx,\sy)+(1.2,1.2)$) rectangle
+          ($(\sx,\sy)+(1.8,1.8)$);
+          \node[blocklabel] at ($(\sx,\sy)+(1.5,1.5)$) {SW};
+        \fi
+      \fi
+    }
+    \filldraw[dsp] (2,0) rectangle ($(2,0)+(1,1)$);
+    \node[blocklabel] at ($(2,0)+(0.5,0.5)$) {DSP};
+    \filldraw[bram] (2,2) rectangle ($(2,2)+(1,1)$);
+    \node[blocklabel] at ($(2,2)+(0.5,0.5)$) {BRAM};
+    \filldraw[dsp] (4,6) rectangle ($(4,6)+(1,1)$);
+    \node[blocklabel] at ($(4,6)+(0.5,0.5)$) {DSP};
+    \filldraw[bram] (4,4) rectangle ($(4,4)+(1,1)$);
+    \node[blocklabel] at ($(4,4)+(0.5,0.5)$) {BRAM};
+    \foreach \v in {{2,2},{2,0},{4,0},{4,2},{6,0}}
+    {\draw[emphasize] (\v) rectangle ($(\v)+(1,1)$);}
+    \foreach \v in {{2,2},{2,0},{4,0}}
+    {\draw[emphasize] ($(\v)+(1.3,0.3)$) rectangle ($(\v)+(1.7,0.7)$);}
+    \foreach \v in {{2,0},{4,0}}
+    {\draw[emphasize] ($(\v)+(1.2,1.2)$) rectangle ($(\v)+(1.8,1.8)$);}
+    \foreach \v in {{4,0}}
+    {\draw[emphasize] ($(\v)+(0.3,1.3)$) rectangle ($(\v)+(0.7,1.7)$);}
+  \end{tikzpicture}
+  \caption[FPGA layout, showing an example of a design that is placed and routed
+  on the FPGA highlighted in red.  The white blocks correspond to LUTs, followed
+  by turquoise blocks being DSPs and green blocks being BRAMs.  The programmable
+  interconnects are made up of connection blocks and switches shown in beige and
+  yellow respectively.]{\Gls{FPGA} layout, showing an example of a design that
+    is placed and routed on the \gls{FPGA} highlighted in red.  The white blocks
+    correspond to \glspl{LUT}, followed by turquoise blocks being \glspl{DSP}
+    and green blocks being \glspl{BRAM}.  The programmable interconnects are
+    made up of connection blocks and switches shown in beige and yellow
+    respectively.}%
+  \label{fig:bg:fpga-layout}
+\end{figure}
+
+The standard process to translate a hardware design from an \gls{HDL}, such as
+Verilog or VHDL, to then be placed onto an \gls{FPGA} is to first
+\emph{synthesise} the hardware design, which generates a lower level description
+of the hardware in terms of the resources that are available on the \gls{FPGA}.
+Next, the net-list is place-and-routed on the \gls{FPGA}, which assigns a
+physical location to each resources and programs the interconnects so that all
+the components are connected properly.  This description low-level description
+of the hardware is then turned into a bit stream that will program all the
+individual resources on the \gls{FPGA}.  The result can be seen in
+\cref{fig:bg:fpga-layout} by looking at the highlighted paths in red, as the
+place-and-route process placed logical functions into \glspl{LUT} and connected
+them together correctly, also making use of a \gls{BRAM} and a \gls{DSP}.
+
+\section{High-Level Synthesis}%
 \label{sec:bg:hls}
 
-\Gls{HLS} is the transformation of software directly into hardware.  There are
-many different types of \gls{HLS}, which can vary in terms of the languages they
-accept or the devices that are targeted, however, they often share similar steps
-in how the translation is performed, as they all go from a higher-level,
-behavioural description of the algorithm to a timed hardware description.  In
-this dissertation, we will assume that we are targeting \glspl{FPGA} instead of
-\glspl{ASIC}, which lead to different resources that are available to the
-\gls{HLS} tool to target.
+\Glsxtrlong{HLS} is the transformation of software directly into hardware.
+There are many different types of \gls{HLS}, which can vary in terms of the
+languages they accept or the devices that are targeted, however, they often
+share similar steps in how the translation is performed, as they all go from a
+higher-level, behavioural description of the algorithm to a timed hardware
+description.  In this dissertation, we will assume that we are targeting
+\glspl{FPGA} instead of \glspl{ASIC}, which lead to different resources that are
+available to the \gls{HLS} tool to target.
 
 The main steps performed in the translation of an \gls{HLS} tool is the
 following~\cite{coussy09_introd_to_high_level_synth,canis13_legup}:
 
 \begin{description}
-\item[Compilation of specification] First, the input specification has to be
-  compiled into a representation that can be used to apply all the necessary
-  optimisations.  The input specification for most traditional \gls{HLS} tools
-  is a restricted version of C or C++, however, \gls{HLS} tools such as Google
-  XLS~\cite{google23_xls} use a \gls{DSL} based on communicating sequential
-  processes~\cite{hoare78_commun_sequen_proces} as primary input specification.
-  This specification is then turned into some intermediate language such as the
-  LLVM \gls{IR}~\cite{lattner04_llvm}, MLIR~\cite{lattner21_mlir} or a custom
-  representation of the code.
+\item[Compilation of input language] First, the program or specification written
+  in the input language to the \gls{HLS} tool is compiled into an intermediate
+  language that is more suitable to be transformed by optimisations.  The input
+  language for most traditional \gls{HLS} tools is a restricted version of C or
+  C++, however, \gls{HLS} tools such as Google XLS~\cite{google23_xls} can use a
+  \gls{DSL} based on communicating sequential
+  processes~\cite{hoare78_commun_sequen_proces} as an input specification as
+  well.  This specification is then turned into some intermediate language such
+  as the LLVM \gls{IR}~\cite{lattner04_llvm}, MLIR~\cite{lattner21_mlir} or a
+  custom representation of the code.  The structure of these intermediate
+  languages is further discussed in \cref{sec:bg:intermediate-language}.
 
 \item[Hardware resource allocation] Depending on if the hardware target is a
-  specific \gls{FPGA} or an \gls{ASIC} working with a specific technology
-  library, the \gls{HLS} tool will have to allocated resources differently.  For
-  example, on \glspl{FPGA} there are only a limited number of \glspl{LUT},
-  \gls{DSP} blocks available. However, tools often assume that an unlimited
-  amount of resources are available instead.  This resource sharing can be too
-  expensive for adders, as the logic for sharing the adder would have
-  approximately the same cost as adding a separate adder.  However, multipliers
-  and divider blocks should be shared, especially as divider blocks are often
-  implemented in logic and are therefore quite expensive.
+  specific \gls{FPGA} or an \gls{ASIC} built on a specific technology library,
+  the \gls{HLS} tool will have to allocated resources differently.  For example,
+  on \glspl{FPGA} there are only a limited number of \glspl{LUT}, \gls{DSP}
+  available.  The \gls{HLS} tool therefore often decides ahead of time which
+  resources the program will need based on the operations that are present in
+  the program.  A few resources are often assumed to be infinite to simplify the
+  resource allocation, examples being registers, which are normally cheap
+  especially on \glspl{FPGA}, or simple logic circuits that are cheap enough to
+  be duplicated or may have dedicated hardware on the FPGA such as integer
+  adders or multiplexers.  Other circuits may require more resources in which
+  case it would make sense to only have a few instantiations of the circuit and
+  share it as much as possible.  Examples of these circuits could be integer
+  division modules or floating point arithmetic units that will most likely not
+  have dedicated hardware on the \gls{FPGA} and would therefore have to be
+  implemented on the \gls{FPGA}.  These circuits also often have trade-offs
+  between area, latency and throughput which should be considered, and will be
+  important in the operation scheduling step.  Finally, memory and
+  multiplication units lie in the middle, where there are usually enough
+  \glspl{BRAM} or \glspl{DSP} resources on the \gls{FPGA}, but they might
+  introduce different challenges such leading to designs that are more difficult
+  to place-and-route.  In particular, if one uses too many of these resources,
+  \glspl{BRAM} and operations in the \glspl{DSP} can be implemented using
+  \glspl{LUT}.
 
-\item[Operation scheduling] The operations then need to be scheduled into a
-  specific clock cycle, as the input specification language is normally an
-  untimed behavioural representation.  This is where the spatial parallelism of
-  the hardware can be taken advantage of, meaning operations that are not
-  dependent on each other can run in parallel.  There are various possible
-  scheduling methods that could be used, such as static or dynamic scheduling,
-  which are described further in \cref{sec:bg:scheduling}.
-
-\item[Operation and variable binding] After the operations have been scheduled,
-  the operations and the variables need to be bound to hardware units and
-  registers respectively.  It is often not that practical to share many hardware
-  units though, as this requires adding multiplexers, which are often the same
-  size as the hardware units themselves.  It is therefore more practical to only
-  share operations that take up a lot of space, such as modulo or divide
-  circuits, as well as multipliers if they are not available any more on the
-  FPGA.
+\item[Operation scheduling] Once the available resources have been chosen, the
+  operations in the intermediate representation need to be scheduled into a
+  clock cycle based on these resource constraints, creating a timed
+  representation of the program.  The goal of the operation scheduling step is
+  to maximise the instruction-level parallelism of the program while also
+  honouring the various resource constraints that are imposed by the available
+  resources.  Scheduling is further described in \cref{sec:bg:scheduling}.  As
+  part of the scheduling step, operations are also often bound to specific
+  resources.
 
 \item[Hardware description generation] Finally, the hardware description is
-  generated from the code that was described in the intermediate language.  This
-  is often a direct translation of the instructions into equivalent hardware
-  constructs.
+  generated from the code that was described in the intermediate language and
+  from the states and resources that each operation and register was assigned
+  to.
 \end{description}
 
 There are many examples of existing high-level synthesis tools, the most popular
-ones being LegUp~\cite{canis13_legup}, Vivado
-HLS~\cite{xilinx20_vivad_high_synth}, Catapult
-C~\cite{mentor20_catap_high_level_synth} and Intel's OpenCL
-SDK~\cite{intel20_sdk_openc_applic}.  These HLS tools all accept general
-programming languages such as C or OpenCL, however, some HLS tools take in
-languages that were designed for hardware such as
+ones being Bambu HLS~\cite{bambu_hls}, LegUp~\cite{canis13_legup}, Vitis
+HLS~\cite{amd23_vitis_high_synth}, Catapult
+C~\cite{mentor20_catap_high_level_synth}, Google XLS~\cite{google23_xls} and
+Intel's OpenCL SDK~\cite{intel20_sdk_openc_applic}.  These HLS tools all accept
+general programming languages such as C/C++ or OpenCL, however, some HLS tools
+take in languages that were designed for hardware such as
 Handel-C~\cite{aubury96_handel_c_languag_refer_guide}, where time is encoded as
-part of the semantics.
+part of the semantics.\YH{TODO: Expand list a bit.}
 
-\subsection{Intermediate Language}%
+\subsection{Data structures for Intermediate Languages}%
+\label{sec:bg:data-structures-for-intermediate-languages}
+
+This \namecref{sec:bg:data-structures-for-intermediate-languages} describes how
+instructions inside functions can be represented and the differences in these
+approaches, especially when integrated into an \gls{HLS} tool.  Next, in
+\cref{sec:bg:intermediate-language} we will describe techniques used to group
+instructions into a contiguous blocks to simplify analyses and transformations
+of instructions within the blocks.
+
+There are many ways to represent the code that makes up a function or a program.
+High-level languages that are written by the programmer are normally represented
+as an \gls{AST} in the front end of the compiler, which is a tree representing
+the parsed source file.  An \gls{AST} is a good representation for high-level
+optimisations that may need information about the exact intent of the
+programmer, for example that a loop is indeed a structured for-loop instead of
+unstructured goto statements.  On the opposite end, the assembly that will run
+on the processor can simply be represented by a list of instructions.  This
+simple representation of the program is useful because individual instructions
+can directly be stored contiguously in memory and are then loaded by the
+processor to be executed.  However, storing instructions as a list means that
+much of the original structure of the program is lost, which makes analysing
+programs and transforming them more difficult.  In between these two
+representations, there is often one or more intermediate languages that can be
+represented in a variety of ways, and are either used purely for analysis or
+also as an intermediate transformation step.
+
+\definecolor{nodea}{HTML}{81B8BF}
+\definecolor{nodeb}{HTML}{A681BF}
+\definecolor{nodec}{HTML}{BF8781}
+\definecolor{noded}{HTML}{99BF81}
+\definecolor{nodee}{HTML}{9FA5CE}
+\definecolor{nodef}{HTML}{CE9FBC}
+\definecolor{nodeg}{HTML}{CEC89F}
+\definecolor{nodeh}{HTML}{9FCEB1}
+
+\tikzset{instrnode/.style={draw=black,fill=white,circle,inner sep=3pt},
+         bblock/.style={draw=black,fill=black!15,rounded corners}}
+
+\begin{figure}
+  \begin{subfigure}[b]{0.15\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=noded,below=of b] (d) {};
+      \node[instrnode,fill=nodec,below=of d] (c) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below=of e] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below=of g] (h) {};
+      \draw[->] (a) -- (b);
+      \draw[->] (b) -- (d);
+      \draw[->] (d) -- (c);
+      \draw[->] (c) -- (e);
+      \draw[->] (e) -- (f);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) -- (h);
+      \draw[->,dashed] (g) to [loop,looseness=1,out=110,in=250] (b);
+      \draw[->,dashed] (b) to [loop,looseness=1,in=70,out=290] (c);
+      \draw[->,dashed] (d) to [loop,looseness=1,in=70,out=290] (f);
+    \end{tikzpicture}
+    \caption{List}\label{fig:data-structure-comparison:list}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.2\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below right=of e] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \draw[->] (a) -- (b);
+      \draw[->] (b) -- (c);
+      \draw[->] (b) -- (d);
+      \draw[->] (d) -- (f);
+      \draw[->] (c) -- (e);
+      \draw[->] (e) -- (f);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) -- (h);
+      \draw[->] (g) to [loop,looseness=1.4,out=150,in=150] (b);
+    \end{tikzpicture}
+    \caption{\Glsfirst{CFG}}\label{fig:data-structure-comparison:cfg}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.3\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below right=of e] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \draw[->,dashed] (a) -- (b);
+      \draw[->,dashed] (g) -- (h);
+      \draw[->,dashed] (g) to [loop,looseness=1.4,out=150,in=150] (b);
+      \draw[->] (a) to [loop,looseness=1.4,out=310,in=50] (f);
+      \draw[->] (b) -- (e);
+      \draw[->] (b) -- (c);
+      \draw[->] (b) -- (d);
+      \draw[->,dashed] (c) to [loop,looseness=1.2,out=230,in=120] (g);
+      \draw[->,dashed] (d) to [loop,looseness=1.2,out=260,in=60] (g);
+      \draw[->] (d) -- (h);
+      \draw[->,dashed] (e) -- (g);
+      \draw[->,dashed] (f) -- (g);
+    \end{tikzpicture}
+    \caption{\Glsfirst{DFG}}\label{fig:data-structure-comparison:dfg}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.25\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below right=of e] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \node[left=0.1cm of c] (padding) {};
+      \begin{pgfonlayer}{background}
+        \node[fit={(b)(c)(d)(e)(f)(g)(padding)},bblock] (fitall) {};
+        \node[fit={(h)},bblock] (fith) {};
+        \node[fit={(a)},bblock] (fita) {};
+      \end{pgfonlayer}
+      \draw[->,dashed] (a) -- (fitall);
+      \draw[->] (b) -- (e);
+      \draw[->] (b) -- (c);
+      \draw[->] (b) -- (d);
+      \draw[->] (c) to [loop,looseness=1.2,out=230,in=120] (g);
+      \draw[->] (d) to [loop,looseness=1.2,out=260,in=60] (g);
+      \draw[->] (e) -- (g);
+      \draw[->] (f) -- (g);
+      \draw[->,dashed] (g) -- (fith);
+      \draw[->,dashed] (g) to [loop,looseness=1.4,out=150,in=150] ($(fitall.north) - (0.3,0)$);
+    \end{tikzpicture}
+    \caption{\Glsfirst{CDFG}}\label{fig:data-structure-comparison:cdfg}
+  \end{subfigure}
+  \caption{Comparison of lists, \glsfmtlongpl{CFG}, \glsfmtlongpl{DFG} and
+    \glsfmtlongpl{CDFG}.}%
+  \label{fig:data-structure-comparison}
+\end{figure}
+
+\subsubsection{Lists}
+
+An example of a list representing code is shown abstractly in
+\cref{fig:data-structure-comparison:list}.  In the figure, the solid arrows
+between nodes show how the instructions are stored as a linked list, one
+instruction feeding to the next.  However, programs may have loops in them,
+which cannot directly be expressed in the list representation, as each
+instruction can only have one successor.  Instead, instructions that are
+represented as a list will have labels attached to them, and goto instructions
+can then jump to those labels.  These jumps are represented using the dashed
+arrows in the figure.  This is the simplest representation of the code as it is
+completely linear, however, analysing such a program will be more difficult
+because a lot of information, such as a lot of edges, are implicit in the
+representation.
+
+\subsubsection{\Glsfmtlongpl{CFG}}
+
+Instead, a \gls{CFG} representation of the code is a graph instead of a list,
+and allows any instruction to be connected to any other instruction explicitly
+by a control-flow edge.  This signifies that after executing an instruction, the
+execution will then move to one of the successors of the current node.
+
+\subsubsection{\Glsfmtlongpl{DFG}}
+
+\subsubsection{\Glsfmtlongpl{CDFG}}
+
+\subsection{Grouping Instructions Into Blocks}%
 \label{sec:bg:intermediate-language}
 
-This section describes some possible characteristics of a language that could be
-used as an input to an \gls{HLS} tool.  These languages normally require some
-structure to allow for easier optimisation and analysis passes.  In particular,
-it is often useful to have contiguous blocks of instructions that do not contain
-any control-flow in one list.  This means that these instructions can safely be
-rearranged by only looking at local information of the block itself, and in
-particular it allows for complete removal of control-flow as only the data-flow
-is important in that block.
+This \namecref{sec:bg:intermediate-language} describes the characteristics for
+intermediate languages that are often used within an \gls{HLS} tool.  First, we
+will describe different techniques to group blocks of instructions which can
+simplify optimisations.
+
+In particular, it is often useful to have contiguous blocks of instructions that
+do not contain any control-flow in one list.  This means that these instructions
+can safely be rearranged by only looking at local information of the block
+itself, and in particular it allows for complete removal of control-flow as only
+the data-flow is important in that block.
+
+\begin{figure}
+  \begin{subfigure}[c]{0.3\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below right=of e] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \begin{pgfonlayer}{background}
+        \node[fit={(c)(e)},bblock] (fitce) {};
+        \node[fit={(d)},bblock] (fitd) {};
+        \node[fit={(b)},bblock] (fitb) {};
+        \node[fit={(a)},bblock] (fita) {};
+        \node[fit={(f)(g)},bblock] (fitfg) {};
+        \node[fit={(h)},bblock] (fith) {};
+      \end{pgfonlayer}
+      \draw[->] (a) -- (fitb);
+      \draw[->] (b) -- (fitce.north);
+      \draw[->] (b) -- (fitd.north);
+      \draw[->] (d) -- (fitfg.north east);
+      \draw[->] (c) -- (e);
+      \draw[->] (e) -- (fitfg.north west);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) -- (fith);
+      \draw[->] (g) to [loop,looseness=1.4,out=150,in=150] (fitb.north west);
+    \end{tikzpicture}
+    \caption{Basic blocks}\label{fig:block-comparison:basicblocks}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[c]{0.3\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below=of e] (f) {};
+      \path (f) -| node[instrnode,fill=nodef,dashed] (fp) {} (d);
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeg,below=of fp,dashed] (gp) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \begin{pgfonlayer}{background}
+        \node[fit={(d)}] (fitd) {};
+        \node[fit={(b)}] (fitb) {};
+        \node[fit={(d)(fp)(gp)},bblock] (fitd) {};
+        \node[fit={(c)(e)(f)(g)}] (fitce) {};
+        \filldraw[bblock] (fitb.north west)
+                       -- (fitb.north east)
+                       -- (fitb.south east)
+                       -- ($(fitce.north east) + (0.07,-0.3)$)
+                       -- ($(fitce.south east) + (0.07,0)$)
+                       -- ($(fitce.south west) - (0.07,0)$)
+                       -- ($(fitce.north west) - (0.07,0)$)
+                       -- cycle;
+        \node[fit={(a)},bblock] (fita) {};
+        \node[fit={(h)},bblock] (fith) {};
+      \end{pgfonlayer}
+      \draw[->] (a) -- (fitb);
+      \draw[->] (b) -- (c);
+      \draw[->] (b) -- (fitd.north);
+      \draw[->] (d) -- (fp);
+      \draw[->] (c) -- (e);
+      \draw[->] (e) -- (f);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) -- (fith);
+      \draw[->] (fp) -- (gp);
+      \draw[->] (gp) -- (fith);
+      \draw[dashed] (f) -- (fp);
+      \draw[dashed] (g) -- (gp);
+      \draw[->] (g) to [loop,looseness=1.2,out=150,in=150] (fitb.north west);
+      \draw[->] (gp) to [loop,looseness=1.2,out=30,in=30] (fitb.north east);
+    \end{tikzpicture}
+    \caption{Superblocks}\label{fig:block-comparison:superblocks}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[c]{0.3\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below right=of e] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \begin{pgfonlayer}{background}
+        \node[fit={(b)(c)(d)(e)(f)(g)},bblock] (fitall) {};
+        \node[fit={(h)},bblock] (fith) {};
+        \node[fit={(a)},bblock] (fita) {};
+      \end{pgfonlayer}
+      \draw[->] (a) -- (fitall);
+      \draw[->] (b) -- (d);
+      \draw[->] (d) -- (c);
+      \draw[->] (c) -- (e);
+      \draw[->] (e) -- (f);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) -- (fith);
+      \draw[->] (g) to [loop,looseness=1.4,out=150,in=150] ($(fitall.north) - (0.3,0)$);
+    \end{tikzpicture}
+    \caption{Hyperblocks}\label{fig:block-comparison:hyperblocks}
+  \end{subfigure}
+  \caption{Comparison of basic blocks, superblocks and hyperblocks.}%
+  \label{fig:block-comparison}
+\end{figure}
 
 \subsubsection{Basic blocks}
 
@@ -521,6 +931,111 @@ is dominated by $d$ ($p \le_{d} d$), then the following equation holds:
 This is an important lemma as it essentially allows one to know the value of a
 register as long as one knows that its assignment dominates the current node and
 one knows what expressions it was assigned.
+
+\subsection{Related Work to Scheduling}%
+\label{sec:related-work}
+
+The most closely related works to ours are those by
+\textcite{tristan08_formal_verif_trans_valid} and by
+\textcite{six22_formal_verif_super_sched}, so we begin this section by recapping
+our main points of similarity and difference.
+
+\textcite{tristan08_formal_verif_trans_valid} were the first to propose adding
+scheduling to a verified compiler, and we adopt their method for validating
+schedules -- running symbolic execution before and after scheduling and
+comparing the resultant symbolic states. Their scheduler only \emph{reorders}
+instructions, so syntactic equality suffices for comparing symbolic states,
+whereas our scheduler can also \emph{modify} instructions (by manipulating
+predicates). This means that our state comparisons are more involved, and we
+turn to a SAT solver to help resolve them
+(\cref{sec:value_summaries}). \citeauthor{tristan08_formal_verif_trans_valid}
+also devised the use of constraints to prevent the scheduler introducing
+undefined behaviour; we adopt this technique too, taking care to extend it to
+handle predicates in such a way that valid schedules can still be validated
+(\cref{sec:handling-discarded-expressions}). We remark that a direct empirical
+comparison with \citeauthor{tristan08_formal_verif_trans_valid}'s work is not
+feasible because their method was implemented for an old version of CompCert and
+was not incorporated into its main branch.
+
+\textcite{six22_formal_verif_super_sched} formalise superblock scheduling, which
+is a restricted form of trace scheduling that is well-suited for VLIW
+processors. Hyperblock scheduling is more general than superblock scheduling and
+is well-suited to our application domain,
+HLS. \citeauthor{six22_formal_verif_super_sched}'s scheduler reorders
+instructions, and also combines them where it is advantageous to do so, so
+comparing symbolic states is more involved than it was for
+\citeauthor{tristan08_formal_verif_trans_valid}, but it still does not require a
+SAT solver because there are no predicates to reason about. A direct empirical
+comparison between our scheduler and
+\citeauthor{six22_formal_verif_super_sched}'s is difficult because
+\citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
+of CompCert called CompCertKVX.
+
+Outside of the realm of mechanised proof, most HLS tools implement some form of
+static scheduling. For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
+LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls} and
+Bambu~\cite[line~304]{ferrandi21_bambu} all employ SDC-based hyperblock
+scheduling. Other HLS tools, such as
+Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
+until runtime. It is notable that these unverified tools tend towards fewer,
+larger passes, where several optimisations are packed into `scheduling'. This
+minimises the number of times the solver needs to be invoked, and gives it the
+best chance of finding a global optimum. Verified tools such as CompCert and
+Vericert, on the other hand, tend towards more, smaller passes that are
+individually feasible to prove correct.
+
+Several HLS tools are associated with translation validators, either for an
+individual scheduling
+pass~\cite{chouksey20_verif_sched_condit_behav_high_level_synth,
+  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the HLS
+tool as a whole~\cite{mentor20_catap_high_level_synth, tiemeyer19_crest}. These
+typically work by establishing equivalence at the level of state machines,
+whereas we take the approach of comparing symbolic states, because
+\textcite{tristan08_formal_verif_trans_valid} showed it to be viable in the
+context of a verified compiler. Unlike our work, none of these translation
+validators provide mechanised proofs of equivalence, so might produce false
+positives.
+
+% \subsection{Diffs w.r.t. superblock scheduling}
+
+% \begin{itemize}
+
+% \item Superblocks are well suited to VLIW processors [citation needed];
+%  hyperblocks are well suited to HLS [citation needed].  Direct comparison is
+%  tricky because the two tools are based on incompatible versions of CompCert.
+
+%\item Both use translation validation, but we use a verified SAT solver as part
+% of this.  (Superblock scheduling doesn't use predicates so doesn't need a SAT
+% solver.)
+
+% \item We introduce two intermediate languages (RTLBlock and RTLPar) that we
+%   argue are easier to work with than the RTLPath language used in the superblock
+%   scheduling work.
+
+% \end{itemize}
+
+% \JW{What's the link between hyperblocks and SDC-based scheduling? Are these
+% orthogonal?}\YH{Well the original SDC papers only talk about basic blocks, and
+% not SDC hyperblock scheduling.  But it is easy enough to adapt.  SDC just
+% requires some kind of blocks without control-flow.} \JW{Ok cool, so you can
+% have SDC scheduling without hyperblocks. Can you have hyperblocks without SDC
+% scheduling? (I guess so, but just wanted to be completely sure.)}\YH{Yes
+% exactly, you can perform any type of basic block scheduling on hyperblocks as
+% well I think, as long as you mark the dependencies correctly.  But in the
+% worst case you could even just see hyperblocks as basic blocks and ignore
+% predicates.  It would still be correct but just less efficient.}
+%
+% \JW{It would be interesting to make the case for SDC-based scheduling. Is it
+% superior to other scheduling mechanisms? Is it so much superior that it's
+% worth the additional complexity, compared to, say, list scheduling? }\YH{SDC
+% scheduling is more flexible with the type of constraint to optimise for
+% (latency / throughput). I don't think it's too meaningful for compilers, where
+% there isn't as much flexibility.}  \JW{Thanks. Does Vericert have any idea
+% that the scheduling is being performed using SDC? Or is the SDC stuff entirely
+% internal to your unverified OCaml code? That is, could you swap your scheduler
+% with a different one that isn't based on SDC, and not have to change anything
+% in Vericert?}\YH{The verified part doesn't know about SDC at all, so it could
+% be changed to any other scheduler that acts on hyperblocks.}
 
 \section{Summary}%
 \label{sec:bg:summary}
