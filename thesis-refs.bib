@@ -17,6 +17,22 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	author = {AbsInt}
 }
 
+@inproceedings{allen70_cfa,
+	keywords = {control-flow},
+	author = {Allen, Frances E.},
+	title = {Control Flow Analysis},
+	year = {1970},
+	isbn = {9781450373869},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	doi = {10.1145/800028.808479},
+	abstract = {Any static, global analysis of the expression and data relationships in a program requires a knowledge of the control flow of the program. Since one of the primary reasons for doing such a global analysis in a compiler is to produce optimized programs, control flow analysis has been embedded in many compilers and has been described in several papers. An early paper by Prosser [5] described the use of Boolean matrices (or, more particularly, connectivity matrices) in flow analysis. The use of “dominance” relationships in flow analysis was first introduced by Prosser and much expanded by Lowry and Medlock [6]. References [6,8,9] describe compilers which use various forms of control flow analysis for optimization. Some recent developments in the area are reported in [4] and in [7].The underlying motivation in all the different types of control flow analysis is the need to codify the flow relationships in the program. The codification may be in connectivity matrices, in predecessor-successor tables, in dominance lists, etc. Whatever the form, the purpose is to facilitate determining what the flow relationships are; in other words to facilitate answering such questions as: is this an inner loop?, if an expression is removed from the loop where can it be correctly and profitably placed?, which variable definitions can affect this use?In this paper the basic control flow relationships are expressed in a directed graph. Various graph constructs are then found and shown to codify interesting global relationships.},
+	booktitle = {Proceedings of a Symposium on Compiler Optimization},
+	pages = {1–19},
+	numpages = {19},
+	location = {Urbana-Champaign, Illinois}
+}
+
 @inproceedings{allen83_conver_contr_depen_data_depen,
 	abstract = {Program analysis methods, especially those which support automatic vectorization, are based on the concept of interstatement dependence where a dependence holds between two statements when one of the statements computes values needed by the other. Powerful program transformation systems that convert sequential programs to a form more suitable for vector or parallel machines have been developed using this concept [AllK 82, KKLW 80].The dependence analysis in these systems is based on data dependence. In the presence of complex control flow, data dependence is not sufficient to transform programs because of the introduction of control dependences. A control dependence exists between two statements when the execution of one statement can prevent the execution of the other. Control dependences do not fit conveniently into dependence-based program translators.One solution is to convert all control dependences to data dependences by eliminating goto statements and introducing logical variables to control the execution of statements in the program. In this scheme, action statements are converted to IF statements. The variables in the conditional expression of an IF statement can be viewed as inputs to the statement being controlled. The result is that control dependences between statements become explicit data dependences expressed through the definitions and uses of the controlling logical variables.This paper presents a method for systematically converting control dependences to data dependences in this fashion. The algorithms presented here have been implemented in PFC, an experimental vectorizer written at Rice University.},
 	author = {Allen, J. R. and Kennedy, Ken and Porterfield, Carrie and Warren, Joe},
@@ -98,6 +114,20 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	year = {2014}
 }
 
+@article{beck91_fcfd,
+	keywords = {control-flow, data-flow},
+	title = {From Control Flow to Dataflow},
+	journal = {Journal of Parallel and Distributed Computing},
+	volume = {12},
+	number = {2},
+	pages = {118-129},
+	year = {1991},
+	issn = {0743-7315},
+	doi = {10.1016/0743-7315(91)90016-3},
+	author = {Micah Beck and Richard Johnson and Keshav Pingali},
+	abstract = {Are imperative languages tied inseparably to the von Neumann model or can they be implemented in some natural way on data-flow architectures? In this paper, we show how imperative language programs can be translated into dataflow graphs and executed on a dataflow machine like Monsoon. This translation can exploit both fine-grain and coarse-grain parallelism in imperative language programs. More importantly, we establish a close connection between our work and current research in the imperative languages community on data dependences, control dependences, program dependence graphs, and static single assignment form. These results suggest that dataflow graphs can serve as an executable intermediate representation in parallelizing compilers.}
+}
+
 @software{berkelaar10,
 	year = {2010},
 	title = {\texttt{lp\_solve} v5.5},
@@ -105,10 +135,10 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	url = {https://lpsolve.sourceforge.net/5.5/}
 }
 
-@article{boutros21_fpga_archit,
+@ARTICLE{boutros21_fpga_archit,
 	author = {Boutros, Andrew and Betz, Vaughn},
 	journal = {IEEE Circuits and Systems Magazine},
-	title = {{FPGA} Architecture: Principles and Progression},
+	title = {FPGA Architecture: Principles and Progression},
 	year = {2021},
 	volume = {21},
 	number = {2},
@@ -173,6 +203,15 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
+@article{campbell93_refin,
+	author = {Campbell, Philip L and Krishna, Ksheerabdhi and Ballance, Robert A},
+	publisher = {Citeseer},
+	journaltitle = {Cs93-6, University of New Mexico, Albuquerque},
+	keywords = {gated-SSA},
+	title = {Refining and defining the program dependence web},
+	year = {1993}
+}
+
 @inproceedings{canis11_legup,
 	abstract = {In this paper, we introduce a new open source high-level synthesis tool called LegUp that allows software techniques to be used for hardware design. LegUp accepts a standard C program as input and automatically compiles the program to a hybrid architecture containing an FPGA-based MIPS soft processor and custom hardware accelerators that communicate through a standard bus interface. Results show that the tool produces hardware solutions of comparable quality to a commercial high-level synthesis tool.},
 	author = {Canis, Andrew and Choi, Jongsok and Aldham, Mark and Zhang, Victor and Kammoona, Ahmed and Anderson, Jason H. and Brown, Stephen and Czajkowski, Tomasz},
@@ -186,6 +225,20 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	series = {FPGA '11},
 	title = {LegUp: High-Level Synthesis for FPGA-Based Processor/Accelerator Systems},
 	year = {2011}
+}
+
+@inproceedings{canis14_modul_sdc,
+	abstract = {Loop pipelining is a high-level synthesis scheduling technique that overlaps loop iterations to achieve higher performance. However, industrial designs often have resource constraints and other constraints imposed by cross-iteration dependencies. The interaction between multiple constraints can pose a challenge for HLS modulo scheduling algorithms, which, if not handled properly can lead to a loop pipeline schedule that fails to achieve the minimum possible initiation interval. We propose a novel modulo scheduler based on an SDC formulation that includes a backtracking mechanism to properly handle multiple scheduling constraints and still achieve the minimum possible initiation interval. The SDC formulation has the advantage of being a mathematical framework that supports flexible constraints that are useful for more complex loop pipelines. Furthermore, we describe how to specifically apply associative expression transformations during modulo scheduling to restructure recurrences in complex loops to enable better scheduling. We compared our techniques to existing prior work in modulo scheduling in HLS and also compared against a state-of-art commercial tool. Over a suite of benchmarks, we show that our scheduler and proposed optimizations can result in a geomean wall-clock time reduction of 32 \% versus prior work and 29 \% versus a commercial tool.},
+	author = {Canis, A. and Brown, S. D. and Anderson, J. H.},
+	url = {https://doi.org/10.1109/FPL.2014.6927490},
+	booktitle = {2014 24th International Conference on Field Programmable Logic and Applications (FPL)},
+	doi = {10.1109/FPL.2014.6927490},
+	issn = {1946-1488},
+	keywords = {high-level synthesis,modulo scheduling,loop scheduling,static scheduling},
+	month = sep,
+	pages = {1--8},
+	title = {Modulo SDC scheduling with recurrence minimization in high-level synthesis},
+	year = {2014}
 }
 
 @PhdThesis{canis15_legup,
@@ -302,6 +355,24 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	pdf = {https://re.public.polimi.it/retrieve/668507/dac21_bambu.pdf}
 }
 
+@article{ferrante87_progr_depen_graph_its_use_optim,
+	abstract = {In this paper we present an intermediate program representation, called the program dependence graph (PDG), that makes explicit both the data and control dependences for each operation in a program. Data dependences have been used to represent only the relevant data flow relationships of a program. Control dependences are introduced to analogously represent only the essential control flow relationships of a program. Control dependences are derived from the usual control flow graph. Many traditional optimizations operate more efficiently on the PDG. Since dependences in the PDG connect computationally related parts of the program, a single walk of these dependences is sufficient to perform many optimizations. The PDG allows transformations such as vectorization, that previously required special treatment of control dependence, to be performed in a manner that is uniform for both control and data dependences. Program transformations that require interaction of the two dependence types can also be easily handled with our representation. As an example, an incremental approach to modifying data dependences resulting from branch deletion or loop unrolling is introduced. The PDG supports incremental optimization, permitting transformations to be triggered by one another and applied only to affected dependences.},
+	author = {Ferrante, Jeanne and Ottenstein, Karl J. and Warren, Joe D.},
+	location = {New York, NY, USA},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/24039.24041},
+	doi = {10.1145/24039.24041},
+	issn = {0164-0925},
+	journaltitle = {ACM Trans. Program. Lang. Syst.},
+	keywords = {program dependence graph,gated-SSA,SSA},
+	month = jul,
+	number = {3},
+	pages = {319--349},
+	title = {The Program Dependence Graph and Its Use in Optimization},
+	volume = {9},
+	year = {1987}
+}
+
 @article{fisher81_trace_sched,
 	author = {Fisher, Joseph A.},
 	doi = {10.1109/TC.1981.1675827},
@@ -321,6 +392,31 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	urldate = {2023-11-14},
 	year = {2023},
 	note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes}
+}
+
+@ARTICLE{halbwachs91_sdfpll,
+	author = {Halbwachs, N. and Caspi, P. and Raymond, P. and Pilaud, D.},
+	journal = {Proceedings of the IEEE},
+	title = {The Synchronous Data Flow Programming Language {LUSTRE}},
+	year = {1991},
+	volume = {79},
+	number = {9},
+	pages = {1305-1320},
+	doi = {10.1109/5.97300}
+}
+
+@inproceedings{havlak94_const,
+	abstract = {Analysis of symbolic expressions benefits from a suitable program representation. We show how to build thinned gated single-assignment (TGSA) form, a value-oriented program representation which is more complete than standard SSA form, defined on all reducible programs, and better for representing symbolic expressions than program dependence graphs or original GSA form. We present practical algorithms for constructing thinned GSA form from the control dependence graph and SSA form. Extensive experiments on large Fortran programs show these methods to take linear time and space in practice. Our implementation of value numbering on TGSA form drives scalar symbolic analysis in the ParaScope programming environment.},
+	author = {Havlak, Paul},
+	editor = {Banerjee, Utpal and Gelernter, David and Nicolau, Alex and Padua, David},
+	location = {Berlin, Heidelberg},
+	publisher = {Springer Berlin Heidelberg},
+	booktitle = {Languages and Compilers for Parallel Computing},
+	isbn = {978-3-540-48308-3},
+	keywords = {gated-SSA,SSA},
+	pages = {477--499},
+	title = {Construction of thinned gated single-assignment form},
+	year = {1994}
 }
 
 @inproceedings{herzog21_price_meltd_spect,
@@ -418,6 +514,26 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	year = {2018}
 }
 
+@article{kam76_gdfaia,
+	keywords = {data-flow},
+	author = {Kam, John B. and Ullman, Jeffrey D.},
+	title = {Global Data Flow Analysis and Iterative Algorithms},
+	year = {1976},
+	issue_date = {Jan. 1976},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {23},
+	number = {1},
+	issn = {0004-5411},
+	url = {https://doi.org/10.1145/321921.321938},
+	doi = {10.1145/321921.321938},
+	abstract = {Kildall has developed data propagation algorithms for code optimization in a general lattice theoretic framework. In another direction, Hecht and Ullman gave a strong upper bound on the number of iterations required for propagation algorithms when the data is represented by bit vectors and depth-first ordering of the flow graph is used. The present paper combines the ideas of these two papers by considering conditions under which the bound of Hecht and Ullman applies to the depth-first version of Kildall's general data propagation algorithm. It is shown that the following condition is necessary and sufficient: Let undefined and g be any two functions which could be associated with blocks of a flow graph, let x be an arbitrary lattice element, and let 0 be the lattice zero. Then (*) (∀undefined,g,x) [undefinedg(0) ≥ g(0) ∧ undefined(x) ∧ x]. Then it is shown that several of the particular instances of the techniques Kildall found useful do not meet condition (*).},
+	journal = {J. ACM},
+	month = {jan},
+	pages = {158–171},
+	numpages = {14}
+}
+
 @inproceedings{karfa06_formal_verif_method_sched_high_synth,
 	author = {Karfa, C and Mandal, C and Sarkar, D and Pentakota, S R. and Reade, Chris},
 	location = {Washington, DC, USA},
@@ -450,6 +566,20 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	pages = {123–193},
 	numpages = {71},
 	keywords = {survey, formal verification, model checking, formal methods, theorem proving, hardware verification, language containment, case studies}
+}
+
+@inproceedings{kildall73_unified_approac_global_progr_optim,
+	author = {Kildall, Gary A.},
+	location = {Boston, Massachusetts},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/512927.512945},
+	booktitle = {Proceedings of the 1st Annual ACM SIGACT-SIGPLAN Symposium on Principles of Programming Languages},
+	doi = {10.1145/512927.512945},
+	isbn = {9781450373494},
+	pages = {194--206},
+	series = {POPL '73},
+	title = {A Unified Approach to Global Program Optimization},
+	year = {1973}
 }
 
 @inproceedings{kim04_autom_fsmd,
@@ -486,6 +616,18 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	pages = {2--14},
 	title = {MLIR: Scaling Compiler Infrastructure for Domain Specific Computation},
 	year = {2021}
+}
+
+@INPROCEEDINGS{lattuada15_ctbsss,
+	keywords = {bambu},
+	author = {Lattuada, Marco and Ferrandi, Fabrizio},
+	booktitle = {2015 IEEE/ACM International Conference on Computer-Aided Design (ICCAD)},
+	title = {Code Transformations Based on Speculative {SDC} Scheduling},
+	year = {2015},
+	volume = {},
+	number = {},
+	pages = {71-77},
+	doi = {10.1109/ICCAD.2015.7372552}
 }
 
 @article{leroy09_formal_verif_compil_back_end,
@@ -587,6 +729,22 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	series = {SAMOS '18}
 }
 
+@inproceedings{ottenstein90_progr_depen_web,
+	abstract = {The Program Dependence Web (PDW) is a program representation that can be directly interpreted using control-, data-, or demand-driven models of execution. A PDW combines a single-assignment version of the program with explicit operators that manage the flow of data values. The PDW can be viewed as an augmented Program Dependence Graph. Translation to the PDW representation provides the basis for projects to compile Fortran onto dynamic dataflow architectures and simulators. A second application of the PDW is the construction of various compositional semantics for program dependence graphs.},
+	author = {Ottenstein, Karl J. and Ballance, Robert A. and MacCabe, Arthur B.},
+	location = {White Plains, New York, USA},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/93542.93578},
+	booktitle = {Proceedings of the ACM SIGPLAN 1990 Conference on Programming Language Design and Implementation},
+	doi = {10.1145/93542.93578},
+	isbn = {0897913647},
+	keywords = {gated-SSA,SSA,program dependence graph},
+	pages = {257--271},
+	series = {PLDI '90},
+	title = {The Program Dependence Web: A Representation Supporting Control-, Data-, and Demand-Driven Interpretation of Imperative Languages},
+	year = {1990}
+}
+
 @article{pangrle87_desig_tools_intel_silic_compil,
 	author = {Barry M. Pangrle and
                   Daniel D. Gajski},
@@ -620,6 +778,20 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	number = {},
 	pages = {128-137},
 	doi = {10.1109/CAMP.1997.631921}
+}
+
+@article{rau96_iterat_modul_sched,
+	abstract = {Modulo scheduling is a framework within which algorithms for software pipelining innermost loops may be defined. The framework specifies a set of constraints that must be met in order to achieve a legal modulo schedule. A wide variety of algorithms and heuristics can be defined within this framework. Little work has been done to evaluate and compare alternative algorithms and heuristics for modulo scheduling from the viewpoints of schedule quality as well as computational complexity. This, along with a vague and unfounded perception that modulo scheduling is computationally expensive as well as difficult to implement, have inhibited its incorporation into product compilers. This paper presents iterative modulo scheduling, a practical algorithm that is capable of dealing with realistic machine models. The paper also characterizes the algorithm in terms of the quality of the generated schedules as well the computational expense incurred.},
+	author = {Rau, B. Ramakrishna},
+	url = {https://doi.org/10.1007/BF03356742},
+	date = {1996-02-01},
+	issn = {1573-7640},
+	journaltitle = {International Journal of Parallel Programming},
+	keywords = {loop scheduling,software pipelining,code motion,compiler optimisation,rotating registers,modulo scheduling},
+	number = {1},
+	pages = {3--64},
+	title = {Iterative Modulo Scheduling},
+	volume = {24}
 }
 
 @INPROCEEDINGS{reuther20_survey_machin_learn_accel,
@@ -740,6 +912,37 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	series = {POPL '08},
 	title = {Formal Verification of Translation Validators: A Case Study on Instruction Scheduling Optimizations},
 	year = {2008}
+}
+
+@inproceedings{tu95_effic_build_placin_gatin_funct,
+	abstract = {In this paper, we present an almost-linear time algorithm for constructing Gated Single Assignment (GSA), which is SSA augmented with gating functions at ø-nodes. The gating functions specify the control dependences for each reaching definition at a ø-node. We introduce a new concept of gating path, which is path in the control flow graph from the immediate dominator u of a node v to v, such that every node in the path is dominated by u. Previous algorithms start with ø-function placement, and then traverse the control flow graph to compute the gating functions. By formulating the problem into gating path construction, we are able to identify not only a ø-node, but also a gating path expression which defines a gating function for the ø-node.},
+	author = {Tu, Peng and Padua, David},
+	location = {La Jolla, California, USA},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/207110.207115},
+	booktitle = {Proceedings of the ACM SIGPLAN 1995 Conference on Programming Language Design and Implementation},
+	doi = {10.1145/207110.207115},
+	isbn = {0897916972},
+	keywords = {gated-SSA,SSA},
+	pages = {47--55},
+	series = {PLDI '95},
+	title = {Efficient Building and Placing of Gating Functions},
+	year = {1995}
+}
+
+@inproceedings{tu95_gated_ssa_based_deman_driven,
+	author = {Tu, Peng and Padua, David},
+	location = {Barcelona, Spain},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/224538.224648},
+	booktitle = {Proceedings of the 9th International Conference on Supercomputing},
+	doi = {10.1145/224538.224648},
+	isbn = {0897917286},
+	keywords = {gated-SSA,SSA,compiler optimisation},
+	pages = {414--423},
+	series = {ICS '95},
+	title = {Gated SSA-Based Demand-Driven Symbolic Analysis for Parallelizing Compilers},
+	year = {1995}
 }
 
 @InProceedings{ustun20_accur_fpga_hls,

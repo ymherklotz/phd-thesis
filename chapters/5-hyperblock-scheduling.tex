@@ -61,8 +61,8 @@ scheduling in HLS was first proposed over two decades
 ago~\cite{budiu02_compil_applic_specif_hardw,
   callahan98_instr_level_paral_recon_comput}, and is nowadays used by popular
 HLS tools such as AMD Vitis HLS~\cite{amd23_vitis_forum},
-LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls}, and
-Bambu~\cite[line~304]{ferrandi14_panda_bambu}.
+LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls},
+and Bambu~\cite[line~304]{ferrandi14_panda_bambu}.
 % This is due to custom hardware being able to execute arbitrarily many
 % independent instructions in parallel.
 
@@ -214,7 +214,7 @@ yscale=-1
   hyperblocks further along our compilation flow, each instruction is paired
   with a predicate. An instruction is only executed if its predicate evaluates
   to true.
-\item We compile from \rtl{} to \rtlblock{} using a translation-validation
+\item We compile from \rtl{} to \rtlblock{} using a \gls{translation validation}
   approach. That is, an unverified algorithm is responsible for gathering
   instructions into basic blocks, then a verified validator confirms the
   equivalence of the \rtl{} and \rtlblock{} representations.  This is similar to

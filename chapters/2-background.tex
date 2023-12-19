@@ -139,7 +139,7 @@ components~\cite{boutros21_fpga_archit}, which are also shown in
     correspond to \glspl{LUT}, followed by turquoise blocks being \glspl{DSP}
     and green blocks being \glspl{BRAM}.  The programmable interconnects are
     made up of connection blocks and switches shown in beige and yellow
-    respectively.}%
+    respectively.\YH{TODO: Fix colors}}%
   \label{fig:bg:fpga-layout}
 \end{figure}
 
@@ -159,7 +159,7 @@ them together correctly, also making use of a \gls{BRAM} and a \gls{DSP}.
 \section{High-Level Synthesis}%
 \label{sec:bg:hls}
 
-\Glsxtrlong{HLS} is the transformation of software directly into hardware.
+\Glsfmtlong{HLS} is the transformation of software directly into hardware.
 There are many different types of \gls{HLS}, which can vary in terms of the
 languages they accept or the devices that are targeted, however, they often
 share similar steps in how the translation is performed, as they all go from a
@@ -218,6 +218,15 @@ following~\cite{coussy09_introd_to_high_level_synth,canis13_legup}:
   resources.  Scheduling is further described in \cref{sec:bg:scheduling}.  As
   part of the scheduling step, operations are also often bound to specific
   resources.
+
+\item[Resource binding] After scheduling, each operation is assigned a concrete
+  instantiation of its resource.  For example, an integer divide operation will
+  be assigned to the integer divider resource, and if this resource is used by
+  another divider in the design, the inputs and outputs will have to be
+  multiplexed.  The resource constrained scheduling step should have ensured
+  that two divisions are not taking place in the same cycle, and that the result
+  of the division will only be used when the divider resource has finished
+  computing the result.
 
 \item[Hardware description generation] Finally, the hardware description is
   generated from the code that was described in the intermediate language and
@@ -324,27 +333,32 @@ also as an intermediate transformation step.
   \end{subfigure}\hfill%
   \begin{subfigure}[b]{0.3\linewidth}
     \centering
-    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm,
+      munode/.style={draw=black,fill=black!15,yscale=-1,shape=trapezium}]
       \node[instrnode,fill=nodea] (a) {};
-      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodeb,below=15mm of a] (b) {};
       \node[instrnode,fill=nodec,below left=of b] (c) {};
       \node[instrnode,fill=noded,below right=of b] (d) {};
       \node[instrnode,fill=nodee,below=of c] (e) {};
       \node[instrnode,fill=nodef,below right=of e] (f) {};
       \node[instrnode,fill=nodeg,below=of f] (g) {};
       \node[instrnode,fill=nodeh,below right=of g] (h) {};
-      \draw[->,dashed] (a) -- (b);
-      \draw[->,dashed] (g) -- (h);
-      \draw[->,dashed] (g) to [loop,looseness=1.4,out=150,in=150] (b);
-      \draw[->] (a) to [loop,looseness=1.4,out=310,in=50] (f);
+      \node[munode,above=9mm of b] (mb) {};
+      \node[munode,above=9mm of f] (mf) {};
+      \draw[->] (a) -- (mb);
+      \draw[->] (mb) -- (b);
+      \draw[->] (g) -- (h);
+      \draw[->] (g) to [loop,looseness=1.4,out=150,in=150] (mb);
+      \draw[->] (a) to [loop,looseness=1.2,out=300,in=90] (mf);
       \draw[->] (b) -- (e);
       \draw[->] (b) -- (c);
       \draw[->] (b) -- (d);
-      \draw[->,dashed] (c) to [loop,looseness=1.2,out=230,in=120] (g);
-      \draw[->,dashed] (d) to [loop,looseness=1.2,out=260,in=60] (g);
-      \draw[->] (d) -- (h);
-      \draw[->,dashed] (e) -- (g);
-      \draw[->,dashed] (f) -- (g);
+      \draw[->] (c) to [loop,looseness=1.2,out=230,in=120] (g);
+      \draw[->] (d) to [loop,looseness=1.2,out=260,in=60] (g);
+      \draw[->] (e) -- (g);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) to [loop,looseness=1.5,out=20,in=60] (mf);
+      \draw[->] (mf) -- (f);
     \end{tikzpicture}
     \caption{\Glsfirst{DFG}}\label{fig:data-structure-comparison:dfg}
   \end{subfigure}\hfill%
@@ -396,32 +410,81 @@ can then jump to those labels.  These jumps are represented using the dashed
 arrows in the figure.  This is the simplest representation of the code as it is
 completely linear, however, analysing such a program will be more difficult
 because a lot of information, such as a lot of edges, are implicit in the
-representation.
+representation.  Every analysis pass would have to reconstruct the control-flow
+edges between the nodes, which would have to be stored as a graph, so lists are
+likely only to be the final representation of the code.
 
 \subsubsection{\Glsfmtlongpl{CFG}}
 
 Instead, a \gls{CFG} representation of the code is a graph instead of a list,
 and allows any instruction to be connected to any other instruction explicitly
 by a control-flow edge.  This signifies that after executing an instruction, the
-execution will then move to one of the successors of the current node.
+execution will then move to one of the successors of the current node.  This
+turns control-flow analysis into a graph problem~\cite[]{allen70_cfa}.  Because
+of this, it is natural to represent code as a \gls{CFG}.
+\Cref{fig:data-structure-comparison:cfg} shows how the list representation of
+the code would be represented as a \gls{CFG}.
 
 \subsubsection{\Glsfmtlongpl{DFG}}
 
+Alternatively, instead of reasoning about the control flow of the program, one
+might be interested in the \gls{data flow} of the program.  Many compiler
+optimisations, such as dead-code elimination or constant propagation, need to
+perform data-flow analyses on the
+\gls{CFG}~\cite[]{kildall73_unified_approac_global_progr_optim,kam76_gdfaia}.
+In addition to that, hardware circuits are naturally expressed using pure data
+flow as net lists are essentially data flow graphs, and even \glspl{HDL} can be
+modelled by synchronous data flow programming
+languages~\cite{halbwachs91_sdfpll}.  One could therefore represent the code as
+a pure \gls{DFG} to help with data-flow optimisations as well as the translation
+to the final hardware.  An example of the \gls{CFG} shown in
+\cref{fig:data-structure-comparison:cfg} being represented as a \gls{DFG} is
+shown in \cref{fig:data-structure-comparison:dfg}, where arrows now represent
+data dependencies between nodes instead of control-flow dependencies.
+
+As can be observed in the diagram, the edges between the nodes are very
+different to the edges in the \gls{CFG}, as nodes in the \gls{CFG} may not have
+\emph{needed} to be in that particular order, because when two instructions are
+independent, one still needs to define an order between them.  Additionally, we
+have added two additional nodes to handle the back edges of the loop, which are
+also data dependencies.  These nodes are represented by a trapeze in the
+\gls{DFG} and act as loop headers to control the loop iterations when
+interpreting the graph as pure data flow.  These additional nodes are needed
+because otherwise the data dependencies present because of the back edges of the
+loop would conflict with the data dependency that actually enters the loop.  We
+therefore need an additional node to turn the data dependencies into the correct
+control-dependencies, and therefore allow data in to the loop when the loop is
+not executing, but while it is executing the node should only allow data through
+from the back edge of the loop.  The example shown in
+\cref{fig:data-structure-comparison:dfg} is similar to the concepts of
+$\mu$-nodes in gated static single assignment form and the program dependence
+web~\cite{ottenstein90_progr_depen_web,campbell93_refin,havlak94_const,tu95_effic_build_placin_gatin_funct},
+which are intermediate languages that can be interpreted in a data flow oriented
+context.
+
 \subsubsection{\Glsfmtlongpl{CDFG}}
+
+As mentioned in the previous section, loops are especially problematic for pure
+\glspl{DFG}.  Instead, one can try and get the best of both \glspl{CFG} and
+\glspl{DFG} by creating a \gls{CDFG}.  In a \gls{CDFG}, one instead has a
+\gls{CFG} where each node is a \gls{DFG} instead of just an instruction.  The
+example is shown in \cref{fig:data-structure-comparison:cdfg}, where the dashed
+arrows are control dependencies between \glspl{DFG}, and the solid lines are the
+data dependencies within the \gls{DFG}.  In this way, loops can be supported
+without having to introduce special nodes and leaving the loop back edge as a
+control dependency instead, and \glspl{DFG} can represent the sections of code
+without any incoming edges using data dependencies, thereby being more flexible
+in how instructions are rearranged without having the downsides of having to
+introduce additional nodes.
 
 \subsection{Grouping Instructions Into Blocks}%
 \label{sec:bg:intermediate-language}
 
-This \namecref{sec:bg:intermediate-language} describes the characteristics for
-intermediate languages that are often used within an \gls{HLS} tool.  First, we
-will describe different techniques to group blocks of instructions which can
-simplify optimisations.
-
-In particular, it is often useful to have contiguous blocks of instructions that
-do not contain any control-flow in one list.  This means that these instructions
-can safely be rearranged by only looking at local information of the block
-itself, and in particular it allows for complete removal of control-flow as only
-the data-flow is important in that block.
+This \namecref{sec:bg:intermediate-language} describes the representation of
+intermediate languages that are often used within an \gls{HLS} tool.  In
+particular, we will base our intermediate language on a \gls{CFG}, but will
+describe various ways to group blocks of instructions together and describe the
+advantages and drawbacks that they provide.
 
 \begin{figure}
   \begin{subfigure}[c]{0.3\linewidth}
@@ -534,73 +597,181 @@ the data-flow is important in that block.
 
 \subsubsection{Basic blocks}
 
-%TODO: Finish the basic blocks section
-
-Basic blocks are the simplest form of structure, as these are only formed of
-lists of instructions that do not include control-flow.
+To build a bit more structure in the \gls{CFG}, it is useful to group
+non-branching instructions without any incoming edges together forming
+\glspl{basic block}.  An example of the \gls{CFG} segmented into
+\glspl{basic block} is shown in \cref{fig:block-comparison:basicblocks}.
+Instructions within a \gls{basic block} can then be represented as a list of
+instructions, as there cannot be any branches, and these lists of instructions
+can then be safely manipulated because there is a guarantee that there is no
+incoming control flow into the middle of a \gls{basic block}.  For example, as
+long as two instructions in a \gls{basic block} are independent, they can be
+safely reordered.  This would have otherwise not been a case, because incoming
+control flow may mean that reordering the instructions now leads to the
+unintended execution of an instruction.
 
 \subsubsection{Superblocks}
 
-Superblocks extend the notion of basic blocks to contiguous regions without any
-incoming control-flow, however, there can be multiple exits out of the block.
-The main benefit of this definition is that due to the extra flexibility of
-allowing multiple exits, the basic blocks can be extended, which often improves
-most optimisations that make use of basic blocks.  However, the downside is that
-the representation of the blocks can be more complex due to the introduction of
-the extra control-flow.  Any analysis passes will have to take into account the
-possibility of control-flow being present and many simplifications will not be
-possible anymore.
+As \cref{fig:block-comparison:basicblocks} shows, one issue with
+\glspl{basic block} is that they are often quite small, therefore limiting the
+benefits that they can provide. One extension to \glspl{basic block} is
+\glspl{superblock}~\cite[]{hwu93_super}, shown in
+\cref{fig:block-comparison:superblocks}.  \Glspl{superblock} extend the notion
+of \glspl{basic block} to contiguous regions without any incoming control flow,
+however, they allow for multiple exits out of the \gls{superblock}.  The main
+benefit of this is that due to the extra flexibility of allowing multiple exits,
+the \glspl{basic block} can now contain arbitrary linear traces through regions
+without any incoming edges.  This means that one can, for example, group the
+\enquote{hot path} of the loop body into a single \gls{superblock}, which can
+then be heavily optimised.  Various other important paths through the program
+can then also be grouped and optimised together.  If different paths through the
+program reuse nodes from another path, as is shown with the pink and yellow
+nodes in \cref{fig:block-comparison:superblocks}, then these nodes will have to
+be duplicated so that they can be included in a different path.  As long as any
+optimisation takes into account the arbitrary exits that are possible in
+\glspl{superblock}, the nodes within a \glspl{superblock} can then be optimised
+independently from the rest of the code.
 
 \subsubsection{Hyperblocks}
 
-Hyperblocks are also an extension of basic blocks similar to superblocks, but
-instead of introducing special control-flow instructions into the block, every
-instruction is predicated.  This leads to possibly more complex control-flow
-than in both of the previous cases, however, it can be reasoned with using a
-\gls{SAT} or \gls{SMT} solver.
+One downside of \glspl{superblock} is that they cannot represent a whole section
+of code without back edges as a single block.  For example, the block present in
+the \gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg} could not be
+represented by a \gls{superblock}.  \Glspl{hyperblock} are defined as
+\glspl{basic block} of \glspl{predicated instruction} with arbitrary outgoing
+edges~\cite[]{mahlke92_effec_compil_suppor_predic_execut_using_hyper}, meaning
+they can represented arbitrary branching code without incoming edges, and are
+therefore an extension to \glspl{superblock}.  This means that they could
+represent the \gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg}, and
+an example of a hyperblock is shown in \cref{fig:block-comparison:hyperblocks},
+where code within the \gls{hyperblock} has been linearised instead of containing
+a \gls{DFG}.  This leads to possibly more complex control flow than in both of
+the previous cases, however, it can be reasoned with using a \gls{SAT} or
+\gls{SMT} solver.
 
 \section{Scheduling}%
 \label{sec:bg:scheduling}
+
+Instruction scheduling is the main transformation and optimisation performed by
+traditional \gls{HLS} tools.  The scheduling transformation introduces time into
+the untimed input representation by placing each instruction into a clock cycle
+in which it should execute.  The scheduler must take into account the resources
+that were selected during the resource allocation step and schedule the
+instructions so that they meet any constraints.  In this
+\namecref{sec:bg:scheduling} we will mainly discuss scheduling techniques used
+by \gls{HLS} tools, first discussing static scheduling in
+\cref{sec:bg:static-scheduling} followed by describing dynamic scheduling in
+\cref{sec:bg:dynamic-scheduling}.
 
 \subsection{Static Scheduling}%
 \label{sec:bg:static-scheduling}
 
 Static scheduling is used by the majority of synthesis
-tools~\cite{canis13_legup, xilinx20_vivad_high_synth,
-  mentor20_catap_high_level_synth, intel20_sdk_openc_applic} and means that the
-time at which each operation will execute is known at compile time.  Static
-analysis is used to gather all the data dependencies between all the operations
-to determine in which clock cycle the operations should be placed, or if these
-operations can be parallelised.  Once the data-flow analysis has been performed,
-various scheduling schemes can be taken into account to place operations in
-various clock cycles.  Some common static-scheduling schemes are the following:
+tools~\cite{canis13_legup, xilinx20_vivad_high_synth, amd23_vitis_high_synth,
+  mentor20_catap_high_level_synth, intel20_sdk_openc_applic,
+  roane23_autom_hw_sw_co_desig, mentor20_catap_high_level_synth} and means that
+the time at which each operation will execute is known at compile time.  The
+first step is to generate a \gls{CDFG}, which is either already the structure of
+the code, or can be generated from a \gls{hyperblock} \gls{CFG} representation,
+for example, by using static analysis on each \gls{hyperblock} to gather all
+data dependencies and convert it into a \gls{DFG}.
+
+Scheduling can have different optimisation goals for the design in terms of
+latency and resource usage.  In the simplest case, each operation in the
+\gls{DFG} can be scheduled as soon as its predecessor in the graph has been
+scheduled, resulting in an \gls{ASAP} schedule, where the start time of each
+node corresponds to the longest path from the start of the \gls{DFG} to that
+node.  If instead the start time of a node is taken to be the longest path from
+the node to the end of the \gls{DFG}, then this would result in an \gls{ALAP}
+schedule.  These two types of schedules show the \emph{slack} of a particular
+operation, which can be exploited by schedulers to minimise resources by still
+obtaining the minimum latency.
+
+A more advanced scheduler can either optimise for resource usage based on a
+maximum latency or for latency based on a maximum amount of resources.  In
+general this is an NP-hard problem, however, \emph{\gls{list scheduling}}
+provides a heuristic for this problem by ordering nodes that can be scheduled
+according to a priority function and picking a subset of these nodes to actually
+be scheduled as long as the resources used by the subset is not greater than the
+available resources.
+
+\subsubsection{System of Difference Constraints Scheduling}
+
+The main static scheduling algorithm used by \gls{HLS} tools is the
+\glsfirst{SDC}\glsunset{SDC} scheduling algorithm~\cite{cong06_sdc}.  It
+generates an \gls{SDC} that is a subset of an \gls{LP} problem that can be
+incrementally modified and checked for feasibility as new constraints are added.
+Then, to solve the \gls{SDC} it can be converted into an efficient \gls{LP}
+problem guaranteeing integer solutions.
+
+The scheduling algorithm is built on the notion of constraining scheduling
+variables for operation $v$ ($\gls{scheduling variable}_i(v)$).  Each operation
+is associated with a set of scheduling variables, but at a minimum it must have
+an initial and a final scheduling variable
+($\gls{scheduling variable}_{\mathrm{init}}(v)$ and
+$\gls{scheduling variable}_{\mathrm{fin}}(v)$).  The main advantage of this
+scheduling algorithm is that one can define many different concepts as
+constraints in terms of scheduling variables.  For example, if one has a data
+dependency from operation $a$ to operation $b$, the following constraint is
+added to the \gls{SDC}.
+
+\begin{equation*}
+  \gls{scheduling variable}_{\mathrm{fin}}(a) - \gls{scheduling
+    variable}_{\mathrm{fin}}(b) \leq 0
+\end{equation*}
+
+Other types of constraints that are normally added to get a valid schedule are:
 
 \begin{description}
-\item[As soon as possible (ASAP)] scheduling will place operations into
-  the first possible clock cycle that they can be executed.
+\item[Control dependency constraint] Constraint between blocks of instructions
+  that are connected by a control-flow dependency.  This ensures that a block is
+  not scheduled before another block it depends on.  In particular, loop back
+  edges therefore need to be removed during the \gls{SDC} construction, as
+  otherwise the system would become unsatisfiable.
 
-\item[As late as possible (ALAP)] scheduling places operations into the last
-  possible clock cycle, right before they are used by later operations.
+\item[Relative timing constraint] This constraint ensure that two operations
+  are separated by at least or at most a fixed number of cycles.  This can be
+  used to satisfy I/O timings.
 
-\item[List scheduling] uses priorities associated with each operation and
-  chooses operations from each priority level to be placed into the current
-  clock cycle if all the data-dependencies are met.  This is done until all the
-  resources for the current clock cycle are used up.
+\item[Latency constraint] This constraint specifies a maximum latency for a set
+  of blocks.
+
+\item[Cycle time constraint] This constraint is used to target a specific final
+  clock period, and split long combinational paths through the \gls{DFG} up into
+  separate cycles.  This allows for \emph{\gls{operation chaining}}, whereby
+  multiple operations that are estimated to have a latency less than a clock
+  cycle can be chained within the same clock cycle.
+
+\item[Resource constraint] To handle limited resources, constraints can be used
+  to make it infeasible to have operations use the same resource within the same
+  clock cycle.  Constructing these constraints relies on a linear ordering of
+  the \gls{DFG}, so some combination of \gls{ALAP} or \gls{ASAP} scheduling can
+  be done to form the linear ordering of the operations.
 \end{description}
 
-Static scheduling can normally produce extremely small circuits, however, it is
-often not possible to guarantee that the circuits will have the best
-throughput~\cite{cheng20_combin_dynam_static_sched_high_level_synth}, as this
-requires extensive control-flow analysis and complex optimisations.  Especially
-for loops, finding the optimal \gls{II} can be tricky if there are loads and
-stores in the loop or if the loops are nested.
+Solving the \gls{SDC} with different optimisation functions produces different
+kinds of schedules.  For example, optimising the following function will produce
+an \gls{ALAP} schedule, as the start time of every operation is maximised.
+
+\begin{equation*}
+  \mathrm{max} \sum_{v \in V_{\mathrm{op}}} \gls{scheduling variable}_{\mathrm{init}}(v)
+\end{equation*}
+
+Modern \gls{HLS} tools often use a variation of \gls{SDC} scheduling.  For
+example, Vitis HLS and LegUp use an extension of \gls{SDC}
+scheduling~\cite[]{zhang13_sdc,canis14_modul_sdc} with support for modulo
+scheduling (loop pipelining)~\cite[]{rau96_iterat_modul_sched} and Bambu HLS
+uses an extension of \gls{SDC} scheduling~\cite[]{lattuada15_ctbsss} with
+support for speculative execution and loop code motion.  In this dissertation,
+\gls{SDC} will refer to the initial implementation of the scheduling without any
+extensions.
 
 \subsection{Dynamic Scheduling}%
 \label{sec:bg:dynamic-scheduling}
 
-On the other hand, Dynamic
-scheduling~\cite{josipovic18_dynam_sched_high_level_synth} does not require the
-schedule to be known at compile time and instead it generates circuits using
+On the other hand, \gls{dynamic
+  scheduling}~\cite{josipovic18_dynam_sched_high_level_synth} does not require
+the schedule to be known at compile time and instead it generates circuits using
 tokens to schedule the operations in parallel at run time.  Whenever the data
 for an operation is available, it sends a token to the next operation,
 signalling that the data is ready to be read.  The next operation does not start
@@ -636,17 +807,18 @@ which allows for better parallisation and pipelining of loops.
 There are different kinds of verification tools, which can mostly be placed into
 two categories: automatic theorem provers described in
 \cref{sec:bg:automatic-theorem-provers} and interactive theorem provers
-described in \cref{sec:bg:interactive-theorem-provers}.
+described in \cref{sec:bg:interactive-theorem-provers}.  This section will give
+a brief overview of the characteristics of these different verification tools.
 
 \subsection{Automatic theorem provers}%
 \label{sec:bg:automatic-theorem-provers}
 
 Automatic theorem provers such as \gls{SAT} or \gls{SMT} solvers can be
-characterised as decision procedures that will answer, for example, if a formula
-is satisfiable or not.  However, by default these tools will only give the
-answer to the initial query, without showing the reasoning.  The reasoning is
-often quite complex as the \gls{SAT} or \gls{SMT} tool will implement many
-optimisations to improve the performance of the decision procedure.
+characterised as decision procedures that will answer, if a formula is
+satisfiable or not.  If the formula is satisfiable, the solver can provide a
+model that will satisfy the formula.  Checking if the solver gave the right
+answer is just a matter of plugging in the model to the formula and checking
+that the formula is indeed satisfied.  \YH{TODO: Talk about unsatisfiability.}
 
 The main advantage of using an automatic theorem prover is that if one is
 working in its constrained decidable theory, then it will be efficient at
