@@ -11,12 +11,22 @@
 \subsection{Main Design Decisions}
 
 \paragraph{Choice of source language}
-C was chosen as the source language as it remains the most common source language amongst production-quality HLS tools~\cite{canis11_legup, xilinx20_vivad_high_synth, intel_hls, bambu_hls}. This, in turn, may be because it is ``[t]he starting point for the vast majority of algorithms to be implemented in hardware''~\cite{5522874}, lending a degree of practicality.
-The availability of \compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid basis for formally verified C compilation.
+C was chosen as the source language as it remains the most common source
+language amongst production-quality HLS tools~\cite{canis13_l,
+  amd23_vitis_high_synth, intel20_hsc, pilato13_bambu}. This, in turn, may be
+because it is ``[t]he starting point for the vast majority of algorithms to be
+implemented in hardware''~\cite{gajski10_what_hls}, lending a degree of
+practicality.  The availability of
+\compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid
+basis for formally verified C compilation.
 %Since a lot of existing code for HLS is written in C, supporting C as an input language, rather than a custom domain-specific language, means that \vericert{} is more practical.
 %An alternative was to support LLVM IR as an input language, however, to get a full work flow from a higher level language to hardware, a front end for that language to LLVM IR would also have to be verified. \JW{Maybe save LLVM for the `Choice of implementation language'?}
-We considered Bluespec~\cite{nikhil04_blues_system_veril}, but decided that although it ``can be classed as a high-level language''~\cite{greaves_note}, it is too hardware-oriented to be suitable for traditional HLS.
-We also considered using a language with built-in parallel constructs that map well to parallel hardware, such as occam~\cite{page91_compil_occam}, Spatial~\cite{spatial} or Scala~\cite{chisel}.
+We considered Bluespec~\cite{nikhil04_bsv}, but decided that although it ``can
+be classed as a high-level language''~\cite{greaves19_resear_note}, it is too
+hardware-oriented to be suitable for traditional HLS.  We also considered using
+a language with built-in parallel constructs that map well to parallel hardware,
+such as occam~\cite{page91_compil_occam}, Spatial~\cite{koeplinger18_s} or
+Scala~\cite{bachrach12_chisel}.
 % However, this would not qualify as being HLS due to the manual parallelism that would have to be performed. \JW{I don't think the presence of parallelism stops it being proper HLS.}
 %\JP{I think I agree with Yann here, but it could be worded better. At any rate not many people have experience writing what is essentially syntactic sugar over a process calculus.}
 %\JW{I mean: there are plenty of software languages that involve parallel constructs. Anyway, perhaps we can just dismiss occam for being too obscure.}
@@ -49,9 +59,9 @@ framework~\cite{zhao12_formal_llvm_inter_repres_verif_progr_trans} was also
 considered because several existing HLS tools are already LLVM-based, but
 additional work would be required to support a high-level language like C as
 input.  The .NET framework has been used as a basis for other HLS tools, such as
-Kiwi~\cite{kiwi}, and LLHD~\cite{schuiki20_llhd} has been recently proposed as
-an intermediate language for hardware design, but neither are suitable for us
-because they lack formal semantics.
+Kiwi~\cite{greaves08_kiwi}, and LLHD~\cite{schuiki20_llhd} has been recently
+proposed as an intermediate language for hardware design, but neither are
+suitable for us because they lack formal semantics.
 
 \begin{figure}
   \centering
@@ -115,11 +125,11 @@ point. Branching off \emph{before} this point (at CminorSel or earlier) denies
 \compcert{} the opportunity to perform optimisations such as constant
 propagation and dead-code elimination, which, despite being designed for
 software compilers, have been found useful in HLS tools as
-well~\cite{cong+11}. And if we branch off \emph{after} this point (at LTL or
-later) then \compcert{} has already performed register allocation to reduce the
-number of registers and spill some variables to the stack; this transformation
-is not required in HLS because there are many more registers available, and
-these should be used instead of \gls{BRAM} whenever
+well~\cite{cong11_high_level_synth_fpgas}. And if we branch off \emph{after}
+this point (at LTL or later) then \compcert{} has already performed register
+allocation to reduce the number of registers and spill some variables to the
+stack; this transformation is not required in HLS because there are many more
+registers available, and these should be used instead of \gls{BRAM} whenever
 possible. %\JP{``\compcert{} performs register allocation during the translation to LTL, with some registers spilled onto the stack: this is unnecessary in HLS since as many registers as are required may be described in the output RTL.''} \JP{Maybe something about FPGAs being register-dense (so rarely a need to worry about the number of flops)?}
 
 \rtl{} is also attractive because it is the closest intermediate language to
@@ -305,7 +315,7 @@ instruction.  Although the duplication of the function bodies caused by inlining
 can increase the area of the hardware, it can have a positive effect on latency
 and is therefore a common HLS optimisation~\cite{noronha17_rapid_fpga}. Inlining
 precludes support for recursive function calls, but this feature is not
-supported in most HLS tools anyway~\cite{davidthomas_asap16}.
+supported in most HLS tools anyway~\cite{thomas16_srcht}.
 
 %\JW{Is that definitely true? Was discussing this with Nadesh and George recently, and I ended up not being so sure. Inlining could actually lead to \emph{reduced} resource usage because once everything has been inlined, the (big) scheduling problem could then be solved quite optimally. Certainly inlining is known to increase register pressure, but that's not really an issue here. If we're  not sure, we could just say that inlining everything leads to bloated Verilog files and the inability to support recursion, and leave it at that.}\YH{I think that is true, just because we don't do scheduling.  With scheduling I think that's true, inlining actually becomes quite good.}
 
@@ -322,7 +332,7 @@ supported in most HLS tools anyway~\cite{davidthomas_asap16}.
 The next translation is from \rtl{} to a new hardware translation language
 (\htl{}). %, which is one step towards being completely translated to hardware described in Verilog.
 This involves going from a CFG representation of the computation to a \gls{FSMD}
-representation~\cite{hwang99_fsmd}. The core idea of the FSMD representation is
+representation~\cite{hwang99_ffplp}. The core idea of the FSMD representation is
 that it separates the control flow from the operations on the memory and
 registers. %\JP{I've become less comfortable with this term, but it's personal preference so feel free to ignore. I think `generalised finite state machine' (i.e.\ thinking of the entire `data-path' as contributing to the overall state) is more accurate.}\YH{Hmm, yes, I mainly chose FSMD because there is quite a lot of literature around it.  I think for now I'll keep it but for the final draft we could maybe change it.}
 %This means that the state transitions can be translated into a simple finite state machine (FSM) where each state contains data operations that update the memory and registers.

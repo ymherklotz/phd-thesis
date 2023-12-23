@@ -170,7 +170,7 @@ description.  In this dissertation, we will assume that we are targeting
 available to the \gls{HLS} tool to target.
 
 The main steps performed in the translation of an \gls{HLS} tool is the
-following~\cite{coussy09_introd_to_high_level_synth,canis13_legup}:
+following~\cite{coussy09_introd_to_high_level_synth,canis13_l}:
 
 \begin{description}
 \item[Compilation of input language] First, the program or specification written
@@ -236,7 +236,7 @@ following~\cite{coussy09_introd_to_high_level_synth,canis13_legup}:
 \end{description}
 
 There are many examples of existing high-level synthesis tools, the most popular
-ones being Bambu HLS~\cite{bambu_hls}, LegUp~\cite{canis13_legup}, Vitis
+ones being Bambu HLS~\cite{pilato13_bambu}, LegUp~\cite{canis13_l}, Vitis
 HLS~\cite{amd23_vitis_high_synth}, Catapult
 C~\cite{mentor20_catap_high_level_synth}, Google XLS~\cite{google23_xls} and
 Intel's OpenCL SDK~\cite{intel20_sdk_openc_applic}.  These HLS tools all accept
@@ -670,8 +670,8 @@ technique with different trade-offs to static scheduling.
 \subsection{Static Scheduling}%
 \label{sec:bg:static-scheduling}
 
-Static scheduling is used by the majority of synthesis
-tools~\cite{canis13_legup, xilinx20_vivad_high_synth, amd23_vitis_high_synth,
+Static scheduling is used by the majority of synthesis tools~\cite{canis13_l,
+  amd23_vitis_high_synth,
   mentor20_catap_high_level_synth, intel20_sdk_openc_applic,
   roane23_autom_hw_sw_co_desig} and means that the time at which each operation
 will execute is known at compile time.  The first step is to generate a
@@ -774,7 +774,7 @@ without any extensions.
 \label{sec:bg:dynamic-scheduling}
 
 On the other hand, \gls{dynamic
-  scheduling}~\cite{josipovic18_dynam_sched_high_level_synth} does not require
+  scheduling}~\cite{josipović18_dynam_sched_high_synth} does not require
 the schedule to be known at compile time and instead it generates circuits using
 tokens to schedule the operations in parallel at run time.  Whenever the data
 for an operation is available, it sends a token to the next operation,
@@ -798,11 +798,11 @@ addition of buffers in certain locations.
 
 An example of a dynamically scheduled synthesis tool is
 Dynamatic~\cite{josipović18_dynam_sched_high_synth}, which uses a
-\gls{LSQ}~\cite{josipovic17_out_of_order_load_store} to order memory operations
-correctly even when loops are pipelined and there are dependencies between
-iterations.  In addition to that, performance of the dynamically scheduled code
-is improved by careful buffer
-placement~\cite{josipovic20_buffer_placem_sizin_high_perfor_dataf_circuit},
+\gls{LSQ}~\cite{josipović17_out_order_load_store_queue_spatial_comput} to order
+memory operations correctly even when loops are pipelined and there are
+dependencies between iterations.  In addition to that, performance of the
+dynamically scheduled code is improved by careful buffer
+placement~\cite{josipović21_buffer_placem_sizin_high_perfor_dataf_circuit},
 which allows for better parallelisation and pipelining of loops.
 
 \section{Verification}%
@@ -1075,12 +1075,11 @@ to be assumed to be correct.
 \subsection{Mechanised Handel-C to Netlist Translation}%
 \label{sec:bg:mechaniced-handel-c-to-netlist-translation}
 
-Handel-C~\cite{bowen98_handel_c_languag_refer_manual} is a C-like language for
-hardware development.  It supports many C features such as assignments,
-if-statements, loops, pointers and functions.  In addition to these constructs,
-Handel-C also supports explicit timing constructs, such as explicit parallelism
-as well as sequential or parallel assignment, similar to blocking and
-nonblocking assignments in Verilog.
+Handel-C~\cite{bowen98_hclrm} is a C-like language for hardware development.  It
+supports many C features such as assignments, if-statements, loops, pointers and
+functions.  In addition to these constructs, Handel-C also supports explicit
+timing constructs, such as explicit parallelism as well as sequential or
+parallel assignment, similar to blocking and nonblocking assignments in Verilog.
 \textcite{perna12_mechan_wire_wise_verif_handel_c_synth} developed a
 mechanically verified Handel-C to netlist translation written in HOL. The
 translation is based on previous work describing translation from Occam to gates

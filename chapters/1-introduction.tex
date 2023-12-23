@@ -42,12 +42,13 @@ hardware designs are automatically compiled from software written in a
 high-level language like C.  This way, hardware design can benefit from mature
 software development tools while working on the general functionality of the
 hardware design, and then use a modern \gls{HLS} tools such as
-\legup{}~\cite{canis11_legup}, Vitis HLS~\cite{amd23_vitis_high_synth}, Intel
-i++~\cite{intel_hls}, Stratus HLS~\cite{roane23_autom_hw_sw_co_desig} and Bambu
-HLS~\cite{bambu_hls} to produce the hardware design at the register transfer
-level.  These \gls{HLS} tools promise designs with comparable performance and
-energy-efficiency to those hand-written in an \gls{HDL}~\cite{homsirikamol+14,
-  silexicahlshdl, 7818341}.  This reduces the time needed to design new hardware
+\legup{}~\cite{canis13_l}, Vitis HLS~\cite{amd23_vitis_high_synth}, Intel
+i++~\cite{intel20_hsc}, Stratus HLS~\cite{roane23_autom_hw_sw_co_desig} and
+Bambu HLS~\cite{pilato13_bambu} to produce the hardware design at the register
+transfer level.  These \gls{HLS} tools promise designs with comparable
+performance and energy-efficiency to those hand-written in an
+\gls{HDL}~\cite{homsirikamol14_can, gauthier20_high_level_synth,
+  pelcat16_desig_hdl}.  This reduces the time needed to design new hardware
 accelerators and as the design is performed at a higher level, this should also
 make the process less error-prone.
 
@@ -89,8 +90,7 @@ C that it supports.%
 Meanwhile, \textcite{lidbury15_many_core_compil_fuzzin} had to abandon their
 attempt to fuzz-test Altera's (now Intel's) OpenCL compiler since it
 \enquote{either crashed or emitted an internal compiler error} on so many of
-their test inputs.  More recently,
-\textcite{herklotz21_empir_study_reliab_high_level_synth_tools} fuzz-tested
+their test inputs.  More recently, \textcite{herklotz21_esrhlst} fuzz-tested
 three commercial \gls{HLS} tools using
 Csmith~\cite{yang11_findin_under_bugs_c_compil}, and despite restricting the
 generated programs to the C fragment explicitly supported by all the tools, they
@@ -224,14 +224,15 @@ contributions of \vericert{} are the following:
 
 \item[Evaluation of Vericert on PolyBench/C] Finally, we evaluate different
   versions of Vericert against the state-of-the-art open source \gls{HLS} tool
-  Bambu HLS~\cite{bambu_hls}.\YH{TODO: Add numbers about the performance here.}
+  Bambu HLS~\cite{pilato13_bambu}.\YH{TODO: Add numbers about the performance
+    here.}
 \end{description}
 
 \paragraph{Companion material}
 \vericert{} is fully open source and available on GitHub at
 \url{https://github.com/ymherklotz/vericert}. A snapshot of the \vericert{}
 development is also available in a Zenodo
-repository~\cite{yann_herklotz_2021_5093839}\YH{TODO: Update the Zenodo link}.
+repository~\cite{herklotz21_v}\YH{TODO: Update the Zenodo link}.
 
 \section{Thesis Outline}
 
@@ -295,29 +296,29 @@ This thesis is made up of the following three publications.
   and motivates the need for a more reliable \gls{HLS} tool, as well as a more
   robust verification flow for \gls{HLS} designs.
 
-\printpublication{herklotz21_empir_study_reliab_high_level_synth_tools}.
+  \printpublication{herklotz21_esrhlst}.
 
 \item[OOPSLA 2021] Next, we introduce Vericert and describe an initial
   translation from C to Verilog using \gls{CompCert}, without optimisations.
   This article is the basis for the thesis, making up parts of
   \ref{sec:introduction-to-vericert,sec:trusted-computing-base,sec:hardware-generation}.
 
-\printpublication{herklotz21_formal_verif_high_level_synth}.
+  \printpublication{herklotz21_fvhls}.
 
 \item[PLDI 2024 (under submission)] Finally, an article describing a critical
   optimisation in the \gls{HLS} flow called \gls{hyperblock scheduling} is under
   submission.  This preprint underpins \cref{sec:hyperblock-scheduling}.
 
-\printpublication{herklotz24_verified_hyperblock_sched}.
+  \printpublication{herklotz24_hsvhls}.
 
 \end{description}
 
 The following publications did not directly contribute to the thesis.
 
 \begin{description}
-\item[FPGA 2020] \printpublication{herklotz20_findin_under_bugs_fpga_synth_tools}.
-\item[FCCM 2022] \printpublication{pardalos22_res_sharing_verified_hls}.
-\item[CPP 2023] \printpublication{herklotz23_gsa}.
+\item[FPGA 2020] \printpublication{herklotz20_fubfst}.
+\item[FCCM 2022] \printpublication{pardalos22_rsvhls}.
+\item[CPP 2023] \printpublication{herklotz23_msgssa}.
 \end{description}
 
 %%% Local Variables:

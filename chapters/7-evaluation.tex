@@ -58,8 +58,16 @@ Our evaluation aims to answer the following research questions:
 \end{figure*}
 
 \paragraph{Experimental setup}
-Following \textcite{herklotz21_formal_verif_high_level_synth} and \textcite{six22_formal_verif_super_sched}, we evaluate our work using PolyBench/C~\cite{pouchet20_polyb_c}. For each benchmark, the resulting Verilog hardware design was simulated using Verilator to get the total cycle count. Each design was synthesised, placed, and routed onto a Xilinx series 7 FPGA (part number: \mono{xc7z020clg484-1}) using Vivado to get its total area and its maximum frequency.
-We then calculated $\text{total execution time} = \frac{\text{total clock cycles}}{\text{maximum frequency}}$.  We ensured that every design met the timing constraints of a 100MHz clock.
+Following \textcite{herklotz21_fvhls} and
+\textcite{six22_formal_verif_super_sched}, we evaluate our work using
+PolyBench/C~\cite{pouchet20_polyb_c}. For each benchmark, the resulting Verilog
+hardware design was simulated using Verilator to get the total cycle count. Each
+design was synthesised, placed, and routed onto a Xilinx series 7 FPGA (part
+number: \mono{xc7z020clg484-1}) using Vivado to get its total area and its
+maximum frequency.  We then calculated
+$\text{total execution time} = \frac{\text{total clock cycles}}{\text{maximum
+    frequency}}$.  We ensured that every design met the timing constraints of a
+100MHz clock.
 
 \paragraph{Answering RQ1}
 To assess whether adding scheduling to Vericert leads to better hardware designs, \cref{fig:list-against-hyper-scheduling} compares the hardware produced by original Vericert (\VericertBase{}) with that produced when hyperblock scheduling is enabled (\VericertHyper{}). We see that, on average, hyperblock scheduling leads to hardware that requires only 0.46$\times$ the cycle count (middle plot). This is unsurprising given that original Vericert only executed a single instruction per clock cycle. In terms of area (bottom plot), hyperblock scheduling has, on average, a slight increase in area.

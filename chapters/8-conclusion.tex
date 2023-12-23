@@ -21,8 +21,18 @@ the software input that \vericert{} accepts.
 %\JW{I'm hesitant about this paragraph. Yes, we have to write something about how future-proof Vericert is, as this is required by the reviewers and promised in our list of changes. But I worry that if we place too much emphasis on how straightforward it will be to add scheduling, then we'll make it harder for ourselves to publish a paper about adding scheduling (``But you said in your OOPSLA 2021 paper that this was all straightforward'' etc.) In what follows, I've tried to strike a balance -- see what you think.}\YH{Yeah I think I like the paragraph and the balance in it, I think it still explains that existing passes should not have to change.  I think reviewer 2 wanted a detailed explanation of this, but I do agree that it should not be needed in this paper.}
 The main limitation of \vericert{} is that it does not perform instruction scheduling, which means that instructions cannot be gathered into the same state and executed in parallel.
 %This limitation is present by design so that the focus could be made on the initial proof of correctness of the translation of instructions with a sequential schedule.
-However, each language in \vericert{} was designed with scheduling in mind, so that these should not have to change fundamentally when that is implemented in the future.
-For instance, our HTL language already allows arbitrary Verilog to appear in each state of the FSMD; currently, each state just contains a single Verilog assignment, but when scheduling is added, it will contain a list of assignments that can all be executed in parallel. We expect to follow the lead of \textcite{tristan08_formal_verif_trans_valid} and \textcite{six+20}, who have previously added scheduling support to CompCert in a VLIW context, by invoking an external (unverified) scheduling tool and then using translation validation to verify that each generated schedule is correct (as opposed to verifying the scheduling tool itself).
+However, each language in \vericert{} was designed with scheduling in mind, so
+that these should not have to change fundamentally when that is implemented in
+the future.  For instance, our HTL language already allows arbitrary Verilog to
+appear in each state of the FSMD; currently, each state just contains a single
+Verilog assignment, but when scheduling is added, it will contain a list of
+assignments that can all be executed in parallel. We expect to follow the lead
+of \textcite{tristan08_formal_verif_trans_valid} and
+\textcite{six20_certif_effic_instr_sched}, who have previously added scheduling
+support to CompCert in a VLIW context, by invoking an external (unverified)
+scheduling tool and then using translation validation to verify that each
+generated schedule is correct (as opposed to verifying the scheduling tool
+itself).
 %The translation from 3ACPar to HTL would not change conceptually, except for the fact that multiple instructions can now be translated into the same state.
 %This means that the proof of translation from 3AC to HTL can also be adapted with minimal changes to the top-level of the proofs.
 %The bulk of the proofs proving the translation of single instructions would stay intact.

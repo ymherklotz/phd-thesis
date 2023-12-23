@@ -13,19 +13,18 @@
 % about its comparison to trace scheduling?}\YH{I think this is answered in the
 % second paragraph, although I can move it later.}
 
-High-level synthesis (HLS) is the automatic compilation of
-software programs into custom hardware designs. With programmable hardware
-devices (such as FPGAs) now widespread, HLS tools such as AMD
-Vitis HLS~\cite[]{amd23_vitis_high_synth}, Intel
-HLS Compiler~\cite[]{intel20_high_synth_compil},
+High-level synthesis (HLS) is the automatic compilation of software programs
+into custom hardware designs. With programmable hardware devices (such as FPGAs)
+now widespread, HLS tools such as AMD Vitis HLS~\cite[]{amd23_vitis_high_synth},
+Intel HLS Compiler~\cite[]{intel20_hsc},
 %Microchip SmartHLS~\cite{smarthls},
-LegUp~\cite[]{canis11_legup}, and Bambu~\cite[]{ferrandi21_bambu} are
-increasingly relied upon. But existing HLS tools are too unreliable for safety-
-and security-critical applications; indeed, random testing by
-\textcite{herklotz21_empir_study_reliab_high_level_synth_tools} uncovered
-miscompilations in all four of the above tools.
+LegUp~\cite[]{canis13_l}, and Bambu~\cite[]{ferrandi21_bambu} are increasingly
+relied upon. But existing HLS tools are too unreliable for safety- and
+security-critical applications; indeed, random testing by
+\textcite{herklotz21_esrhlst} uncovered miscompilations in all four of the above
+tools.
 
-\textcite{herklotz21_formal_verif_high_level_synth} have begun to address this
+\textcite{herklotz21_fvhls} have begun to address this
 shortcoming by building \emph{Vericert}, a prototype HLS tool that extends the
 CompCert verified C
 compiler~\cite{leroy09_formal_verif_compil_back_end}. Vericert guarantees
@@ -147,7 +146,7 @@ yscale=-1
 \draw[bgbox, fill=bgbox1] (-1.5,-1.1) rectangle (12.8, 0.7);
 \end{pgfonlayer}
 
-\node[anchor=north east, align=right] (vlabel) at (12.8,0.9) {Vericert~\cite{herklotz21_formal_verif_high_level_synth}};
+\node[anchor=north east, align=right] (vlabel) at (12.8,0.9) {Vericert~\cite{herklotz21_fvhls}};
 \begin{pgfonlayer}{background}
 \draw[bgbox, fill=bgbox2] (4.5,0.9) rectangle (12.8, 2.7);
 \end{pgfonlayer}
@@ -249,7 +248,7 @@ yscale=-1
     chaining}, a long-established optimisation in hardware
   design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.
 \item The scheduler itself is written in unverified OCaml, and works similarly
-  to those in existing HLS tools~\cite[]{canis11_legup}: it takes a set of
+  to those in existing HLS tools~\cite[]{canis13_l}: it takes a set of
   scheduling constraints that capture the clock period, available hardware
   resources, and dependencies between operations, encodes them all as a system
   of difference constraints (SDC)~\cite[]{cong06_sdc}, and then hands them off
@@ -2860,7 +2859,7 @@ was simply unworkable.
 We have presented the first verified implementations of general if-conversion
 and hyperblock scheduling, and incorporated them into the Vericert verified HLS
 tool. The practical value of this work is that it extends verified HLS from the
-prototype of \textcite{herklotz21_formal_verif_high_level_synth} into an
+prototype of \textcite{herklotz21_fvhls} into an
 increasingly practical tool. On the more conceptual side, our work may prove
 useful to those implementing other optimisation passes in a verified compiler
 using solver-powered validation.
