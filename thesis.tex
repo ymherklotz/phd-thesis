@@ -1,5 +1,5 @@
+\PassOptionsToPackage{hyphens}{url}
 \documentclass[
-  svgnames,
   fontsize=12pt,
 %  headings=openany,
 %  headings=twolinechapter,
@@ -7,12 +7,17 @@
   bibliography=totoc,
 %  draft=true,
 %  headsepline=true,
+  DIV=11,
   ]{scrbook}
 
 \setkomafont{publishers}{\large\itshape}
 
+\usepackage[svgnames]{xcolor}
+
+\colorlet{maincolour}{DarkSlateBlue}
+
 \renewcommand\chapterlinesformat[3]{%
-  \leavevmode\marginpar{\fontsize{96}{115}\selectfont\textcolor{teal}{#2}}%
+  \leavevmode\marginpar{\fontsize{96}{115}\selectfont\textcolor{maincolour}{#2}}%
   {\raggedleft #3\par}%
 }
 
@@ -24,11 +29,30 @@
 \usepackage{polyglossia}
 \setdefaultlanguage[variant=british]{english}
 
-\usepackage[backend=biber,backref=true,maxbibnames=9]{biblatex}
+\begin{hyphenrules}[variant=british]{english}
+  \hyphenation{Comp-Cert Veri-cert Comp-Cert-GSA Comp-Cert-SSA}
+\end{hyphenrules}
+
+\usepackage[
+  backend=biber,
+  backref=true,
+  minbibnames=3,
+  maxbibnames=9,
+  maxcitenames=3,
+  mincitenames=1,
+  datamodel=acmdatamodel,
+  style=acmauthoryear,
+]{biblatex}
+
 \addbibresource{thesis-refs.bib}
 \addbibresource{oopsla-refs.bib}
 \addbibresource{lsr-refs.bib}
 \addbibresource{ymh-refs.bib}
+
+% For ACM author year citations
+\newcommand{\bibliofont}{\normalfont\normalsize}
+\renewcommand*{\bibfont}{\normalfont\normalsize}
+\setlength\bibitemsep{\baselineskip}
 
 %\usepackage{lineno}
 %\linenumbers
@@ -69,11 +93,10 @@
 \setminted{fontsize=\small}
 \usemintedstyle{manni}
 
-\usepackage{url}
 \usepackage[colorlinks=true,pdfa]{hyperref}
-\hypersetup{allcolors=teal}
+\hypersetup{allcolors=maincolour}
 
-\usepackage[acronym,index,symbols,xindy]{glossaries-extra}
+\usepackage[acronym,index,symbols,xindy,nomain]{glossaries-extra}
 \usepackage{glossary-bookindex}
 \setabbreviationstyle[acronym]{long-short}
 \makeatletter
@@ -148,7 +171,7 @@ Imperial College London.}
 \newacronym{SDC}{SDC}{system of difference constraints}
 \newacronym{CNF}{CNF}{conjunctive normal form}
 \newacronym{SAT}{SAT}{satisfiability}
-\newacronym{SMT}{SMT}{satisfiability modulo theory}
+\newacronym{SMT}{SMT}{satisfiability modulo theories}
 \newacronym{DSP}{DSP}{digital signal processor}
 \newacronym{ITP}{ITP}{interactive theorem prover}
 \newacronym{FSMD}{FSMD}{finite-state machine with data path}
@@ -169,12 +192,14 @@ Imperial College London.}
 \newacronym{ILP}{ILP}{integer linear programming}
 \newacronym{LP}{LP}{linear programming}
 
-\newterm[name={``plus'' forward simulation}]{plus-forward-simulation}
-\newterm[name={``star'' forward simulation}]{star-forward-simulation}
+\newterm[name={``plus'' forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
+\newterm[name={``star'' forward simulation},sort=starforwardsimulation]{star-forward-simulation}
 \newterm{CompCert}
 \newterm{translation validation}
 \newterm{data flow}
 \newterm{control flow}
+\newterm{data path}
+\newterm{control logic}
 \newterm{basic block}
 \newterm{superblock}
 \newterm{hyperblock}
@@ -190,23 +215,21 @@ Imperial College London.}
 \glsxtrnewsymbol[description={variable defining the time step of an
   operation}]{scheduling variable}{\ensuremath{\mathrm{sv}}}
 
-\hyphenation{Comp-Cert Veri-cert Comp-Cert-GSA Comp-Cert-SSA}
-
 %\newterm
 
 \includeonly{%
-%  titlepage,
-%  copyright-assignment,
-%  abstract,
-%  acknowledgements,
-  chapters/1-introduction,
-  chapters/2-background,
-%  chapters/3-introduction-to-vericert,
-%  chapters/4-trusted-computing-base,
-%  chapters/5-hyperblock-scheduling,
-%  chapters/6-hardware-generation,
-%  chapters/7-evaluation,
-%  chapters/8-conclusion,
+ % titlepage,
+ % copyright-assignment,
+ % abstract,
+ % acknowledgements,
+ % chapters/1-introduction,
+ chapters/2-background,
+ % chapters/3-introduction-to-vericert,
+ % chapters/4-trusted-computing-base,
+ % chapters/5-hyperblock-scheduling,
+ % chapters/6-hardware-generation,
+ % chapters/7-evaluation,
+ % chapters/8-conclusion,
 }
 
 \begin{document}

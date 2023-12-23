@@ -297,6 +297,7 @@ TSWLatexianTemp*
 
 # glossaries
 *.ist
+*.glo-*
 
 # REVTeX puts footnotes in the bibliography by default, unless the nofootinbib
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
@@ -304,3 +305,5 @@ TSWLatexianTemp*
 #*Notes.bib
 
 /thesis.pdf
+/thesis_full.pdf
+!/.dir-locals.el

@@ -23,10 +23,9 @@ We also considered using a language with built-in parallel constructs that map w
 
 
 \paragraph{Choice of target language}
-Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an HDL that can be
-synthesised into logic cells which can either be placed onto a
-field-programmable gate array (FPGA) or turned into an application-specific
-integrated circuit (ASIC).  Verilog was chosen as the output language for
+Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an \gls{HDL} that can
+be synthesised into logic cells which can either be placed onto an \gls{FPGA} or
+turned into an \gls{ASIC}.  Verilog was chosen as the output language for
 \vericert{} because it is one of the most popular HDLs and there already exist a
 few formal semantics for it that could be used as a
 target~\cite{lööw19_verif_compil_verif_proces, meredith10_veril}.  Bluespec,
@@ -41,10 +40,11 @@ We chose Coq as the implementation language because of its mature support for
 code extraction; that is, its ability to generate OCaml programs directly from
 the definitions used in the theorems.  We note that other authors have had some
 success reasoning about the HLS process using other theorem provers such as
-Isabelle~\cite{ellis08}.  \compcert{}~\cite{leroy09_formal_verif_realis_compil}
-was chosen as the front end because it has a well established framework for
-simulation proofs about intermediate languages, and it already provides a
-validated C parser~\cite{jourdan12_valid_lr_parser}.  The Vellvm
+Isabelle~\cite{ellis08_csicgfu}.
+\compcert{}~\cite{leroy09_formal_verif_realis_compil} was chosen as the front
+end because it has a well established framework for simulation proofs about
+intermediate languages, and it already provides a validated C
+parser~\cite{jourdan12_valid_lr_parser}.  The Vellvm
 framework~\cite{zhao12_formal_llvm_inter_repres_verif_progr_trans} was also
 considered because several existing HLS tools are already LLVM-based, but
 additional work would be required to support a high-level language like C as
@@ -65,16 +65,16 @@ because they lack formal semantics.
     \fill[formalhls,rounded corners=3pt] (-1,-1) rectangle (9.9,-2.4);
     %\draw[linecount] (-0.95,-0.45) rectangle (3.6,1);
     %\draw[linecount] (4,-0.45) rectangle (7.5,1);
-    \node[language] at (-0.3,0) (clight) {Clight};
+    \node[language] at (-0.3,0) (clight) {\textsc{Clight}};
     \node[continuation] at (1,0) (conta) {$\cdots$};
-    \node[language] at (2.7,0) (cminor) {CminorSel};
-    \node[language] at (4.7,0) (rtl) {3AC};
-    \node[language] at (6.2,0) (ltl) {LTL};
+    \node[language] at (2.7,0) (cminor) {\textsc{CminorSel}};
+    \node[language] at (4.7,0) (rtl) {\rtl{}};
+    \node[language] at (6.2,0) (ltl) {\textsc{Ltl}};
     \node[language,anchor=west] at (8.4,0) (aarch) {aarch64};
     \node[language,anchor=west] at (8.4,0.8) (x86) {x86};
     \node[continuation,anchor=west] at (8.4,1.4) (backs) {$\cdots$};
     \node[continuation] at (7.3,0) (contb) {$\cdots$};
-    \node[language] at (4.7,-1.5) (htl) {HTL};
+    \node[language] at (4.7,-1.5) (htl) {\htl{}};
     \node[language] at (6.7,-1.5) (verilog) {Verilog};
     \node[anchor=west] at (-0.9,1.6) {\textbf{\compcert{}}};
     \node[anchor=west] at (-0.9,-1.4) {\textbf{\vericert{}}};
@@ -103,17 +103,35 @@ because they lack formal semantics.
 The main work flow of \vericert{} is given in \cref{fig:rtlbranch}, which shows
 those parts of the translation that are performed in \compcert{}, and those that
 have been added.  This includes translations to two new intermediate languages
-added in \vericert{}, HTL and Verilog, as well as an additional optimisation
+added in \vericert{}, \htl{} and Verilog, as well as an additional optimisation
 pass labelled as ``\gls{BRAM} insertion''.
 
 \def\numcompcertlanguages{ten}
 
 \compcert{} translates Clight\footnote{A deterministic subset of C with pure expressions.} input into assembly output via a sequence of intermediate languages; we must decide which of these \numcompcertlanguages{} languages is the most suitable starting point for the HLS-specific translation stages.
 
-We select CompCert's three-address code (3AC)\footnote{This is known as register transfer language (RTL) in the \compcert{} literature. `3AC' is used in this paper instead to avoid confusion with register-transfer level (RTL), which is another name for the final hardware target of the HLS tool.} as the starting point. Branching off \emph{before} this point (at CminorSel or earlier) denies \compcert{} the opportunity to perform optimisations such as constant propagation and dead-code elimination, which, despite being designed for software compilers, have been found useful in HLS tools as well~\cite{cong+11}. And if we branch off \emph{after} this point (at LTL or later) then \compcert{} has already performed register allocation to reduce the number of registers and spill some variables to the stack; this transformation is not required in HLS because there are many more registers available, and these should be used instead of \gls{BRAM} whenever possible. %\JP{``\compcert{} performs register allocation during the translation to LTL, with some registers spilled onto the stack: this is unnecessary in HLS since as many registers as are required may be described in the output RTL.''} \JP{Maybe something about FPGAs being register-dense (so rarely a need to worry about the number of flops)?}
+We select CompCert's register transfer language (\rtl{}) as the starting
+point. Branching off \emph{before} this point (at CminorSel or earlier) denies
+\compcert{} the opportunity to perform optimisations such as constant
+propagation and dead-code elimination, which, despite being designed for
+software compilers, have been found useful in HLS tools as
+well~\cite{cong+11}. And if we branch off \emph{after} this point (at LTL or
+later) then \compcert{} has already performed register allocation to reduce the
+number of registers and spill some variables to the stack; this transformation
+is not required in HLS because there are many more registers available, and
+these should be used instead of \gls{BRAM} whenever
+possible. %\JP{``\compcert{} performs register allocation during the translation to LTL, with some registers spilled onto the stack: this is unnecessary in HLS since as many registers as are required may be described in the output RTL.''} \JP{Maybe something about FPGAs being register-dense (so rarely a need to worry about the number of flops)?}
 
-3AC is also attractive because it is the closest intermediate language to LLVM IR, which is used by several existing HLS compilers. %\JP{We already ruled out LLVM as a starting point, so this seems like it needs further qualification.}\YH{Well not because it's not a good starting point, but the ecosystem in Coq isn't as good.  I think it's still OK here to say that being similar to LLVM IR is an advantage?}
-It has an unlimited number of pseudo-registers, and is represented as a control flow graph (CFG) where each instruction is a node with links to the instructions that can follow it. One difference between LLVM IR and 3AC is that 3AC includes operations that are specific to the chosen target architecture; we chose to target the x86\_32 back end because it generally produces relatively dense 3AC thanks to the availability of complex addressing modes.% reducing cycle counts in the absence of an effective scheduling approach.
+\rtl{} is also attractive because it is the closest intermediate language to
+LLVM IR, which is used by several existing HLS
+compilers. %\JP{We already ruled out LLVM as a starting point, so this seems like it needs further qualification.}\YH{Well not because it's not a good starting point, but the ecosystem in Coq isn't as good.  I think it's still OK here to say that being similar to LLVM IR is an advantage?}
+It has an unlimited number of pseudo-registers, and is represented as a
+\gls{CFG} where each instruction is a node with links to the instructions that
+can follow it. One difference between LLVM \gls{IR} and \rtl{} is that \rtl{} includes
+operations that are specific to the chosen target architecture; we chose to
+target the x86\_32 back end because it generally produces relatively dense \rtl{}
+thanks to the availability of complex addressing
+modes.% reducing cycle counts in the absence of an effective scheduling approach.
 
 \subsection{An Introduction to Verilog}
 
@@ -214,7 +232,7 @@ main() {
     return x2
 }
 \end{minted}
-      \caption{3AC produced by the \compcert{} front-end without any optimisations.}\label{fig:accumulator_rtl}
+      \caption{\rtl{} produced by the \compcert{} front-end without any optimisations.}\label{fig:accumulator_rtl}
     \end{subfigure}
   \end{subfigure}\hfill%
   \begin{subfigure}[b]{0.65\linewidth}
@@ -234,7 +252,7 @@ module main(reset, clk, finish, return_val);
       else d_out <= stack[addr];
       en <= u_en;
     end
-  // Data-path
+  // data path
   always @(posedge clk)
     case (state)
       32'd11: reg_2 <= d_out;
@@ -251,7 +269,7 @@ module main(reset, clk, finish, return_val);
       32'd1: begin finish = 32'd1; return_val = reg_2; end
       default: ;
     endcase
-  // Control logic
+  // control logic
   always @(posedge clk)
     if ({reset == 32'd1}) state <= 32'd8;
     else case (state)
@@ -263,7 +281,8 @@ module main(reset, clk, finish, return_val);
          endcase
 endmodule
 \end{minted}
-\caption{Verilog produced by \vericert{}. It demonstrates the instantiation of the \gls{BRAM} (lines 9--15), the data-path (lines 16--32) and the control logic (lines 33--42).}\label{fig:accumulator_v}
+\caption{Verilog produced by \vericert{}. It demonstrates the instantiation of
+  the \gls{BRAM} (lines 9--15), the \glsfmttext{data path} (lines 16--32) and the control logic (lines 33--42).}\label{fig:accumulator_v}
 \end{subfigure}
 \caption{Translating a simple program from C to Verilog.}\label{fig:accumulator_c_rtl}
 % \NR{Is the default in line 41 of (c) supposed to be empty?}\YH{Yep, that's how it's generated.}
@@ -275,13 +294,13 @@ that stores and retrieves values from an array.  In this section, we describe
 the stages of the \vericert{} translation, referring to this program as an
 example.
 
-\subsubsection{Translating C to 3AC}
+\subsubsection{Translating C to \rtl{}}
 
 The first stage of the translation uses unmodified \compcert{} to transform the
-C input, shown in \cref{fig:accumulator_c}, into a 3AC intermediate
+C input, shown in \cref{fig:accumulator_c}, into a \rtl{} intermediate
 representation, shown in \cref{fig:accumulator_rtl}.  As part of this
 translation, function inlining is performed on all functions, which allows us to
-support function calls without having to support the \texttt{Icall} 3AC
+support function calls without having to support the \texttt{Icall} \rtl{}
 instruction.  Although the duplication of the function bodies caused by inlining
 can increase the area of the hardware, it can have a positive effect on latency
 and is therefore a common HLS optimisation~\cite{noronha17_rapid_fpga}. Inlining
@@ -290,7 +309,7 @@ supported in most HLS tools anyway~\cite{davidthomas_asap16}.
 
 %\JW{Is that definitely true? Was discussing this with Nadesh and George recently, and I ended up not being so sure. Inlining could actually lead to \emph{reduced} resource usage because once everything has been inlined, the (big) scheduling problem could then be solved quite optimally. Certainly inlining is known to increase register pressure, but that's not really an issue here. If we're  not sure, we could just say that inlining everything leads to bloated Verilog files and the inability to support recursion, and leave it at that.}\YH{I think that is true, just because we don't do scheduling.  With scheduling I think that's true, inlining actually becomes quite good.}
 
-\subsubsection{Translating 3AC to HTL}
+\subsubsection{Translating \rtl{} to \htl{}}
 
 %   + TODO Explain the main mapping in a short simple way
 
@@ -300,20 +319,29 @@ supported in most HLS tools anyway~\cite{davidthomas_asap16}.
 %\JW{I feel like this could use some sort of citation, but I'm not sure what. I guess this is all from "Hardware Design 101", right?}\YH{I think I found a good one actually, which goes over the basics.}
 %\JW{I think it would be worth having a sentence to explain how the C model of memory is translated to a hardware-centric model of memory. For instance, in C we have global variables/arrays, stack-allocated variables/arrays, and heap-allocated variables/arrays (anything else?). In Verilog we have registers and \gls{BRAM} blocks. So what's the correspondence between the two worlds? Globals and heap-allocated are not handled, stack-allocated variables become registers, and stack-allocated arrays become \gls{BRAM} blocks? Am I close?}\YH{Stack allocated variables become \gls{BRAM} as well, so that we can deal with addresses easily and take addresses of any variable.} \JW{I see, thanks. So, in short, the only registers in your hardware designs are those that store things like the current state, etc. You generate a fixed number of registers every time you synthesis -- you don't generate extra registers to store any of the program variables. Right?}
 
-The next translation is from 3AC to a new hardware translation language (HTL). %, which is one step towards being completely translated to hardware described in Verilog.
-This involves going from a CFG representation of the computation to a finite state machine with data-path (FSMD) representation~\cite{hwang99_fsmd}. The core idea of the FSMD representation is that it separates the control flow from the operations on the memory and registers. %\JP{I've become less comfortable with this term, but it's personal preference so feel free to ignore. I think `generalised finite state machine' (i.e.\ thinking of the entire `data-path' as contributing to the overall state) is more accurate.}\YH{Hmm, yes, I mainly chose FSMD because there is quite a lot of literature around it.  I think for now I'll keep it but for the final draft we could maybe change it.}
+The next translation is from \rtl{} to a new hardware translation language
+(\htl{}). %, which is one step towards being completely translated to hardware described in Verilog.
+This involves going from a CFG representation of the computation to a \gls{FSMD}
+representation~\cite{hwang99_fsmd}. The core idea of the FSMD representation is
+that it separates the control flow from the operations on the memory and
+registers. %\JP{I've become less comfortable with this term, but it's personal preference so feel free to ignore. I think `generalised finite state machine' (i.e.\ thinking of the entire `data-path' as contributing to the overall state) is more accurate.}\YH{Hmm, yes, I mainly chose FSMD because there is quite a lot of literature around it.  I think for now I'll keep it but for the final draft we could maybe change it.}
 %This means that the state transitions can be translated into a simple finite state machine (FSM) where each state contains data operations that update the memory and registers.
-Hence, an HTL program consists of two maps from states to Verilog statements:
-the \emph{control logic} map, which expresses state transitions, and the
-\emph{data-path} map, which expresses computations.
-\Cref{fig:accumulator_diagram} shows the resulting FSMD architecture. The
+Hence, an \htl{} program consists of two maps from states to Verilog statements:
+the \emph{\gls{control logic}} map, which expresses state transitions, and the
+\emph{\gls{data path}} map, which expresses computations.
+\Cref{fig:accumulator_diagram} shows the resulting \gls{FSMD} architecture. The
 right-hand block is the control logic that computes the next state, while the
 left-hand block updates all the registers and \gls{BRAM} based on the current
 program state.
 
-The HTL language was mainly introduced to simplify the proof of translation from 3AC to Verilog, as these languages have very different semantics.
-It serves as an intermediate language with similar semantics to 3AC at the top level, using maps to represents what to execute at every state, and similar semantics to Verilog at the lower level by already using Verilog statements instead of more abstract instructions.
-Compared to plain Verilog, HTL is simpler to manipulate and analyse, thereby making it easier to prove optimisations like proper \gls{BRAM} insertion.
+The \htl{} language was mainly introduced to simplify the proof of translation
+from \rtl{} to Verilog, as these languages have very different semantics.  It
+serves as an intermediate language with similar semantics to \rtl{} at the top
+level, using maps to represents what to execute at every state, and similar
+semantics to Verilog at the lower level by already using Verilog statements
+instead of more abstract instructions.  Compared to plain Verilog, \htl{} is
+simpler to manipulate and analyse, thereby making it easier to prove
+optimisations like proper \gls{BRAM} insertion.
 
 \begin{figure*}
   \centering
@@ -433,12 +461,12 @@ Typically, HLS-generated hardware consists of a sea of registers and RAMs.  This
 memory view is very different from the C memory model, so we perform the
 following translation from \compcert{}'s abstract memory model to a concrete
 \gls{BRAM}.\@ Variables that do not have their address taken are kept in
-registers, which correspond to the registers in 3AC.  All address-taken
+registers, which correspond to the registers in \rtl{}.  All address-taken
 variables, arrays, and structs are kept in \gls{BRAM}.  The stack of the main
 function becomes an unpacked array of 32-bit integers representing the
 \gls{BRAM} block.  Any loads and stores are temporarily translated to direct
 accesses to this array, where each address has its offset removed and is divided
-by four.  In a separate HTL-to-HTL conversion, these direct accesses are then
+by four.  In a separate \htl{}-to-\htl{} conversion, these direct accesses are then
 translated to proper loads and stores that use a \gls{BRAM} interface to
 communicate with the \gls{BRAM}, shown on lines 21, 24 and 28 of
 \cref{fig:accumulator_v}.  This pass inserts a \gls{BRAM} block with the
@@ -451,12 +479,12 @@ of the \gls{BRAM} interface can be seen in \cref{fig:accumulator_diagram}.
 
 \paragraph{Translating instructions}
 
-Most 3AC instructions correspond to hardware constructs.
-%Each 3AC instruction either corresponds to a hardware construct or does not have to be handled by the translation, such as function calls (because of inlining). \JW{Are function calls the only 3AC instruction that we ignore? (And I guess return statements too for the same reason.)}\YH{Actually, return instructions are translated (because you can return from main whenever), so call instructions (Icall, Ibuiltin and Itailcall) are the only functions that are not handled.}
+Most \rtl{} instructions correspond to hardware constructs.
+%Each \rtl{} instruction either corresponds to a hardware construct or does not have to be handled by the translation, such as function calls (because of inlining). \JW{Are function calls the only \rtl{} instruction that we ignore? (And I guess return statements too for the same reason.)}\YH{Actually, return instructions are translated (because you can return from main whenever), so call instructions (Icall, Ibuiltin and Itailcall) are the only functions that are not handled.}
 % JW: Thanks; please check proposed new text.
 For example, line 2 in \cref{fig:accumulator_rtl} shows a 32-bit register
 \texttt{x5} being initialised to 3, after which the control flow moves execution
-to line 3. This initialisation is also encoded in the Verilog generated from HTL
+to line 3. This initialisation is also encoded in the Verilog generated from \htl{}
 at state 8 in both the control logic and data-path always-blocks, shown at lines
 33 and 16 respectively in \cref{fig:accumulator_v}.  Simple operator
 instructions are translated in a similar way.  For example, the add instruction
@@ -469,36 +497,40 @@ special instructions require extra care. One such instruction is the
 Verilog equivalent and therefore has to be implemented in terms of other
 operations and proven to be equivalent.
 % In addition to any non-32-bit operations, the remaining
-The only 32-bit instructions that we do not translate are case-statements (\texttt{Ijumptable}) and those instructions related to function calls (\texttt{Icall}, \texttt{Ibuiltin}, and \texttt{Itailcall}), because we enable inlining by default.
+The only 32-bit instructions that we do not translate are case-statements
+(\texttt{Ijumptable}) and those instructions related to function calls
+(\texttt{Icall}, \texttt{Ibuiltin}, and \texttt{Itailcall}), because we enable
+inlining by default.
 
-\subsubsection{Translating HTL to Verilog}
+\subsubsection{Translating \htl{} to Verilog}
 
-Finally, we have to translate the HTL code into proper
-Verilog. % and prove that it behaves the same as the 3AC according to the Verilog semantics.
+Finally, we have to translate the \htl{} code into proper
+Verilog. % and prove that it behaves the same as the \rtl{} according to the Verilog semantics.
 The challenge here is to translate our FSMD representation into a Verilog AST.
-However, as all the instructions in HTL are already expressed as Verilog
+However, as all the instructions in \htl{} are already expressed as Verilog
 statements, only the top-level data-path and control logic maps need to be
 translated to valid Verilog case-statements.  We also require declarations for
 all the variables in the program, as well as declarations of the inputs and
 outputs to the module, so that the module can be used inside a larger hardware
 design.  In addition to translating the maps of Verilog statements, an
 always-block that will behave like the \gls{BRAM} also has to be created, which
-is only modelled abstractly at the HTL level.  \Cref{fig:accumulator_v} shows
+is only modelled abstractly at the \htl{} level.  \Cref{fig:accumulator_v} shows
 the final Verilog output that is generated for our example.
 
 Although this translation seems quite straight\-forward, proving that this
 translation is correct is complex.  All the implicit assumptions that were made
-in HTL need to be translated explicitly to Verilog statements and it needs to be
-shown that these explicit behaviours are equivalent to the assumptions made in
-the HTL semantics.  One main example of this is proving that the specification
-of the \gls{BRAM} in HTL does indeed behave in the same as its Verilog
-implementation.  We discuss these proofs in upcoming sections.
+in \htl{} need to be translated explicitly to Verilog statements and it needs to
+be shown that these explicit behaviours are equivalent to the assumptions made
+in the \htl{} semantics.  One main example of this is proving that the
+specification of the \gls{BRAM} in \htl{} does indeed behave in the same as its
+Verilog implementation.  We discuss these proofs in upcoming sections.
 
- %In general, the generated Verilog structure has similar to that of the HTL code.
-%The key difference is that the control and datapath maps become Verilog case-statements.
-%Other additions are the initialisation of all the variables in the code to the
-%correct bitwidths and the declaration of the inputs and outputs to the module,
-%so that the module can be used inside a larger hardware design.
+% In general, the generated Verilog structure has similar to that of the \htl{}
+% code.  The key difference is that the control and datapath maps become Verilog
+% case-statements.  Other additions are the initialisation of all the variables
+% in the code to the correct bitwidths and the declaration of the inputs and
+% outputs to the module, so that the module can be used inside a larger hardware
+% design.
 
 %%% Local Variables:
 %%% mode: latex

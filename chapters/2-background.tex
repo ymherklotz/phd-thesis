@@ -30,18 +30,19 @@ components~\cite{boutros21_fpga_archit}, which are also shown in
 \cref{fig:bg:fpga-layout}.
 
 \begin{description}
-\item[\gls{LUT}] A \gls{LUT} can implement any kind of logic with a set number
-  of inputs and a single output.  On an \gls{FPGA}, \glspl{LUT} are often
-  grouped into larger programmable logic units called \emph{slices} that can
-  handle multiple inputs and outputs.
+\item[\Gls{LUT}] A \gls{LUT} can implement any kind of logic with a set number
+  of inputs and an output.  On an \gls{FPGA}, \glspl{LUT} are often grouped into
+  larger programmable logic units called \emph{slices} that can handle multiple
+  inputs and outputs.  \Glspl{LUT} are also normally paired with an optional
+  register at the output so that they can also be used as a memory.
 \item[Programmable interconnect] The \glspl{LUT} are connected using
   programmable interconnects, so that these arbitrary logical units can also be
   connected in arbitrary ways, making it possible to implement any kind of
   hardware design.
-\item[\gls{BRAM}] Instead of relying on implementing memories to store a large
+\item[\Gls{BRAM}] Instead of relying on implementing memories to store a large
   amount of data using \glspl{LUT}, there is often \gls{BRAM} on the \gls{FPGA},
   which provides efficient storage for data.
-\item[\gls{DSP}] Finally, \glspl{FPGA} also often contain \glspl{DSP}, which can
+\item[\Gls{DSP}] Finally, \glspl{FPGA} also often contain \glspl{DSP}, which can
   be used to implement common arithmetic functions efficiently, that may
   otherwise take up a lot of space if implemented using \glspl{LUT}.  Some
   common arithmetic functions that are often implemented using \gls{DSP} include
@@ -147,7 +148,7 @@ The standard process to translate a hardware design from an \gls{HDL}, such as
 Verilog or VHDL, to then be placed onto an \gls{FPGA} is to first
 \emph{synthesise} the hardware design, which generates a lower level description
 of the hardware in terms of the resources that are available on the \gls{FPGA}.
-Next, the net-list is place-and-routed on the \gls{FPGA}, which assigns a
+Next, the netlist is place-and-routed on the \gls{FPGA}, which assigns a
 physical location to each resources and programs the interconnects so that all
 the components are connected properly.  This description low-level description
 of the hardware is then turned into a bit stream that will program all the
@@ -433,7 +434,7 @@ optimisations, such as dead-code elimination or constant propagation, need to
 perform data-flow analyses on the
 \gls{CFG}~\cite[]{kildall73_unified_approac_global_progr_optim,kam76_gdfaia}.
 In addition to that, hardware circuits are naturally expressed using pure data
-flow as net lists are essentially data flow graphs, and even \glspl{HDL} can be
+flow as netlists are essentially data flow graphs, and even \glspl{HDL} can be
 modelled by synchronous data flow programming
 languages~\cite{halbwachs91_sdfpll}.  One could therefore represent the code as
 a pure \gls{DFG} to help with data-flow optimisations as well as the translation
@@ -582,7 +583,8 @@ advantages and drawbacks that they provide.
       \end{pgfonlayer}
       \draw[->] (a) -- (fitall);
       \draw[->] (b) -- (d);
-      \draw[->] (d) -- (c);
+      \draw[->] (b) -- (c);
+      \draw[->] (d) -- (f);
       \draw[->] (c) -- (e);
       \draw[->] (e) -- (f);
       \draw[->] (f) -- (g);
@@ -660,8 +662,10 @@ that were selected during the resource allocation step and schedule the
 instructions so that they meet any constraints.  In this
 \namecref{sec:bg:scheduling} we will mainly discuss scheduling techniques used
 by \gls{HLS} tools, first discussing static scheduling in
-\cref{sec:bg:static-scheduling} followed by describing dynamic scheduling in
-\cref{sec:bg:dynamic-scheduling}.
+\cref{sec:bg:static-scheduling}, which is the scheduling algorithm used by
+Vericert in this dissertation, followed by describing \gls{dynamic scheduling}
+in \cref{sec:bg:dynamic-scheduling}, which is an alternative scheduling
+technique with different trade-offs to static scheduling.
 
 \subsection{Static Scheduling}%
 \label{sec:bg:static-scheduling}
@@ -669,12 +673,12 @@ by \gls{HLS} tools, first discussing static scheduling in
 Static scheduling is used by the majority of synthesis
 tools~\cite{canis13_legup, xilinx20_vivad_high_synth, amd23_vitis_high_synth,
   mentor20_catap_high_level_synth, intel20_sdk_openc_applic,
-  roane23_autom_hw_sw_co_desig, mentor20_catap_high_level_synth} and means that
-the time at which each operation will execute is known at compile time.  The
-first step is to generate a \gls{CDFG}, which is either already the structure of
-the code, or can be generated from a \gls{hyperblock} \gls{CFG} representation,
-for example, by using static analysis on each \gls{hyperblock} to gather all
-data dependencies and convert it into a \gls{DFG}.
+  roane23_autom_hw_sw_co_desig} and means that the time at which each operation
+will execute is known at compile time.  The first step is to generate a
+\gls{CDFG}, which is either already the structure of the code, or can be
+generated from a \gls{hyperblock} \gls{CFG} representation, for example, by
+using static analysis on each \gls{hyperblock} to gather all data dependencies
+and convert it into a \gls{DFG}.
 
 Scheduling can have different optimisation goals for the design in terms of
 latency and resource usage.  In the simplest case, each operation in the
@@ -717,7 +721,7 @@ added to the \gls{SDC}.
 
 \begin{equation*}
   \gls{scheduling variable}_{\mathrm{fin}}(a) - \gls{scheduling
-    variable}_{\mathrm{fin}}(b) \leq 0
+    variable}_{\mathrm{init}}(b) \leq 0
 \end{equation*}
 
 Other types of constraints that are normally added to get a valid schedule are:
@@ -761,10 +765,10 @@ Modern \gls{HLS} tools often use a variation of \gls{SDC} scheduling.  For
 example, Vitis HLS and LegUp use an extension of \gls{SDC}
 scheduling~\cite[]{zhang13_sdc,canis14_modul_sdc} with support for modulo
 scheduling (loop pipelining)~\cite[]{rau96_iterat_modul_sched} and Bambu HLS
-uses an extension of \gls{SDC} scheduling~\cite[]{lattuada15_ctbsss} with
-support for speculative execution and loop code motion.  In this dissertation,
-\gls{SDC} will refer to the initial implementation of the scheduling without any
-extensions.
+uses an extension of \gls{SDC} scheduling with support for speculative execution
+and loop code motion~\cite[]{lattuada15_ctbsss}.  In this dissertation,
+\gls{SDC} scheduling refers to the initial implementation of the scheduling
+without any extensions.
 
 \subsection{Dynamic Scheduling}%
 \label{sec:bg:dynamic-scheduling}
@@ -799,81 +803,135 @@ correctly even when loops are pipelined and there are dependencies between
 iterations.  In addition to that, performance of the dynamically scheduled code
 is improved by careful buffer
 placement~\cite{josipovic20_buffer_placem_sizin_high_perfor_dataf_circuit},
-which allows for better parallisation and pipelining of loops.
+which allows for better parallelisation and pipelining of loops.
 
 \section{Verification}%
 \label{sec:bg:verification}
 
-There are different kinds of verification tools, which can mostly be placed into
-two categories: automatic theorem provers described in
-\cref{sec:bg:automatic-theorem-provers} and interactive theorem provers
-described in \cref{sec:bg:interactive-theorem-provers}.  This section will give
-a brief overview of the characteristics of these different verification tools.
+Theorem provers can be categorised into two main types: automatic theorem
+provers described in \cref{sec:bg:automatic-theorem-provers} and interactive
+theorem provers described in \cref{sec:bg:interactive-theorem-provers}.  This
+section will give a brief overview of the characteristics of these different
+verification tools.
 
 \subsection{Automatic theorem provers}%
 \label{sec:bg:automatic-theorem-provers}
 
-Automatic theorem provers such as \gls{SAT} or \gls{SMT} solvers can be
-characterised as decision procedures that will answer, if a formula is
-satisfiable or not.  If the formula is satisfiable, the solver can provide a
-model that will satisfy the formula.  Checking if the solver gave the right
-answer is just a matter of plugging in the model to the formula and checking
-that the formula is indeed satisfied.  \YH{TODO: Talk about unsatisfiability.}
+Automatic theorem provers are tools that can reason about logic automatically,
+and answer whether a theorem about some variables is true or whether there is a
+counter example.  Most automatic theorem provers are implemented around
+\gls{SAT} or \gls{SMT} solvers, which can be characterised as deciding if a
+formula is satisfiable or not.  In \gls{SAT}, the formula is purely boolean, but
+in \gls{SMT} the boolean formula may include arbitrary theories that extend the
+logic, for example by including linear integer arithmetic or a theory of arrays.
+This is powerful, and means that \gls{SMT} solvers such as
+Z3~\cite[]{moura08_z}, cvc5~\cite[]{barbosa22_cvc5},
+Boolector~\cite[]{brummayer09_b} or veriT~\cite{bouton09} are used by
+higher-level automatic verification tools such as bounded model checkers like
+CBMC~\cite[]{kroening14_c} or verification aware programming languages like
+Dafny~\cite[]{leino10_d}.
 
-The main advantage of using an automatic theorem prover is that if one is
-working in its constrained decidable theory, then it will be efficient at
-proving or disproving if a formula is a theorem.  However, if the theorem
-requires inductive arguments to prove, then the theorem prover might need some
-manual help from the user by adding the right lemmas to its collection of facts
-which the automatic procedure can use.  The proof itself though will still be
-automatic, which means that many of the tedious cases in the proofs can be
-ignored.
+Automatic theorem provers are also the basis for formal hardware verification in
+general, providing ways to prove the equivalence between hardware designs as
+well as between hardware designs and their specifications using commercial
+verification tools like Cadence Conformal~\cite[]{cadence23_c} and Synopsys VC
+Formal~\cite[]{synopsys23_v}.  More details about current hardware verification
+methodologies are given in \cref{sec:bg:unmechanised-verification-of-hls},
+especially as they apply to \gls{HLS}.
 
-However, this is also the main disadvantage of automatic theorem provers,
-because they do not provide details about the proof itself and often cannot
-communicate why they cannot prove a theorem.  This means that as a user one has
-to guess what theorems the prover is missing and try and add these to the fact
-database.
+One question one might have is how can one trust the answer of such automatic
+theorem provers?  From a high-level, they are running an opaque, highly
+optimised algorithm and return an answer to the problem, which may be incorrect.
+If the formula is satisfiable, the solution is simple.  The solver can provide a
+model that satisfies the formula.  Checking if the solver gave the right answer
+is just a matter of checking that the model satisfies the formula.  If the
+formula is unsatisfiable, the solver will return \enquote{unsat} as the answer
+as there is no model.  Checking that a formula is actually unsatisfiable without
+having to trust the \gls{SMT} solver can be done if the \gls{SMT} solver can
+generate a proof witness, which can be checked by an independent, trusted
+checker.  Proof witnesses are normally a series of rewrites of axioms or basic
+lemmas that translate the original formula into \textit{false}.  If one trusts
+the checker, one does not have to trust the \gls{SMT} solver, because if it can
+generate a valid proof witness, then one knows that the formula has to be
+equivalent to \textit{false}.  Some examples of \gls{SMT} solvers that can
+generate proof witnesses are veriT~\cite{bouton09} or
+cvc5~\cite[]{barbosa22_cvc5}, and the proof witnesses generated by these tools
+can actually be checked by a formally verified proof checker called
+SMTCoq~\cite{armand11_modul_integ_sat_smt_solver}, so that these proofs of
+\gls{SMT} formulas can be used in a verified context.
 
-Finally, automatic theorem provers do not provide reasoning for their final
-answer by default, meaning one cannot check if the result is actually correct.
-However, some SMT solvers support the generation of proof witnesses, which can
-then be checked and reused in other theorem provers.  Some examples of these are
-veriT~\cite{bouton09}, and these can then be integrated into Coq using
-SMTCoq~\cite{armand11_modul_integ_sat_smt_solver}.
+Unfortunately, equivalence checkers used to verify designs or formal
+verification tools to prove assertions about hardware normally do not produce a
+proof witness that can be independently checked.  This means that especially
+with the commercial, closed source formal verification tools, one has to trust
+that the result they produce is correct.
+
+%The main advantage of using an automatic theorem prover is that if one is
+%working in its constrained decidable theory, then it will be efficient at
+%proving or disproving if a formula is a theorem.  However, if the theorem
+%requires inductive arguments to prove, then the theorem prover might need some
+%manual help from the user by adding the right lemmas to its collection of facts
+%which the automatic procedure can use.  The proof itself though will still be
+%automatic, which means that many of the tedious cases in the proofs can be
+%ignored.
+%
+%However, this is also the main disadvantage of automatic theorem provers,
+%because they do not provide details about the proof itself and often cannot
+%communicate why they cannot prove a theorem.  This means that as a user one has
+%to guess what theorems the prover is missing and try and add these to the fact
+%database.
 
 \subsection{Interactive theorem provers}%
 \label{sec:bg:interactive-theorem-provers}
 
-Interactive theorem provers, on the other hand, focus on checking proofs that
-are provided to them.  These can either be written manually by the user, or
-automatically generated by some decision procedure.  However, these two ways of
-generating proofs can be combined, so the general proof structure can be
-manually written, and simpler steps inside of the proof can be automatically
-solved.
+Interactive theorem provers like
+Coq~\cite[]{bertot04_inter_theor_provin_progr_devel},
+Isabelle~\cite[]{paulson94_i} or Lean~\cite[]{moura15_l}, on the other hand,
+focus on checking proofs that are provided to them, instead of automatically
+trying to check theorems.  These proofs can either be written manually by the
+user in a tactic language provided by the theorem prover, or automatically
+generated by external decision procedures, such as an automatic theorem prover
+that produces a witness.  One benefit of using an interactive theorem prover is
+that the proof is checked by a small, trusted kernel.  This kernel together with
+the statements of the theorems in the theorem prover are the only parts that
+need to be trusted, as the proofs of the theorems are untrusted.
 
-The main benefit of using an interactive theorem prover is that the proof is
-there and can be checked by a small, trusted kernel.  This kernel does not need
-to be heavily optimised, and can therefore be reasoned about.
+Interactive theorem provers can therefore help with verifying complex theorems,
+such as proving the correctness of a C Compiler, as is the case with CompCert,
+or prove the correctness of an operating system kernel like sel4 or the four
+colour theorem proof~\cite[]{gonthier08_fp}.
 
-The main cost of using an interactive theorem prover is the time it takes to
-prove theorems, and the amount of formalisation that is needed to make the
-proofs pass.  For a proof to be completed, one has to remove any axioms from the
-proof, meaning even the smallest detail must be proven to continue.
+More details on how an interactive theorem prover is used to develop verified
+programs is described in
+\cref{sec:bg:mechanised-compiler-proofs,sec:bg:compcert}.
+
+\YH{TODO: Expand on section.}
 
 \section{Unmechanised Verification of HLS}%
 \label{sec:bg:unmechanised-verification-of-hls}
 
-Work is being done to prove the equivalence between the generated hardware and
-the original behavioural description in C.  An example of a tool that implements
-this is Mentor's Catapult~\cite{mentor20_catap_high_level_synth}, which tries to
-match the states in the register transfer level (RTL) description to states in
-the original C code after an unverified translation.  This technique is called
-translation validation~\cite{pnueli98_trans}, whereby the translation that the
-HLS tool performed is proven to have been correct for that input, by showing
-that they behave in the same way for all possible inputs.  Using translation
-validation is quite effective for proving complex optimisations such as
-scheduling~\cite{kim04_autom_fsmd, karfa06_formal_verif_method_sched_high_synth,
+This section describes how \gls{HLS} designs are typically verified and also
+describes the current state-of-the-art in verification of \gls{HLS}
+transformations.  The standard way to test designs in \gls{HLS} is either using
+hardware test benches, testing the final hardware design like any other hardware
+design, or by using C/RTL co-simulation, which is a feature some \gls{HLS} tools
+support, whereby the same test code that drove the C code can also be used to
+drive the hardware design.
+
+Proving the equivalence between the generated hardware and the original
+behavioural description in C is an ongoing research problem.  There are
+commercial tools that support such an equivalence checks, such as Siemens'
+SLEC~\cite[]{chauhan20_formal_ensur_equiv_c_rtl} or Cadence's
+C2RTL~\cite[]{cadence23_j}, which try to match the states in the register
+transfer level description to states in the original C code after an unverified
+translation.
+
+This technique is called translation validation~\cite{pnueli98_trans}, whereby
+the translation that the HLS tool performed is proven to have been correct for
+that input, by showing that they behave in the same way for all possible inputs.
+Using translation validation is quite effective for proving complex
+optimisations such as scheduling~\cite{kim04_autom_fsmd,
+  karfa06_formal_verif_method_sched_high_synth,
   chouksey20_verif_sched_condit_behav_high_level_synth} or code
 motion~\cite{banerjee14_verif_code_motion_techn_using_value_propag,
   chouksey19_trans_valid_code_motion_trans_invol_loops}, however, the validation
@@ -909,7 +967,7 @@ output is correct.  It works in two stages, first generating a DFG from the
 input language, HardwarePal.  It then optimises the DFG to improve the routing
 of the design and also improving the scheduling of operations.  Finally, the
 netlist is generated from the DFG by placing all the operations that do not
-depend on each other into the same clock cycle.  Datapath and register
+depend on each other into the same clock cycle.  Data path and register
 allocation is performed by an unverified clique partitioning algorithm.  The
 equivalence proof between the DFG and HardwarePal is done by proof by
 simulation, where it is proven that, given a valid input configuration, that
@@ -919,12 +977,18 @@ same behaviour as the input.
 There has also been work on proving the translation from Occam to
 gates~\cite{page91_compil_occam} correct using algebraic
 proofs~\cite{jifeng93_towar}.  This translation resembles dynamic scheduling as
-tokens are used to start the next operations.  However, Occam is timed by
-design, and will execute assignments sequentially.  To take advantage of the
-parallel nature of hardware, Occam uses explicit parallel constructs with
+tokens are used to start the next operations.  To take advantage of the parallel
+nature of hardware, Occam has explicit concurrency using the PAR constructs with
 channels to share state.  Handel-C, a version of Occam with many more features
-such as memory and pointers, has also been used to prove HLS correct, and is
-described further in \cref{sec:bg:mechaniced-handel-c-to-netlist-translation}.
+such as memory and pointers, and is described further in
+\cref{sec:bg:mechaniced-handel-c-to-netlist-translation} as there is mechanised
+translation from Handel-C into a netlist.  One thing to note about these
+translations from Occam and Handel-C into netlists is that they are essentially
+timed languages in SEQ blocks.  This is because every assignment takes one cycle
+to complete and expressions are assumed to finish evaluation within that cycle.
+No automatic scheduling is performed by the translation, and the designer has
+full control over the design and can manually pipeline and parallelise the
+design.
 
 \section{Mechanised Compiler Proofs}%
 \label{sec:bg:mechanised-compiler-proofs}
@@ -936,34 +1000,35 @@ the actual implementation, meaning there could be various implementation bugs in
 the algorithm that cause it to behave incorrectly.  C compilers are a good
 example of this, where many optimisations performed by the compilers have been
 proven correct, however these proofs are not linked directly to the actual
-implementations of these algorithms in GCC or Clang.  Yang et
-al.~\cite{yang11_findin_under_bugs_c_compil} found more than 300 bugs in GCC and
+implementations of these algorithms in GCC or Clang.
+\textcite{yang11_findin_under_bugs_c_compil} found more than 300 bugs in GCC and
 Clang, many of them appearing in the optimisation phases of the compiler.  One
 way to link the proofs to the actual implementations in these compilers is to
 write the compiler in a language which allows for a theorem prover to check
 properties about the algorithms.  This allows for the proofs to be directly
 linked to the algorithms, ensuring that the actual implementations are proven
-correct.  Yang et al.~\cite{yang11_findin_under_bugs_c_compil} found that
-CompCert, a formally verified C Compiler, only had five bugs in all the
-unverified parts of the compiler, meaning this method of proving algorithms
-correct ensures a correct compiler.
+correct.  \citeauthor{yang11_findin_under_bugs_c_compil} found that CompCert, a
+formally verified C compiler, only had five bugs in all the unverified parts of
+the compiler, meaning this method of proving algorithms correct ensures a
+correct compiler.
 
 \subsection{HLS Formalised in Isabelle}
 
-Martin Ellis' work on correct synthesis~\cite{ellis08_correc} is the first
-example of a mechanically verified high-level synthesis tool, also called
-hardware/software compilers, as they produce software as well as hardware for
-special functional units that should be hardware accelerated.  The main goal of
-the thesis is to provide a framework to prove hardware/software compilers
-correct, by defining semantics for an intermediate language (IR) which supports
-partitioning of code into hardware and software parts, as well as a custom
-netlist format which is used to describe the hardware parts and is the final
-target of the hardware/software compiler.  The proof of correctness then says
-that the hardware/software design should have the same behaviour as if the
-design had only been implemented in software.  The framework used to prove the
-correctness of the compilation from the IR to the netlist format is written in
-Isabelle, which is a theorem prover comparable to Coq.  Any proofs in the
-framework are therefore automatically checked by Isabelle for correctness.
+Martin Ellis' work on the specification of hardware/software
+co-design~\cite{ellis08_csicgfu} is the first attempt towards mechanically
+verified \gls{HLS} using Isabelle.  The main goal of the thesis is to provide a
+framework to prove hardware/software co-design compilers correct, where part of
+the design is specified in software and other parts of the design are translated
+to equivalent hardware to be accelerated.  The dissertation describes the
+semantics of an \gls{SSA} based software \gls{IR} which supports partitioning of
+code into hardware and software parts, as well as a custom netlist format which
+is used to describe the hardware parts and is the final target of the
+hardware/software compiler.  The proof of correctness then says that the
+hardware/software design should have the same behaviour as if the design had
+only been implemented in software.  The framework used to prove the correctness
+of the compilation from the IR to the netlist format is written in Isabelle,
+which is a theorem prover comparable to Coq.  Any proofs in the framework are
+therefore automatically checked by Isabelle for correctness.
 
 This work first defines a static single assignment (SSA) IR, with the
 capabilities of defining sections that should be hardware accelerated, and
@@ -982,9 +1047,9 @@ different back end to be implemented from existing compilers.  In addition to
 that, it would most likely mean that the translation from higher-level language
 to the IR is unverified and could therefore contain bugs.  As the resulting
 netlist also uses a custom format, it cannot be fed directly to tools that can
-then translate it to a bitstream to place onto an FPGA. The reason for designing
-a custom IR and netlist was so that these were compatible with each other,
-making proofs of equivalence between the two simpler.
+then translate it to a bitstream to place onto an \gls{FPGA}. The reason for
+designing a custom IR and netlist was so that these were compatible with each
+other, making proofs of equivalence between the two simpler.
 
 Finally, it is unclear whether or not a translation algorithm from the IR to the
 netlist format was actually implemented, as the only example in the thesis seems
@@ -998,14 +1063,14 @@ a mapping between variables and netlist wires and registers.
 
 Even though this Isabelle framework does provide some equivalence relation
 between an IR and a netlist and describes how the translation would be proven
-correct by matching states to one another, it is actually not useable in
+correct by matching states to one another, it is actually not usable in
 practice.  First of all, the IR is only represented in Isabelle and does not
 have a parser or a compiler which can target this IR.  In addition to that, the
 netlist format cannot be passed to any existing tool, to then be placed onto an
-FPGA, meaning an additional, unverified translation would have to take place.
-This further reduces the effectiveness of the correctness proof, as there are
-various stages that are not addressed by the proofs and therefore have to be
-assumed to be correct.
+\gls{FPGA}, meaning an additional, unverified translation would have to take
+place.  This further reduces the effectiveness of the correctness proof, as
+there are various stages that are not addressed by the proofs and therefore have
+to be assumed to be correct.
 
 \subsection{Mechanised Handel-C to Netlist Translation}%
 \label{sec:bg:mechaniced-handel-c-to-netlist-translation}
@@ -1015,25 +1080,26 @@ hardware development.  It supports many C features such as assignments,
 if-statements, loops, pointers and functions.  In addition to these constructs,
 Handel-C also supports explicit timing constructs, such as explicit parallelism
 as well as sequential or parallel assignment, similar to blocking and
-nonblocking assignments in Verilog.  Perna et
-al.~\cite{perna12_mechan_wire_wise_verif_handel_c_synth} developed a
+nonblocking assignments in Verilog.
+\textcite{perna12_mechan_wire_wise_verif_handel_c_synth} developed a
 mechanically verified Handel-C to netlist translation written in HOL. The
 translation is based on previous work describing translation from Occam to gates
-by Page et al.~\cite{page91_compil_occam}, which was proven correct by Jifeng et
-al.~\cite{jifeng93_towar} using algebraic proofs.  As Handel-C is mostly an
+by \textcite{page91_compil_occam}, which was proven correct by
+\textcite{jifeng93_towar} using algebraic proofs.  As Handel-C is mostly an
 extension of Occam with C-like operations, the translation from Handel-C to
 gates can proceed in a similar way.
 
-Perna et al. verify the compilation of a subset of Handel-C to gates, which does
-not include memory, arrays or function calls.  In addition to the constructs
-presented in Page et al., the prioritised choice construct is also added to the
-Handel-C subset that is supported.  The verification proceeds by first defining
-the algorithm to perform the compilation, chaining operations together with
-start and end signals that determine the next construct which will be executed.
-The circuits themselves are treated as black boxes by the compilation algorithm
-and are chosen based on the current statement in Handel-C which is being
-translated.  The compilation algorithm correctly has to link each black box to
-one another using the start and end signals that the circuits expose to
+\citeauthor{perna12_mechan_wire_wise_verif_handel_c_synth} verify the
+compilation of a subset of Handel-C to gates, which does not include memory,
+arrays or function calls.  In addition to the constructs presented by
+\citeauthor{page91_compil_occam}, the prioritised choice construct is also added
+to the Handel-C subset that is supported.  The verification proceeds by first
+defining the algorithm to perform the compilation, chaining operations together
+with start and end signals that determine the next construct which will be
+executed.  The circuits themselves are treated as black boxes by the compilation
+algorithm and are chosen based on the current statement in Handel-C which is
+being translated.  The compilation algorithm correctly has to link each black
+box to one another using the start and end signals that the circuits expose to
 correctly compile the Handel-C code.
 
 The verification of the compilation is done by proving that the control signal
@@ -1045,7 +1111,7 @@ have the same functionality as the Handel-C constructs, only that the control
 signals are propagated in the correct manner.  In addition to that, the
 assumption is made that the semantics for time are the same in Handel-C as well
 as in the netlist format that is generated, which could be proven if the
-constructs are shown to behave in the exact same way as the handel-C constructs.
+constructs are shown to behave in the exact same way as the Handel-C constructs.
 
 \section{CompCert}%
 \label{sec:bg:compcert}
@@ -1085,7 +1151,7 @@ that the stack variables are correctly aligned.
 \gls{SSA} intermediate language.  This language enforces \gls{SSA} properties
 and therefore allows for many convenient proofs about optimisations performed on
 this intermediate language, as many assumptions about variables can be made when
-these are encountered.  The main interesting porperty that arises from using
+these are encountered.  The main interesting property that arises from using
 \gls{SSA} is the \emph{equational lemma}, stating that given a variable, if it
 was assigned by an operation that does not depend on memory, then loading the
 destination value of that variable is the same as recomputing the value of that

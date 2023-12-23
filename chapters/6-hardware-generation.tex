@@ -332,7 +332,7 @@ finish.  It should therefore be implemented using a sequence of shifts.
 
 \compcert{} eventually performs a translation from this representation into
 assembly code which uses shifts to implement the division, however, the
-specification of the instruction in 3AC itself still uses division instead of
+specification of the instruction in \rtl{} itself still uses division instead of
 shifts, meaning this proof of the translation cannot be reused.  In \vericert{},
 the equivalence of the representation in terms of divisions and shifts is proven
 over the integers and the specification, thereby making it simpler to prove the
@@ -493,8 +493,8 @@ There is quite a large mismatch between the \htl{} semantics and the
   \htl{} semantics the whole design is executed at every clock cycle, because
   hardware is inherently parallel. The program pointer is part of the design as
   well, not just part of an abstract state. This makes the semantics of \htl{}
-  simpler, but comparing it to the semantics of 3AC becomes more challenging, as
-  one has to map the abstract notion of the state to concrete values in
+  simpler, but comparing it to the semantics of \rtl{} becomes more challenging,
+  as one has to map the abstract notion of the state to concrete values in
   registers.
 \end{itemize}
 
@@ -897,33 +897,37 @@ applies to the translation of loads.)
     d \blockasgn r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \arcr
     \sigma \blockasgn e_2\msemi
   \end{array}\right) \\
+  \begin{array}{l}
   t_1 = \left(\begin{array}{l}
     r.\mathrm{u\_en} \blockasgn
     \neg r.\mathrm{u\_en}\msemi \arcr
     r.\mathrm{wr\_en} \blockasgn \texttt{1'b0}\msemi \arcr
     r.\mathrm{addr} \blockasgn e_{1} \msemi \arcr
     \sigma \blockasgn n \msemi
-  \end{array}\right) \\
+  \end{array}\right) \arcr
   t_2 = \left(\begin{array}{l}
     d \blockasgn r.\mathrm{d\_out} \msemi \arcr
     \sigma \blockasgn e_2 \msemi
-  \end{array}\right)}%
+  \end{array}\right)
+  \end{array}}%
   {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
   \and
   \inferrule[Predicated Load Transl]{ d[i] = \left(\begin{array}{l}
     d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \arcr
     \sigma \blockasgn e_2\msemi
   \end{array}\right) \\
-  t_1 = \left(\begin{array}{l}
+  \begin{array}{l}
+    t_1 = \left(\begin{array}{l}
     r.\mathrm{u\_en} \blockasgn (c \verilogeq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi \arcr
     r.\mathrm{wr\_en} \blockasgn \texttt{1'b0}\msemi \arcr
     r.\mathrm{addr} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{addr}} \msemi \arcr
     \sigma \blockasgn n \msemi
-  \end{array}\right) \\
+  \end{array}\right) \arcr
   t_2 = \left(\begin{array}{l}
     d \blockasgn \mternary{c}{e_{1}}{r.\mathrm{d\_out}} \msemi \arcr
     \sigma \blockasgn e_2 \msemi
-  \end{array}\right)}%
+  \end{array}\right)
+    \end{array}}%
   {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
   \and
   \inferrule[Default Transl]{(\forall e_1\ e_2\ e_3\ldotp d[i] \neq (r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
@@ -1015,6 +1019,12 @@ reasons why this transformation is needed.
 
 \definecolor{mathcommentcolor}{HTML}{0099FF}
 \newcommand\mathstate[1]{\veriloginline`//` \textcolor{mathcommentcolor}{#1}}
+\makeatletter
+\newcommand\mathstateln[2]{{\tiny #1 \quad}\my@name@mathstateln{#1}}
+\NewDocumentCommand \my@name@mathstateln { m }{%
+  \def\@currentlabelname{#1}%
+}
+\makeatother
 
 \newcommand\asgnblockingbefore{\Gamma}
 \newcommand\asgnblockingafter{\Gamma'}
@@ -1022,7 +1032,7 @@ reasons why this transformation is needed.
 \newcommand\asgnnonblockingafter{\Delta'}
 
 \newcommand\interstate[2]{{#2}^{#1}_{\mathrm r}}
-\newcommand\initialstate[1]{{#1}^{\mathrm I}_{\mathrm r}}
+\newcommand\initialstate[1]{{#1}^{0}_{\mathrm r}}
 
 \begin{figure}
   \centering
@@ -1030,66 +1040,100 @@ reasons why this transformation is needed.
     label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
     bb/.style={align=left, draw=white, fill=black!5}]
     \node[bb] (initial block) {
-      {\tiny 1 $\quad$}\mathstate{\texttt{assume:} $\at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto \varnothing; \texttt{r2} \mapsto
+      \veriloginline`state = 32'd2;`\\
+      \veriloginline`r2 = r4 * r6;`\\
+      \veriloginline`r8 = r2 + r10;`\\
+      \veriloginline`state = r3 ? 32'd3 : state;`};
+
+    \node[bb, right=1cm of
+    initial block] (transf block)
+    {\veriloginline`state <= 32'd2;`\\
+     \veriloginline`r2 <= r4 * r6;`\\
+     \veriloginline`r8 <= {r4 * r6} + r10;`\\
+     \veriloginline`state <= r3 ? 32'd3 : 32'd2;`};
+    \node[label] at (initial
+    block.north west) {\texttt{1}};
+    \node[label] at (transf block.north west)
+    {\texttt{1}};
+    %\draw[->,very thick] ($(initial block.east) + (0.5,0)$) --
+    %node [below, font=\footnotesize] {forward substitution}
+    %($(initial block.east) + (4,0)$);
+  \end{tikzpicture}
+  \caption{Simple forward substitution transformation together with the runtime
+    value of the blocking assignment association map ($\Gamma_{\mathrm r}$) and
+    the nonblocking assignment association map ($\Delta_{\mathrm r}$).\YH{TODO:
+      Need to find a better way to lay this out.}}%
+  \label{fig:hg:forward-substitution-simple}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=Latex,shorten >=1pt,
+    label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
+    bb/.style={align=left, draw=white, fill=black!5}]
+    \node[bb] (initial block) {
+      \mathstateln{1}\phantomsection\label{msln:1}\mathstate{\texttt{assume:} $\at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto \varnothing; \texttt{r2} \mapsto
           \varnothing; \texttt{r8} \mapsto \varnothing}$}\\[0.5em]
-      {\tiny 2 $\quad$}\veriloginline`state = 32'd2;`\\[0.5em]
-      {\tiny 3 $\quad$}\mathstate{$\interstate{1}{\asgnblockingbefore} = \at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto
+      \mathstateln{2}\phantomsection\label{msln:2}\veriloginline`state = 32'd2;`\\[0.5em]
+      \mathstateln{3}\phantomsection\label{msln:3}\mathstate{$\interstate{1}{\asgnblockingbefore} = \at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto
           \texttt{32'd2}}$}\\[0.5em]
-      {\tiny 4 $\quad$}\mathstate{$\interstate{1}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
-      {\tiny 5 $\quad$}\veriloginline`r2 = r4 * r6;`\\[0.5em]
-      {\tiny 6 $\quad$}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
-          \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
-          \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
-      {\tiny 7 $\quad$}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \interstate{1}{\asgnnonblockingbefore}$}\\[0.5em]
-      {\tiny 8 $\quad$}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
+      \mathstateln{4}\phantomsection\label{msln:4}\mathstate{$\interstate{1}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      \mathstateln{5}\phantomsection\label{msln:5}\veriloginline`r2 = r4 * r6;`\\[0.5em]
+      % {\tiny 6 $\quad$}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
+      %     \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+      %     \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
+      % {\tiny 7 $\quad$}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \interstate{1}{\asgnnonblockingbefore}$}\\[0.5em]
+      \mathstateln{6}\phantomsection\label{msln:6}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
           \at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
           \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
-      {\tiny 9 $\quad$}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
-      {\tiny 10 $\quad$}\veriloginline`r8 = r2 + r10;`\\[0.5em]
-      {\tiny 11 $\quad$}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
-          \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}} \mathbin{\texttt{+}}
-          \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
-      {\tiny 12 $\quad$}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \interstate{2}{\asgnnonblockingbefore}$}\\[0.5em]
-{\tiny 13 $\quad$}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
+      \mathstateln{7}\phantomsection\label{msln:7}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      \mathstateln{8}\phantomsection\label{msln:8}\veriloginline`r8 = r2 + r10;`\\[0.5em]
+      % {\tiny 11 $\quad$}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
+      %     \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}} \mathbin{\texttt{+}}
+      %     \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
+      % {\tiny 12 $\quad$}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \interstate{2}{\asgnnonblockingbefore}$}\\[0.5em]
+\mathstateln{9}\phantomsection\label{msln:9}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
           (\at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
           \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}) \mathbin{\texttt{+}}
           \at{\initialstate{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
-{\tiny 14 $\quad$}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
-      {\tiny 15 $\quad$}\veriloginline`state = r3 ? 32'd3 : state;`\\[0.5em]
-{\tiny 16 $\quad$}\mathstate{$\interstate{4}{\asgnblockingbefore} =
-  \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
-    \mternary{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{state}}}}$}\\[0.5em]
-{\tiny 17 $\quad$}\mathstate{$\interstate{4}{\asgnnonblockingbefore} = \interstate{3}{\asgnnonblockingbefore}$}\\[0.5em]
-{\tiny 18 $\quad$}\mathstate{$\interstate{4}{\asgnblockingbefore} =
+\mathstateln{10}\phantomsection\label{msln:10}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      \mathstateln{11}\phantomsection\label{msln:11}\veriloginline`state = r3 ? 32'd3 : state;`\\[0.5em]
+% {\tiny 16 $\quad$}\mathstate{$\interstate{4}{\asgnblockingbefore} =
+%   \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
+%     \mternary{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{state}}}}$}\\[0.5em]
+% {\tiny 17 $\quad$}\mathstate{$\interstate{4}{\asgnnonblockingbefore} = \interstate{3}{\asgnnonblockingbefore}$}\\[0.5em]
+\mathstateln{12}\phantomsection\label{msln:12}\mathstate{$\interstate{4}{\asgnblockingbefore} =
   \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
     \mternary{\at{\initialstate{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
-{\tiny 19 $\quad$}\mathstate{$\interstate{4}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}};
+\mathstateln{13}\phantomsection\label{msln:13}\mathstate{$\interstate{4}{\asgnnonblockingbefore} =
+  \initialstate{\asgnnonblockingbefore}$}};
+
     \node[bb, right=1cm of
     initial block] (transf block)
     {\veriloginline`state <= 32'd2;`\\[0.5em]
      \mathstate{$\interstate{1}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
      \mathstate{$\interstate{1}{\asgnnonblockingafter} = \at{\initialstate{\asgnnonblockingafter}}{\texttt{state} \mapsto \texttt{32'd2}}$}\\[0.5em]
      \veriloginline`r2 <= r4 * r6;`\\[0.5em]
-     \mathstate{$\interstate{2}{\asgnblockingafter} = \interstate{1}{\asgnblockingafter}$}\\[0.5em]
-     \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\interstate{1}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\interstate{1}{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
+     % \mathstate{$\interstate{2}{\asgnblockingafter} = \interstate{1}{\asgnblockingafter}$}\\[0.5em]
+     % \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\interstate{1}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\interstate{1}{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
      \mathstate{$\interstate{2}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
      \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
      \veriloginline`r8 <= {r4 * r6} + r10;`\\[0.5em]
-     \mathstate{$\interstate{3}{\asgnblockingafter} = \interstate{2}{\asgnblockingafter}$}\\[0.5em]
-     \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
-          (\at{\interstate{2}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
-          \at{\interstate{2}{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
-          \at{\interstate{2}{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
+     % \mathstate{$\interstate{3}{\asgnblockingafter} = \interstate{2}{\asgnblockingafter}$}\\[0.5em]
+     % \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
+     %      (\at{\interstate{2}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
+     %      \at{\interstate{2}{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
+     %      \at{\interstate{2}{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
      \mathstate{$\interstate{3}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
      \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
           (\at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
           \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
           \at{\initialstate{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
      \veriloginline`state <= r3 ? 32'd3 : 32'd2;`\\[0.5em]
-     \mathstate{$\interstate{4}{\asgnblockingafter} = \interstate{3}{\asgnblockingafter}$}\\[0.5em]
-\mathstate{$\interstate{4}{\asgnnonblockingafter} =
-  \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
-    \mternary{\at{\interstate{3}{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
+%      \mathstate{$\interstate{4}{\asgnblockingafter} = \interstate{3}{\asgnblockingafter}$}\\[0.5em]
+% \mathstate{$\interstate{4}{\asgnnonblockingafter} =
+%   \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
+%     \mternary{\at{\interstate{3}{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
      \mathstate{$\interstate{4}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
 \mathstate{$\interstate{4}{\asgnnonblockingafter} =
   \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
@@ -1227,8 +1271,8 @@ the expression substitution map $\substmap$.  The first invariant, described in
 \cref{def:in-substitution-map}, states that the evaluation of an expression in
 the substitution map $\substmap$ should correspond to the value associated with
 that register in the current execution of the block.  For example, in
-\cref{fig:hg:forward-substitution} after line 5, the substitution map would
-contain the entry:
+\cref{fig:hg:forward-substitution} after line~\nameref{msln:5}, the substitution
+map would contain the entry:
 $\at{\substmap}{\texttt{r2} \mapsto \at{\substmap}{\texttt{r4}}
   \mathbin{\texttt{*}} \at{\substmap}{\texttt{r6}}}$.  Executing this expression
 $\at{\substmap}{\texttt{r4}} \mathbin{\texttt{*}} \at{\substmap}{\texttt{r6}}$
@@ -1259,8 +1303,8 @@ i.e. $\at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}}$, which is the case.
 \Cref{def:hg:not-in-substitution-map} describes what the relationship is between
 the initial map and the current run time map is when a register is not in the
 expression substitution map.  For example, this would be the case for register
-\texttt{r2} before line 5.  In that case, \texttt{r2} is not in $\substmap$ and
-so
+\texttt{r2} before line~\nameref{msln:5}.  In that case, \texttt{r2} is not in
+$\substmap$ and so
 $\at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2}} =
 \at{\initialstate{\asgnblockingbefore}}{\texttt{r2}}$.
 

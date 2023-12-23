@@ -56,9 +56,9 @@ correctness theorem above as a forwards simulation result (following standard
 \compcert{} practice), which makes it easier to prove.  To prove this forward
 simulation, it suffices to prove forward simulations between each pair of
 consecutive intermediate languages, as these results can be composed to prove
-the correctness of the whole HLS tool.  The forward simulation from 3AC to HTL
-is stated in \cref{lemma:htl} (\cref{sec:proof:3ac_htl}), the forward simulation
-for the \gls{BRAM} insertion is shown in \cref{lemma:htl_ram}
+the correctness of the whole HLS tool.  The forward simulation from \rtl{} to
+\htl{} is stated in \cref{lemma:htl} (\cref{sec:proof:3ac_htl}), the forward
+simulation for the \gls{BRAM} insertion is shown in \cref{lemma:htl_ram}
 (\cref{sec:proof:ram_insertion}), then the forward simulation between HTL and
 Verilog is shown in \cref{lemma:verilog} (\cref{sec:proof:htl_verilog}), and
 finally, the proof that Verilog is deterministic is given in
@@ -68,34 +68,64 @@ finally, the proof that Verilog is deterministic is given in
 
 \YH{TODO: Add section on theory of dependently typed arrays.}
 
-\newcommand{\alwaysblock}{always-block}
-
 This section describes the Verilog semantics that was chosen for the target language, including the changes that were made to the semantics to make it a suitable HLS target.  The Verilog standard is quite large~\cite{06_ieee_stand_veril_hardw_descr_languag,05_ieee_stand_veril_regis_trans_level_synth}, but the syntax and semantics can be reduced to a small subset that \vericert{} needs to target.  This section  also describes how \vericert{}'s representation of memory differs from \compcert{}'s memory model.
 
-The Verilog semantics we use is ported to Coq from a semantics written in HOL4 by \textcite{lööw19_proof_trans_veril_devel_hol} and used to prove the translation from HOL4 to Verilog~\cite{lööw19_verif_compil_verif_proces}. % which was used to create a formal translation from a logic representation encoded in the HOL4~\cite{slind08_brief_overv_hol4} theorem prover into an equivalent Verilog design.
-This semantics is quite practical as it is restricted to a small subset of Verilog, which can nonetheless be used to model the hardware constructs required for HLS.  The main features that are excluded are continuous assignment and combinational \alwaysblock{}s; these are modelled in other semantics such as that by~\textcite{meredith10_veril}. %however, these are not necessarily needed, but require more complicated event queues and execution model.
+The Verilog semantics we use is ported to Coq from a semantics written in HOL4
+by \textcite{lööw19_proof_trans_veril_devel_hol} and used to prove the
+translation from HOL4 to
+Verilog~\cite{lööw19_verif_compil_verif_proces}. % which was used to create a formal translation from a logic representation encoded in the HOL4~\cite{slind08_brief_overv_hol4} theorem prover into an equivalent Verilog design.
+This semantics is quite practical as it is restricted to a small subset of
+Verilog, which can nonetheless be used to model the hardware constructs required
+for HLS.  The main features that are excluded are continuous assignment and
+combinational always-blocks; these are modelled in other semantics such as that
+by~\textcite{meredith10_veril}. %however, these are not necessarily needed, but require more complicated event queues and execution model.
 
-The semantics of Verilog differs from regular programming languages, as it is used to describe hardware directly, which is inherently parallel, rather than an algorithm, which is usually sequential.  The main construct in Verilog is the \alwaysblock{}.
-A module can contain multiple \alwaysblock{}s, all of which run in parallel.  These \alwaysblock{}s further contain statements such as if-statements or assignments to variables.  We support only \emph{synchronous} logic, which means that the \alwaysblock{} is triggered on (and only on) the positive or negative edge of a clock signal.
+The semantics of Verilog differs from regular programming languages, as it is
+used to describe hardware directly, which is inherently parallel, rather than an
+algorithm, which is usually sequential.  The main construct in Verilog is the
+always-block.  A module can contain multiple always-blocks, all of which run in
+parallel.  These always-blocks further contain statements such as if-statements
+or assignments to variables.  We support only \emph{synchronous} logic, which
+means that the always-block is triggered on (and only on) the positive or
+negative edge of a clock signal.
 %\NR{We should mention that variables cannot be driven by multiple \alwaysblock{}s, since one might get confused with data races when relating to concurrent processes in software.} \JW{Given the recent discussion on Teams, it seems to me that we perhaps don't need to mention here what happens if a variable is driven multiple times per clock cycle, especially since \vericert{} isn't ever going to do that.}
 
-The semantics combines the big-step and small-step styles. The overall execution of the hardware is described using a small-step semantics, with one small step per clock cycle; this is appropriate because hardware is routinely designed to run for an unlimited number of clock cycles and the big-step style is ill-suited to describing infinite executions. Then, within each clock cycle, a big-step semantics is used to execute all the statements.
-An example of a rule for executing an \alwaysblock{} that is triggered at the positive edge of the clock is shown below, where $\Sigma$ is the state of the registers in the module and $s$ is the statement inside the \alwaysblock{}:
+The semantics combines the big-step and small-step styles. The overall execution
+of the hardware is described using a small-step semantics, with one small step
+per clock cycle; this is appropriate because hardware is routinely designed to
+run for an unlimited number of clock cycles and the big-step style is ill-suited
+to describing infinite executions. Then, within each clock cycle, a big-step
+semantics is used to execute all the statements.  An example of a rule for
+executing an always-block that is triggered at the positive edge of the clock is
+shown below, where $\Sigma$ is the state of the registers in the module and $s$
+is the statement inside the always-block:
 
 \begin{equation*}
   \inferrule[Always]{(\Sigma, s)\downarrow_{\text{stmnt}} \Sigma'}{(\Sigma, \yhkeyword{always @(posedge clk) } s) \downarrow_{\text{always}^{+}} \Sigma'}
 \end{equation*}
 
-\noindent This rule says that assuming the statement $s$ in the \alwaysblock{} runs with state $\Sigma$ and produces the new state $\Sigma'$, the \alwaysblock{} will result in the same final state.  %Since only clocked \alwaysblock{} are supported, and one step in the semantics correspond to one clock cycle, it means that this rule is run once per clock cycle for each \alwaysblock{}.
+\noindent This rule says that assuming the statement $s$ in the always-block
+runs with state $\Sigma$ and produces the new state $\Sigma'$, the always-block
+will result in the same final
+state.  %Since only clocked \alwaysblock{} are supported, and one step in the semantics correspond to one clock cycle, it means that this rule is run once per clock cycle for each \alwaysblock{}.
 
-Two types of assignments are supported in \alwaysblock{}s: nonblocking and blocking assignment.  Nonblocking assignments all take effect simultaneously at the end of the clock cycle, %and atomically.
-while blocking assignments happen instantly so that later assignments in the clock cycle can pick them up.  To model both of these assignments, the state $\Sigma$ has to be split into two maps: $\Gamma$, which contains the current values of all variables and arrays, and $\Delta$, which contains the values that will be assigned at the end of the clock cycle. $\Sigma$ can therefore be defined as follows: $\Sigma = (\Gamma, \Delta)$.
-Nonblocking assignment can therefore be expressed as follows:
+Two types of assignments are supported in always-blocks: nonblocking and
+blocking assignment.  Nonblocking assignments all take effect simultaneously at
+the end of the clock cycle, %and atomically.
+while blocking assignments happen instantly so that later assignments in the
+clock cycle can pick them up.  To model both of these assignments, the state
+$\Sigma$ has to be split into two maps: $\Gamma$, which contains the current
+values of all variables and arrays, and $\Delta$, which contains the values that
+will be assigned at the end of the clock cycle. $\Sigma$ can therefore be
+defined as follows: $\Sigma = (\Gamma, \Delta)$.  Nonblocking assignment can
+therefore be expressed as follows:
 \begin{equation*}
   \inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}\\
 \end{equation*}
 
-\noindent where assuming that $\downarrow_{\text{expr}}$ evaluates an expression $e$ to a value $v$, the nonblocking assignment $d\ \yhkeyword{ <= } e$ updates the future state of the variable $d$ with value $v$.
+\noindent where assuming that $\downarrow_{\text{expr}}$ evaluates an expression
+$e$ to a value $v$, the nonblocking assignment $d\ \yhkeyword{ <= } e$ updates
+the future state of the variable $d$ with value $v$.
 
 Finally, the following rule dictates how the whole module runs in one clock cycle:
 \begin{equation*}
@@ -104,7 +134,14 @@ Finally, the following rule dictates how the whole module runs in one clock cycl
     \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule})
     \downarrow_{\text{program}} (\Gamma' \verilogmerge \Delta')}
 \end{equation*}
-where $\Gamma$ is the initial state of all the variables, $\epsilon$ is the empty map because the $\Delta$ map is assumed to be empty at the start of the clock cycle, and $\vec{m}$ is a list of variable declarations and \alwaysblock{}s that $\downarrow_{\text{module}}$ evaluates sequentially to obtain $(\Gamma', \Delta')$. The final state is obtained by merging these maps using the $//$ operator, which gives priority to the right-hand operand in a conflict. This rule ensures that the nonblocking assignments overwrite at the end of the clock cycle any blocking assignments made during the cycle.
+where $\Gamma$ is the initial state of all the variables, $\epsilon$ is the
+empty map because the $\Delta$ map is assumed to be empty at the start of the
+clock cycle, and $\vec{m}$ is a list of variable declarations and always-blocks
+that $\downarrow_{\text{module}}$ evaluates sequentially to obtain
+$(\Gamma', \Delta')$. The final state is obtained by merging these maps using
+the $//$ operator, which gives priority to the right-hand operand in a
+conflict. This rule ensures that the nonblocking assignments overwrite at the
+end of the clock cycle any blocking assignments made during the cycle.
 
 \subsection{Changes to the Semantics}
 
@@ -113,7 +150,17 @@ Five changes were made to the semantics proposed by
 target.
 
 \paragraph{Adding array support}
-The main change is the addition of support for arrays, which are needed to model \gls{BRAM} in Verilog.  \gls{BRAM} is needed to model the stack in C efficiently, without having to declare a variable for each possible stack location. % In the original semantics, RAMs (as well as inputs and outputs to the module) could be modelled using a function from variable names (strings) to values, which could be modified accordingly to model inputs to the module.  This is quite an abstract description of memory and can also be expressed as an array of bitvectors instead, which is the path we took. This requires the addition of array operators to the semantics and correct reasoning of loads and stores to the array in different \alwaysblock{}s simultaneously.
+The main change is the addition of support for arrays, which are needed to model
+\gls{BRAM} in Verilog.  \gls{BRAM} is needed to model the stack in C
+efficiently, without having to declare a variable for each possible stack
+location.
+% In the original semantics, RAMs (as well as inputs and outputs to the module)
+% could be modelled using a function from variable names (strings) to values,
+% which could be modified accordingly to model inputs to the module.  This is
+% quite an abstract description of memory and can also be expressed as an array
+% of bitvectors instead, which is the path we took. This requires the addition
+% of array operators to the semantics and correct reasoning of loads and stores
+% to the array in different \alwaysblock{}s simultaneously.
 Consider the following Verilog code:
 
 \begin{center}
@@ -123,22 +170,55 @@ always @(posedge clk) begin x[0] = 1; x[1] <= 1; end
 \end{minted}
 \end{center}
 
-which modifies one array element using blocking assignment and then a second using nonblocking assignment. If the existing semantics were used to update the array, then during the merge, the entire array \texttt{x} from the nonblocking association map would replace the entire array from the blocking association map.  This would replace \texttt{x[0]} with its original value and therefore behave incorrectly. Accordingly, we modified the maps so they record updates on a per-el\-em\-ent basis. Our state $\Gamma$ is therefore further split up into $\Gamma_{r}$ for instantaneous updates to variables, and $\Gamma_{a}$ for instantaneous updates to arrays ($\Gamma = (\Gamma_{r}, \Gamma_{a})$); $\Delta$ is split similarly ($\Delta = (\Delta_{r}, \Delta_{a})$). The merge function then ensures that only the modified indices get updated when $\Gamma_{a}$ is merged with the nonblocking map equivalent $\Delta_{a}$.
+which modifies one array element using blocking assignment and then a second
+using nonblocking assignment. If the existing semantics were used to update the
+array, then during the merge, the entire array \texttt{x} from the nonblocking
+association map would replace the entire array from the blocking association
+map.  This would replace \texttt{x[0]} with its original value and therefore
+behave incorrectly. Accordingly, we modified the maps so they record updates on
+a per-el\-em\-ent basis. Our state $\Gamma$ is therefore further split up into
+$\Gamma_{r}$ for instantaneous updates to variables, and $\Gamma_{a}$ for
+instantaneous updates to arrays ($\Gamma = (\Gamma_{r}, \Gamma_{a})$); $\Delta$
+is split similarly ($\Delta = (\Delta_{r}, \Delta_{a})$). The merge function
+then ensures that only the modified indices get updated when $\Gamma_{a}$ is
+merged with the nonblocking map equivalent $\Delta_{a}$.
 
 \paragraph{Adding negative edge support}
-To reason about circuits that execute on the negative edge of the clock (such as our \gls{BRAM} interface described in \cref{sec:algorithm:optimisation:ram}),  support for negative-edge-triggered \alwaysblock{}s was added to the semantics. This is shown in the modifications of the \textsc{Module} rule shown below:
+To reason about circuits that execute on the negative edge of the clock (such as
+our \gls{BRAM} interface described in \cref{sec:algorithm:optimisation:ram}),
+support for negative-edge-triggered always-blocks was added to the
+semantics. This is shown in the modifications of the \nameref{infer:module} rule
+shown below:
 
 \begin{equation*}
-  \inferrule[Module]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}
+  \inferrule[Module]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}\label{infer:module}
 \end{equation*}
 
-The main execution of the module $\downarrow_{\text{module}}$ is split into $\downarrow_{\text{module}^{+}}$ and $\downarrow_{\text{module}^{-}}$, which are rules that only execute \alwaysblock{}s triggered at the positive and at the negative edge respectively. The positive-edge-triggered \alwaysblock{}s are processed in the same way as in the original \textsc{Module} rule. The output maps $\Gamma'$ and $\Delta'$ are then merged and passed as the blocking assignments map into the negative edge execution, so that all the blocking and nonblocking assignments are present.  Finally, all the negative-edge-triggered \alwaysblock{}s are processed and merged to give the final state.
+The main execution of the module $\downarrow_{\text{module}}$ is split into
+$\downarrow_{\text{module}^{+}}$ and $\downarrow_{\text{module}^{-}}$, which are
+rules that only execute always-blocks triggered at the positive and at the
+negative edge respectively. The positive-edge-triggered always-blocks are
+processed in the same way as in the original \nameref{infer:module} rule. The
+output maps $\Gamma'$ and $\Delta'$ are then merged and passed as the blocking
+assignments map into the negative edge execution, so that all the blocking and
+nonblocking assignments are present.  Finally, all the negative-edge-triggered
+always-blocks are processed and merged to give the final state.
 
-\paragraph{Adding declarations} Explicit support for declaring inputs, outputs and internal variables was added to the semantics to make sure that the generated Verilog also contains the correct declarations.  This adds some guarantees to the generated Verilog and ensures that it synthesises and simulates correctly.
+\paragraph{Adding declarations} Explicit support for declaring inputs, outputs
+and internal variables was added to the semantics to make sure that the
+generated Verilog also contains the correct declarations.  This adds some
+guarantees to the generated Verilog and ensures that it synthesises and
+simulates correctly.
 
-\paragraph{Removing support for external inputs to modules} Support for receiving external inputs was removed from the semantics for simplicity, as these are not needed for an HLS target. The main module in Verilog models the main function in C, and since the inputs to a C function should not change during its execution, there is no need for external inputs for Verilog modules.
+\paragraph{Removing support for external inputs to modules} Support for
+receiving external inputs was removed from the semantics for simplicity, as
+these are not needed for an HLS target. The main module in Verilog models the
+main function in C, and since the inputs to a C function should not change
+during its execution, there is no need for external inputs for Verilog modules.
 
-\paragraph{Simplifying representation of bitvectors} Finally, we use 32-bit integers to represent bitvectors rather than arrays of booleans. This is because \vericert{} (currently) only supports types represented by 32 bits.
+\paragraph{Simplifying representation of bitvectors} Finally, we use 32-bit
+integers to represent bitvectors rather than arrays of booleans. This is because
+\vericert{} (currently) only supports types represented by 32 bits.
 
 \subsection{Integrating the Verilog Semantics into \compcert{}'s Model}
 \label{sec:verilog:integrating}
@@ -146,55 +226,115 @@ The main execution of the module $\downarrow_{\text{module}}$ is split into $\do
 \begin{figure*}
   \centering
   \begin{minipage}{1.0\linewidth}
-    \begin{gather*}
-      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\text{program}} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\sigma]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\sigma]\ \ \Gamma_r'\ \Gamma_a'}\\
+    \begin{mathpar}
+      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\text{program}} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\sigma]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\sigma]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
       %
-      \inferrule[Finish]{\Gamma_r[\mathit{fin}] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ \sigma\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \mathit{ret}]}\\
+      \inferrule[Finish]{\Gamma_r[\mathit{fin}] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ \sigma\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \mathit{ret}]}\label{infer:finishstate}\and
       %
-      \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\sigma \mapsto n, \mathit{fin} \mapsto 0, \mathit{rst} \mapsto 0])\ \epsilon}\\
+      \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\sigma \mapsto n, \mathit{fin} \mapsto 0, \mathit{rst} \mapsto 0])\ \epsilon}\label{infer:callstate}\and
       %
-      \inferrule[Return]{ }{\yhconstant{Returnstate}\ (\yhconstant{Stackframe}\ r\ m\ \mathit{pc}\ \Gamma_r\ \Gamma_a :: \mathit{sf})\ v \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \mathit{pc}\ (\Gamma_{r} [ \sigma \mapsto \mathit{pc}, r \mapsto v ])\ \Gamma_{a}}
-    \end{gather*}
+      \inferrule[Return]{ }{\yhconstant{Returnstate}\ (\yhconstant{Stackframe}\ r\ m\ \mathit{pc}\ \Gamma_r\ \Gamma_a :: \mathit{sf})\ v \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \mathit{pc}\ (\Gamma_{r} [ \sigma \mapsto \mathit{pc}, r \mapsto v ])\ \Gamma_{a}}\label{infer:returnstate}
+    \end{mathpar}
   \end{minipage}
   \caption{Top-level small-step semantics for Verilog modules in \compcert{}'s computational framework.}%
   \label{fig:inference_module}
 \end{figure*}
 
-The \compcert{} computation model defines a set of states through which execution passes. In this subsection, we explain how we extend our Verilog semantics with four special-purpose  registers in order to integrate it into \compcert{}.
+The \compcert{} computation model defines a set of states through which
+execution passes. In this subsection, we explain how we extend our Verilog
+semantics with four special-purpose registers in order to integrate it into
+\compcert{}.
 
 \compcert{} executions pass through three main states:
 \begin{description}
-  \item[\texttt{State} $\mathit{sf}$ $m$ $v$ $\Gamma_{r}$ $\Gamma_{a}$] The main state when executing a function, with stack frame $\mathit{sf}$, current module $m$, current state $v$ and variable states $\Gamma_{r}$ and $\Gamma_{a}$.
-  \item[\texttt{Callstate} $\mathit{sf}$ $m$ $\vec{r}$] The state that is reached when a function is called, with the current stack frame $\mathit{sf}$, current module $m$ and arguments $\vec{r}$.
-  \item[\texttt{Returnstate} $\mathit{sf}$ $v$] The state that is reached when a function returns back to the caller, with stack frame $\mathit{sf}$ and return value $v$.
+\item[\texttt{State} $\mathit{sf}$ $m$ $v$ $\Gamma_{r}$ $\Gamma_{a}$] The main
+  state when executing a function, with stack frame $\mathit{sf}$, current
+  module $m$, current state $v$ and variable states $\Gamma_{r}$ and
+  $\Gamma_{a}$.
+  \item[\texttt{Callstate} $\mathit{sf}$ $m$ $\vec{r}$] The state that is
+    reached when a function is called, with the current stack frame
+    $\mathit{sf}$, current module $m$ and arguments $\vec{r}$.
+  \item[\texttt{Returnstate} $\mathit{sf}$ $v$] The state that is reached when a
+    function returns back to the caller, with stack frame $\mathit{sf}$ and
+    return value $v$.
 \end{description}
 
-To support this computational model, we extend the Verilog module we generate with the following four registers and a \gls{BRAM} block:
+To support this computational model, we extend the Verilog module we generate
+with the following four registers and a \gls{BRAM} block:
 
 \begin{description}
-  \item[program counter] The program counter can be modelled using a register that keeps track of the state, denoted as $\sigma$.
-  \item[function entry point] When a function is called, the entry point denotes the first instruction that will be executed. This can be modelled using a reset signal that sets the state accordingly, denoted as $\mathit{rst}$.
-  \item[return value] The return value can be modelled by setting a finished flag to 1 when the result is ready, and putting the result into a 32-bit output register. These are denoted as $\mathit{fin}$ and $\mathit{ret}$ respectively.
+\item[program counter] The program counter can be modelled using a register that
+  keeps track of the state, denoted as $\sigma$.
+  \item[function entry point] When a function is called, the entry point denotes
+    the first instruction that will be executed. This can be modelled using a
+    reset signal that sets the state accordingly, denoted as $\mathit{rst}$.
+  \item[return value] The return value can be modelled by setting a finished
+    flag to 1 when the result is ready, and putting the result into a 32-bit
+    output register. These are denoted as $\mathit{fin}$ and $\mathit{ret}$
+    respectively.
 %\JW{Is there a mismatch between `ret' in the figure and `rtrn' in the text?}
-  \item[stack] The function stack can be modelled as a \gls{BRAM} block, which is implemented using an array in the module, and denoted as $\mathit{stk}$.
+  \item[stack] The function stack can be modelled as a \gls{BRAM} block, which
+    is implemented using an array in the module, and denoted as $\mathit{stk}$.
 %\JW{Is there a mismatch between `st' in the figure and `stk' in the text?}\YH{It was actually between $\Gamma_{a}$ and \mathit{stk}.  The \mathit{st} should have been $\sigma$.}
 \end{description}
 
-\Cref{fig:inference_module} shows the inference rules for moving between the computational states.  The first, \textsc{Step}, is the normal rule of execution.  It defines one step in the \texttt{State} state, assuming that the module is not being reset, that the finish state has not been reached yet, that the current and next state are $v$ and $v'$, and that the module runs from state $\Gamma$ to $\Gamma'$ using the \textsc{Step} rule.  The \textsc{Finish} rule returns the final value of running the module and is applied when the $\mathit{fin}$ register is set; the return value is then taken from the $\mathit{ret}$ register.
+\Cref{fig:inference_module} shows the inference rules for moving between the
+computational states.  The first, \nameref{infer:stepstate}, is the normal rule
+of execution.  It defines one step in the \texttt{State} state, assuming that
+the module is not being reset, that the finish state has not been reached yet,
+that the current and next state are $v$ and $v'$, and that the module runs from
+state $\Gamma$ to $\Gamma'$ using the \nameref{infer:stepstate} rule.  The
+\nameref{infer:finishstate} rule returns the final value of running the module
+and is applied when the $\mathit{fin}$ register is set; the return value is then
+taken from the $\mathit{ret}$ register.
 
-Note that there is no step from \texttt{State} to \texttt{Callstate}; this is because function calls are not supported, and it is therefore impossible in our semantics ever to reach a \texttt{Callstate} except for the initial call to main. So the \textsc{Call} rule is only used at the very beginning of execution; likewise, the \textsc{Return} rule is only matched for the final return value from the main function.
-Therefore, in addition to the rules shown in \cref{fig:inference_module}, an initial state and final state need to be defined:
+Note that there is no step from \texttt{State} to \texttt{Callstate}; this is
+because function calls are not supported, and it is therefore impossible in our
+semantics ever to reach a \texttt{Callstate} except for the initial call to
+main. So the \nameref{infer:callstate} rule is only used at the very beginning
+of execution; likewise, the \nameref{infer:returnstate} rule is only matched for
+the final return value from the main function.  Therefore, in addition to the
+rules shown in \cref{fig:inference_module}, an initial state and final state
+need to be defined:
 
-\begin{gather*}
-  \inferrule[Initial]{\yhfunction{is\_internal}\ P.\texttt{main}}{\yhfunction{initial\_state}\ (\yhconstant{Callstate}\ []\ P.\texttt{main}\ [])}\qquad
-  \inferrule[Final]{ }{\yhfunction{final\_state}\ (\yhconstant{Returnstate}\ []\ n)\ n}
-\end{gather*}
+\begin{mathpar}
+  \inferrule[Initial]{\yhfunction{is\_internal}\
+    P.\texttt{main}}{\yhfunction{initial\_state}\ (\yhconstant{Callstate}\ []\
+    P.\texttt{main}\ [])}%
+  \label{infer:initialstate}
+  \and
+  \inferrule[Final]{ }{\yhfunction{final\_state}\ (\yhconstant{Returnstate}\ []\
+    n)\ n}%
+  \label{infer:finalstate}
+\end{mathpar}
 
-\noindent where the initial state is the \texttt{Callstate} with an empty stack frame and no arguments for the \texttt{main} function of program $P$, where this \texttt{main} function needs to be in the current translation unit.  The final state results in the program output of value $n$ when reaching a \texttt{Returnstate} with an empty stack frame.
+\noindent where the initial state is the \texttt{Callstate} with an empty stack
+frame and no arguments for the \texttt{main} function of program $P$, where this
+\texttt{main} function needs to be in the current translation unit.  The final
+state results in the program output of value $n$ when reaching a
+\texttt{Returnstate} with an empty stack frame.
 
 \subsection{Memory Model}\label{sec:verilog:memory}
 
-The Verilog semantics do not define a memory model for Verilog, as this is not needed for a hardware description language.  There is no preexisting architecture that Verilog will produce; it can describe any memory layout that is needed.  Instead of having specific semantics for memory, the semantics only needs to support the language features that can produce these different memory layouts, these being Verilog arrays.  We therefore define semantics for updating Verilog arrays using blocking and nonblocking assignment.  We then have to prove that the C memory model that \compcert{} uses matches with the interpretation of arrays used in Verilog.  The \compcert{} memory model is infinite, whereas our representation of arrays in Verilog is inherently finite.  There have already been efforts to define a general finite memory model for all intermediate languages in \compcert{}, such as \compcert{}\-S~\cite{besson18_compc} or \compcert{}-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages intact and translate to a more concrete finite memory model in the back end, such as in \compcert{}\-ELF~\cite{wang20_compc}.  We also define such a translation from \compcert{}'s standard infinite memory model to finite arrays that can be represented in Verilog.  There is therefore no more notion of an abstract memory model and all the interactions to memory are encoded in the hardware itself.
+The Verilog semantics do not define a memory model for Verilog, as this is not
+needed for a hardware description language.  There is no preexisting
+architecture that Verilog will produce; it can describe any memory layout that
+is needed.  Instead of having specific semantics for memory, the semantics only
+needs to support the language features that can produce these different memory
+layouts, these being Verilog arrays.  We therefore define semantics for updating
+Verilog arrays using blocking and nonblocking assignment.  We then have to prove
+that the C memory model that \compcert{} uses matches with the interpretation of
+arrays used in Verilog.  The \compcert{} memory model is infinite, whereas our
+representation of arrays in Verilog is inherently finite.  There have already
+been efforts to define a general finite memory model for all intermediate
+languages in \compcert{}, such as \compcert{}\-S~\cite{besson18_compc} or
+\compcert{}-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages
+intact and translate to a more concrete finite memory model in the back end,
+such as in \compcert{}\-ELF~\cite{wang20_compc}.  We also define such a
+translation from \compcert{}'s standard infinite memory model to finite arrays
+that can be represented in Verilog.  There is therefore no more notion of an
+abstract memory model and all the interactions to memory are encoded in the
+hardware itself.
 
 %\JW{I'm not quite sure I understand. Let me check: Are you saying that previous work has shown how all the existing CompCert passes can be adapted from an infinite to a finite memory model, but what we're doing is leaving the default (infinite) memory model for the CompCert front end, and just converting from an infinite memory model to a finite memory model when we go from 3AC to HTL?}\YH{Yes exactly, most papers changed the whole memory model to thread through properties that were then needed in the back end, but we currently don't need to do that.  I need to double check though for CompCertELF, it doesn't actually seem to be the case.  Will edit this section later.}
 
@@ -270,7 +410,9 @@ The Verilog semantics do not define a memory model for Verilog, as this is not n
     \node at (9.5,-4.7) {\small \texttt{stack[0] <= 0xDEADBEEF;}};
   \end{tikzpicture}
   %\Description{\compcert{}'s memory model is translated into a more concrete memory model based on Verilog arrays.  Two association maps are therefore needed to keep track of the blocking and nonblocking assignments.}
-  \caption{Change in the memory model during the translation of 3AC into HTL.  The state of the memories in each case is right after the execution of the store to memory.}\label{fig:memory_model_transl}
+  \caption{Change in the memory model during the translation of \rtl{} into
+    \htl{}.  The state of the memories in each case is right after the execution
+    of the store to memory.}\label{fig:memory_model_transl}
 \end{figure}
 
 %\JW{It's not completely clear what the relationship is between your work and those works. The use of `only' suggests that you've re-done a subset of work that has already been done -- is that the right impression?}\YH{Hopefully that's more clear.}
