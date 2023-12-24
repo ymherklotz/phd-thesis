@@ -592,10 +592,10 @@ assumptions that need to be made about the \rtlsubpar{} and \htl{} code for a
 pair of states to match are:
 
 \begin{itemize}
-\item The \rtlsubpar{} register file $R$ needs to be `less defined' than the \htl{} register
-  map $\Gamma_{r}$ (written $R \le \Gamma_{r}$). This means that all entries
-  should be equal to each other, unless a value in $R$ is undefined, in which
-  case any value can match it.
+\item The \rtlsubpar{} register file $R$ needs to be \enquote{less defined} than
+  the \htl{} register map $\Gamma_{r}$ (written $R \le \Gamma_{r}$). This means
+  that all entries should be equal to each other, unless a value in $R$ is
+  undefined, in which case any value can match it.
 \item There is a single allocation that was performed in \rtlsubpar{}, with the
   size of the allocation being equal to the stack size of the \texttt{main}
   function, which was performed when the \texttt{main} function was initially

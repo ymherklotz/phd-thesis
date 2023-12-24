@@ -11,10 +11,10 @@ simulated, then $C$ will have the same behaviour $B$. $\mathit{Safe}(C)$ means
 all observable behaviours of $C$ are safe, which can be defined as
 $\forall B,\ C \Downarrow B \implies B \in \texttt{Safe}$.  A behaviour is in
 \texttt{Safe} if it is either a final state (in the case of convergence) or
-divergent, but it cannot `go wrong'. (This means that the source program must
-not contain undefined behaviour.) In \compcert{}, a behaviour is also associated
-with a trace of I/O events, but since external function calls are not supported
-in \vericert{}, this trace will always be empty.
+divergent, but it cannot \enquote{go wrong}. (This means that the source program
+must not contain undefined behaviour.) In \compcert{}, a behaviour is also
+associated with a trace of I/O events, but since external function calls are not
+supported in \vericert{}, this trace will always be empty.
 
 \begin{theorem}
   Whenever the translation from $C$ succeeds and produces Verilog $V$, and all
@@ -44,9 +44,9 @@ the semantics of Verilog and Clight.  Note that the compiler is allowed to fail
 and not produce any output; the correctness theorem only applies when the
 translation succeeds.
 
-How can we prove this theorem? First, note that the theorem is a `backwards
-simulation' result (every target behaviour must also be a source behaviour),
-following the terminology used in the \compcert{}
+How can we prove this theorem? First, note that the theorem is a
+\enquote{backwards simulation} result (every target behaviour must also be a
+source behaviour), following the terminology used in the \compcert{}
 literature~\cite{leroy09_formal_verif_realis_compil}. The reverse direction
 (every source behaviour must also be a target behaviour) is not demanded because
 compilers are permitted to resolve any non-determinism present in their source

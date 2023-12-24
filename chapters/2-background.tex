@@ -1143,32 +1143,6 @@ intermediate language is used to get closer to the assembly language of the
 architecture, performing operations such as register allocation and making sure
 that the stack variables are correctly aligned.
 
-\subsection{CompCertSSA}%
-\label{sec:bg:compcertssa}
-
-\index{CompCertSSA}CompCertSSA is an extension of CompCert with an additional
-\gls{SSA} intermediate language.  This language enforces \gls{SSA} properties
-and therefore allows for many convenient proofs about optimisations performed on
-this intermediate language, as many assumptions about variables can be made when
-these are encountered.  The main interesting property that arises from using
-\gls{SSA} is the \emph{equational lemma}, stating that given a variable, if it
-was assigned by an operation that does not depend on memory, then loading the
-destination value of that variable is the same as recomputing the value of that
-variable with the current context.
-
-Given a well formed SSA program $p$, a reachable state
-$\Sigma\ s\ f\ \sigma\ R\ M$, a memory independent operation which was defined
-at a node $d$ as $\mono{Iop}\ \mathit{op}\ \vec{a}\ x\ n$ assuming that $\sigma$
-is dominated by $d$ ($p \le_{d} d$), then the following equation holds:
-
-\begin{equation}\label{eq:equational-lemma}
-  \left(\mathit{op}, \vec{a}\right) \Downarrow (R, M) = \left\lfloor R[x] \right\rfloor
-\end{equation}
-
-This is an important lemma as it essentially allows one to know the value of a
-register as long as one knows that its assignment dominates the current node and
-one knows what expressions it was assigned.
-
 \subsection{Related Work to Scheduling}%
 \label{sec:related-work}
 
@@ -1180,44 +1154,44 @@ our main points of similarity and difference.
 \textcite{tristan08_formal_verif_trans_valid} were the first to propose adding
 scheduling to a verified compiler, and we adopt their method for validating
 schedules -- running symbolic execution before and after scheduling and
-comparing the resultant symbolic states. Their scheduler only \emph{reorders}
+comparing the resultant symbolic states.  Their scheduler only \emph{reorders}
 instructions, so syntactic equality suffices for comparing symbolic states,
 whereas our scheduler can also \emph{modify} instructions (by manipulating
-predicates). This means that our state comparisons are more involved, and we
+predicates).  This means that our state comparisons are more involved, and we
 turn to a SAT solver to help resolve them
-(\cref{sec:value_summaries}). \citeauthor{tristan08_formal_verif_trans_valid}
+(\cref{sec:value_summaries}).  \citeauthor{tristan08_formal_verif_trans_valid}
 also devised the use of constraints to prevent the scheduler introducing
 undefined behaviour; we adopt this technique too, taking care to extend it to
 handle predicates in such a way that valid schedules can still be validated
-(\cref{sec:handling-discarded-expressions}). We remark that a direct empirical
+(\cref{sec:handling-discarded-expressions}).  We remark that a direct empirical
 comparison with \citeauthor{tristan08_formal_verif_trans_valid}'s work is not
 feasible because their method was implemented for an old version of CompCert and
 was not incorporated into its main branch.
 
 \textcite{six22_formal_verif_super_sched} formalise superblock scheduling, which
 is a restricted form of trace scheduling that is well-suited for VLIW
-processors. Hyperblock scheduling is more general than superblock scheduling and
-is well-suited to our application domain,
-HLS. \citeauthor{six22_formal_verif_super_sched}'s scheduler reorders
-instructions, and also combines them where it is advantageous to do so, so
-comparing symbolic states is more involved than it was for
+processors.  Hyperblock scheduling is more general than superblock scheduling
+and is well-suited to our application domain, HLS.\@
+\citeauthor{six22_formal_verif_super_sched}'s scheduler reorders instructions,
+and also combines them where it is advantageous to do so, so comparing symbolic
+states is more involved than it was for
 \citeauthor{tristan08_formal_verif_trans_valid}, but it still does not require a
-SAT solver because there are no predicates to reason about. A direct empirical
+SAT solver because there are no predicates to reason about.  A direct empirical
 comparison between our scheduler and
 \citeauthor{six22_formal_verif_super_sched}'s is difficult because
 \citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
 of CompCert called CompCertKVX.
 
 Outside of the realm of mechanised proof, most HLS tools implement some form of
-static scheduling. For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
+static scheduling.  For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
 LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls} and
 Bambu~\cite[line~304]{ferrandi21_bambu} all employ SDC-based hyperblock
-scheduling. Other HLS tools, such as
+scheduling.  Other HLS tools, such as
 Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
-until runtime. It is notable that these unverified tools tend towards fewer,
-larger passes, where several optimisations are packed into `scheduling'. This
-minimises the number of times the solver needs to be invoked, and gives it the
-best chance of finding a global optimum. Verified tools such as CompCert and
+until runtime.  It is notable that these unverified tools tend towards fewer,
+larger passes, where several optimisations are packed into \enquote{scheduling}.
+This minimises the number of times the solver needs to be invoked, and gives it
+the best chance of finding a global optimum. Verified tools such as CompCert and
 Vericert, on the other hand, tend towards more, smaller passes that are
 individually feasible to prove correct.
 

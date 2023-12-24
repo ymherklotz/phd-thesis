@@ -44,10 +44,10 @@ within a basic block. This means they squander opportunities for performance
 improvements that could be obtained by reordering instructions across
 branches. A more powerful alternative is \emph{trace
   scheduling}~\cite{ellis85_bulld, fisher81_trace_sched}, which works by
-creating paths (or `traces') through the code, across basic-block boundaries,
-and then reordering the instructions within those paths. In its most general
-form, trace scheduling is considered infeasible on large programs, but two
-special cases called \emph{superblock scheduling}~\cite{hwu93_super} and
+creating paths (or \enquote{traces}) through the code, across basic-block
+boundaries, and then reordering the instructions within those paths. In its most
+general form, trace scheduling is considered infeasible on large programs, but
+two special cases called \emph{superblock scheduling}~\cite{hwu93_super} and
 \emph{hyperblock
   scheduling}~\cite{mahlke92_effec_compil_suppor_predic_execut_using_hyper} have
 been developed, both of which impose restrictions on the form of traces in order

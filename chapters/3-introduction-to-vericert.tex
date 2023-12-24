@@ -14,19 +14,19 @@
 C was chosen as the source language as it remains the most common source
 language amongst production-quality HLS tools~\cite{canis13_l,
   amd23_vitis_high_synth, intel20_hsc, pilato13_bambu}. This, in turn, may be
-because it is ``[t]he starting point for the vast majority of algorithms to be
-implemented in hardware''~\cite{gajski10_what_hls}, lending a degree of
+because it is \enquote{[t]he starting point for the vast majority of algorithms
+  to be implemented in hardware}~\cite{gajski10_what_hls}, lending a degree of
 practicality.  The availability of
 \compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid
 basis for formally verified C compilation.
 %Since a lot of existing code for HLS is written in C, supporting C as an input language, rather than a custom domain-specific language, means that \vericert{} is more practical.
 %An alternative was to support LLVM IR as an input language, however, to get a full work flow from a higher level language to hardware, a front end for that language to LLVM IR would also have to be verified. \JW{Maybe save LLVM for the `Choice of implementation language'?}
-We considered Bluespec~\cite{nikhil04_bsv}, but decided that although it ``can
-be classed as a high-level language''~\cite{greaves19_resear_note}, it is too
-hardware-oriented to be suitable for traditional HLS.  We also considered using
-a language with built-in parallel constructs that map well to parallel hardware,
-such as occam~\cite{page91_compil_occam}, Spatial~\cite{koeplinger18_s} or
-Scala~\cite{bachrach12_chisel}.
+We considered Bluespec~\cite{nikhil04_bsv}, but decided that although it
+\enquote{can be classed as a high-level language}~\cite{greaves19_resear_note},
+it is too hardware-oriented to be suitable for traditional HLS.  We also
+considered using a language with built-in parallel constructs that map well to
+parallel hardware, such as occam~\cite{page91_compil_occam},
+Spatial~\cite{koeplinger18_s} or Scala~\cite{bachrach12_chisel}.
 % However, this would not qualify as being HLS due to the manual parallelism that would have to be performed. \JW{I don't think the presence of parallelism stops it being proper HLS.}
 %\JP{I think I agree with Yann here, but it could be worded better. At any rate not many people have experience writing what is essentially syntactic sugar over a process calculus.}
 %\JW{I mean: there are plenty of software languages that involve parallel constructs. Anyway, perhaps we can just dismiss occam for being too obscure.}

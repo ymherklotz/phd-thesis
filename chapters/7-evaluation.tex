@@ -80,12 +80,26 @@ To answer this, \cref{fig:list-against-hyper-scheduling} measures the hardware p
 In terms of area, we see that \VericertList{} leads to the smallest hardware designs. This can be attributed to the downstream logic synthesis tool being able to save area by optimising chained operations, such as multiply--accumulate, while not having to handle the predicates that are introduced with \VericertHyper{}.
 
 \paragraph{Answering RQ3}
-To assess how \VericertHyper{} fares against unverified HLS tools, we compare it against the state-of-the-art open-source HLS tool Bambu~\cite[]{ferrandi21_bambu}. We use Bambu in two modes: one where all default optimisations are enabled (\BambuDefault{}), and one where as many optimisations as possible are disabled (\BambuNoOpt{}). Note that several `optimisations' are built into Bambu and cannot be disabled, such as list scheduling and loop flattening.
+To assess how \VericertHyper{} fares against unverified HLS tools, we compare it
+against the state-of-the-art open-source HLS tool
+Bambu~\cite[]{ferrandi21_bambu}. We use Bambu in two modes: one where all
+default optimisations are enabled (\BambuDefault{}), and one where as many
+optimisations as possible are disabled (\BambuNoOpt{}). Note that several
+\enquote{optimisations} are built into Bambu and cannot be disabled, such as
+list scheduling and loop flattening.
 
 All the bars in \cref{fig:list-against-hyper-scheduling} are relative to \BambuDefault. The pink bars show \BambuNoOpt. We see that although \VericertHyper{} is well behind \BambuDefault{} (its designs require 3$\times$ the cycle count), it performs comparably to \BambuNoOpt{} (1.04$\times$ the cycle count), which is encouraging because \VericertHyper{} and \BambuNoOpt{} have similar feature sets.
 
 \paragraph{Answering RQ4}
-To assess whether \VericertHyper{} has acceptable compilation times, we also compare it against Bambu.  Compilation times did not deviate for Bambu, all of them being around 3s mainly due to long startup costs. \VericertHyper{} compiled each benchmark in 0.9s, also without much variation, showing that verification was not overly costly.  As for whether our design decisions led to these compilation times: we remark that if we disable the `final-state predicates' innovation that we introduced in \cref{sec:thirdattempt}, none of the benchmarks compile within a few minutes and eventually the machine runs out of memory.
+To assess whether \VericertHyper{} has acceptable compilation times, we also
+compare it against Bambu.  Compilation times did not deviate for Bambu, all of
+them being around 3s mainly due to long startup costs. \VericertHyper{} compiled
+each benchmark in 0.9s, also without much variation, showing that verification
+was not overly costly.  As for whether our design decisions led to these
+compilation times: we remark that if we disable the \enquote{final-state
+  predicates} innovation that we introduced in \cref{sec:thirdattempt}, none of
+the benchmarks compile within a few minutes and eventually the machine runs out
+of memory.
 
 % \Cref{fig:list-against-hyper-scheduling} shows the final results relative to the base version of Vericert.  First, the relative cycle counts between each tool shows that list scheduling has 0.59$\times$ the number of cycles compared to base Vericert and hyperblock scheduling has 0.56$\times$ the number of cycles compared to base Vericert, showing that scheduling instructions provides a large improvement compared to the total number of cycles of base Vericert.  Bambu with optimisations turned-off has around 0.42$\times$ the number of cycles, and with optimisations has 0.14$\times$ the number of cycles, taking drastically fewer cycles.  One outlier here is the jacobi-1d benchmark, where only optimised Bambu finds a way to reduce the number of cycles.  This is because it is a very small benchmark with a single loop, which cannot be optimised by the scheduling algorithms and requires more advanced loop optimisations such as loop pipelining.
 

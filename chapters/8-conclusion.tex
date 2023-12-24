@@ -107,15 +107,15 @@ the load and store instructions.  These were tedious to prove correct because of
 the substantial difference between the memory models used, and the need to prove
 properties such as stores outside of the allocated memory being undefined, so
 that a finite array could be used. In addition to that, since pointers in HTL
-and Verilog are represented as integers, instead of as a separate `pointer' type
-like in the \compcert{} semantics, it was painful to reason about them.  Many
-new theorems had to be proven about them in \vericert{} to prove the conversion
-from pointer to integer.  Moreover, the second-largest proof of the correct
-\gls{BRAM} generation includes many proofs about the extensional equality of
-array operations, such as merging arrays with different assignments.  As the
-negative edge implies that two merges take place every clock cycle, the proofs
-about the equality of the contents in memory and in the merged arrays become
-more tedious too.
+and Verilog are represented as integers, instead of as a separate
+\enquote{pointer} type like in the \compcert{} semantics, it was painful to
+reason about them.  Many new theorems had to be proven about them in \vericert{}
+to prove the conversion from pointer to integer.  Moreover, the second-largest
+proof of the correct \gls{BRAM} generation includes many proofs about the
+extensional equality of array operations, such as merging arrays with different
+assignments.  As the negative edge implies that two merges take place every
+clock cycle, the proofs about the equality of the contents in memory and in the
+merged arrays become more tedious too.
 
 Looking at the trusted computing base of \vericert{}, the Verilog semantics is
 431 lines of code.  This and the Clight semantics from \compcert{} are the only
