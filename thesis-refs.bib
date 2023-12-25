@@ -227,6 +227,21 @@ and Rosu, Grigore",
 	year = {2018}
 }
 
+@ARTICLE{biesenack93_siemen_callas,
+	author = {Biesenack, J. and Koster, M. and Langmaier, A. and Ledeux, S. and Marz, S. and Payer, M. and Pilsl, M. and Rumler, S. and Soukup, H. and Wehn, N. and Duzy, P.},
+	journal = {IEEE Transactions on Very Large Scale Integration (VLSI) Systems},
+	title = {The Siemens high-level synthesis system CALLAS},
+	year = {1993},
+	volume = {1},
+	number = {3},
+	pages = {244-253},
+	abstract = {In this paper we present the Siemens high-level synthesis system CALLAS and describe its design methodology and synthesis strategy. It supports the synthesis of control-dominated applications and uses a VHDL subset for the algorithmic specification. Its main feature can be characterized as "What you simulate is what you synthesize." This principle permits a validation of the synthesis results by simulation or even formal verification. CALLAS has been successfully applied on real designs which were implemented in silicon. These examples demonstrate that CALLAS fulfils the constraints and objectives of a hardware designer. The circuits are comparable in quality to results achieved by synthesis starting at the register-transfer-level.<>},
+	keywords = {},
+	doi = {10.1109/92.238438},
+	ISSN = {1557-9999},
+	month = {Sep.}
+}
+
 @inproceedings{blazy05_formal_verif_memor_model_c,
 	abstract = {This paper presents a formal verification with the Coq proof assistant of a memory model for C-like imperative languages. This model defines the memory layout and the operations that manage the memory. The model has been specified at two levels of abstraction and implemented as part of an ongoing certification in Coq of a moderately-optimising C compiler. Many properties of the memory have been verified in the specification. They facilitate the definition of precise formal semantics of C pointers. A certified OCaml code implementing the memory model has been automatically extracted from the specifications.},
 	author = {Blazy, Sandrine and Leroy, Xavier},
@@ -482,6 +497,18 @@ and Philippou, Anna",
 	pages = {1--14},
 	title = {Verification of Scheduling of Conditional Behaviors in High-Level Synthesis},
 	year = {2020}
+}
+
+@inproceedings{clarke03_behav_c_veril,
+	abstract = {We present an algorithm that checks behavioral consistency between an ANSI-C program and a circuit given in Verilog using Bounded Model Checking. Both the circuit and the program are unwound and translated into a formula that represents behavioral consistency. The formula is then checked using a SAT solver. We are able to translate C programs that include side effects, pointers, dynamic memory allocation, and loops with conditions that cannot be evaluated statically. We describe experimental results on various reactive circuits and programs, including a small processor given in Verilog and its Instruction Set Architecture given in ANSI-C.},
+	author = {Clarke, E. and Kroening, D. and Yorav, K.},
+	booktitle = {Proceedings 2003. Design Automation Conference (IEEE Cat. No.03CH37451)},
+	doi = {10.1145/775832.775928},
+	keywords = {bounded model checking,high-level synthesis,translation validation,verilog,verification},
+	month = jun,
+	pages = {368--371},
+	title = {Behavioral consistency of C and Verilog programs using bounded model checking},
+	year = {2003}
 }
 
 @inproceedings{cong06_sdc,
@@ -1272,6 +1299,21 @@ and Voronkov, Andrei",
 	year = {2019}
 }
 
+@inproceedings{lööw21_lutsig,
+	abstract = {We report on a new verified Verilog compiler called Lutsig. Lutsig currently targets (a class of) FPGAs and is capable of producing technology mapped netlists for FPGAs. We have connected Lutsig to existing Verilog development tools, and in this paper we show how Lutsig, as a consequence of this connection, fits into a hardware development methodology for verified circuits in the HOL4 theorem prover. One important step in the methodology is transporting properties proved at the behavioral Verilog level down to technology mapped netlists, and Lutsig is the component in the methodology that enables such transportation.},
+	author = {Lööw, Andreas},
+	location = {Virtual, Denmark},
+	publisher = {Association for Computing Machinery},
+	booktitle = {Proceedings of the 10th ACM SIGPLAN International Conference on Certified Programs and Proofs},
+	doi = {10.1145/3437992.3439916},
+	isbn = {9781450382991},
+	keywords = {hardware verification,hardware synthesis,compiler verification},
+	pages = {46--60},
+	series = {CPP 2021},
+	title = {Lutsig: A Verified Verilog Compiler for Verified Circuit Development},
+	year = {2021}
+}
+
 @article{mahlke92_effec_compil_suppor_predic_execut_using_hyper,
 	author = {Mahlke, Scott A. and Lin, David C. and Chen, William Y. and Hank, Richard E. and Bringmann, Roger A.},
 	location = {New York, NY, USA},
@@ -1335,6 +1377,22 @@ and Rehof, Jakob",
 	pages = "378--388",
 	abstract = "Lean is a new open source theorem prover being developed at Microsoft Research and Carnegie Mellon University, with a small trusted kernel based on dependent type theory. It aims to bridge the gap between interactive and automated theorem proving, by situating automated tools and methods in a framework that supports user interaction and the construction of fully specified axiomatic proofs. Lean is an ongoing and long-term effort, but it already provides many useful components, integrated development environments, and a rich API which can be used to embed it into other systems. It is currently being used to formalize category theory, homotopy type theory, and abstract algebra. We describe the project goals, system architecture, and main features, and we discuss applications and continuing work.",
 	isbn = "978-3-319-21401-6"
+}
+
+@inproceedings{nigam20_predic_accel_desig_time_sensit_affin_types,
+	abstract = {Field-programmable gate arrays (FPGAs) provide an opportunity to co-design applications with hardware accelerators, yet they remain difficult to program. High-level synthesis (HLS) tools promise to raise the level of abstraction by compiling C or C++ to accelerator designs. Repurposing legacy software languages, however, requires complex heuristics to map imperative code onto hardware structures. We find that the black-box heuristics in HLS can be unpredictable: changing parameters in the program that should improve performance can counterintuitively yield slower and larger designs. This paper proposes a type system that restricts HLS to programs that can predictably compile to hardware accelerators. The key idea is to model consumable hardware resources with a time-sensitive affine type system that prevents simultaneous uses of the same hardware structure. We implement the type system in Dahlia, a language that compiles to HLS C++, and show that it can reduce the size of HLS parameter spaces while accepting Pareto-optimal designs.},
+	author = {Nigam, Rachit and Atapattu, Sachille and Thomas, Samuel and Li, Zhijing and Bauer, Theodore and Ye, Yuwei and Koti, Apurva and Sampson, Adrian and Zhang, Zhiru},
+	location = {London, UK},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/3385412.3385974},
+	booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
+	doi = {10.1145/3385412.3385974},
+	isbn = {9781450376136},
+	keywords = {affine types,high-level synthesis},
+	pages = {393--407},
+	series = {PLDI 2020},
+	title = {Predictable Accelerator Design with Time-Sensitive Affine Types},
+	year = {2020}
 }
 
 @inproceedings{nikhil04_bsv,
@@ -1423,6 +1481,20 @@ and Rehof, Jakob",
 	pages = {140--147},
 	title = {Design productivity of a high level synthesis compiler versus HDL},
 	year = {2016}
+}
+
+@article{perna11_correc_hardw_synth,
+	abstract = {This paper presents an algebraic compilation approach to the correct synthesis (compilation into hardware) of a synchronous language with shared variables and parallelism. The synthesis process generates a hardware component that implements the source program by means of gradually reducing it into a highly parallel state-machine. The correctness of the compiler follows by construction from the correctness of the transformations involved in the synthesis process. Each transformation is proved sound from more basic algebraic laws of the source language; the laws are themselves formally derived from a denotational semantics expressed in the Unified Theories of Programming. The proposed approach is based on previous efforts that handle both software and hardware compilation, in a pure algebraic style, but the complexity of our source language demanded significant adaptations and extensions to the existing approaches.},
+	author = {Perna, Juan and Woodcock, Jim and Sampaio, Augusto and Iyoda, Juliano},
+	url = {https://doi.org/10.1007/s00236-011-0142-y},
+	date = {2011-12-01},
+	doi = {10.1007/s00236-011-0142-y},
+	issn = {1432-0525},
+	journaltitle = {Acta Informatica},
+	number = {7},
+	pages = {363--396},
+	title = {Correct Hardware Synthesis},
+	volume = {48}
 }
 
 @article{perna12_mechan_wire_wise_verif_handel_c_synth,
