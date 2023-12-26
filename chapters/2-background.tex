@@ -1171,9 +1171,23 @@ is mechanised in the work for the translation of Handel-C to netlists.  However,
 the final semantic equivalence of the translation was not mechanised.
 
 Next, Kôika~\cite[]{bourgeat20_essen_blues} is a formalisation of a derivative
-of Bluespec that focuses on providing control over the scheduling of the rules,
-and defines a mechanised compilation from a collection of rules with a schedule
-into an equivalent circuit.
+of Bluespec that focuses on providing control over the scheduling of the rules.
+Rule based hardware design in Kôika is therefore similar to Bluespec and
+provides a useful abstraction to design hardware over using Verilog directly.
+Kôika also provides a mechanised compilation from the collection of rules with a
+schedule into an equivalent circuit.  This circuit can then be pretty printed as
+a Verilog design.  This is a fundamentally different approach to increasing the
+abstraction level of hardware design compared to translating software into
+hardware.  This mainly comes down to Kôika giving fine-grained control over the
+intra-cycle scheduling of rules and both Kôika and Bluespec give control of the
+inter-block scheduling which is up to the hardware designer, whereas in
+traditional \gls{HLS} the hardware design is automatically scheduled from the
+sequential software definition.
+
+Finally, another related formalisation is Lutsig, a formally verified Verilog
+synthesis tool~\cite[]{lööw21_lutsig}.  This is concerned with translating
+register transfer level Verilog into netlist level Verilog, instead of
+translating from a higher-level specification into hardware.
 
 \subsection{HLS Formalised in Isabelle}
 
@@ -1186,85 +1200,124 @@ to equivalent hardware to be accelerated.  The dissertation describes the
 semantics of an \gls{SSA} based software \gls{IR} which supports partitioning of
 code into hardware and software parts, as well as a custom netlist format which
 is used to describe the hardware parts and is the final target of the
-hardware/software compiler.  The proof of correctness then says that the
-hardware/software design should have the same behaviour as if the design had
-only been implemented in software.  The framework used to prove the correctness
-of the compilation from the IR to the netlist format is written in Isabelle,
-which is a theorem prover comparable to Coq.  Any proofs in the framework are
-therefore automatically checked by Isabelle for correctness.
-
-This work first defines a static single assignment (SSA) IR, with the
-capabilities of defining sections that should be hardware accelerated, and
-sections that should be executed on the CPU.  This language supports
-\emph{hyperblocks}, which are a list of basic blocks with one entry node and
-multiple exit nodes, which is well suited for various HLS optimisations and
-better scheduling.  However, as this is quite a low-level intermediate language,
-the first thing that would be required is to create a tool that can actually
-translate a high-level language to this intermediate language.  In addition to
-that, they also describe a netlist format in which the hardware accelerated code
-will be represented in.
+hardware/software compiler.  The dissertation then describes what the
+correctness would look like between the software and hardware semantics. The
+framework used to prove the correctness of the compilation from the IR to the
+netlist format is written in Isabelle, which is a theorem prover comparable to
+Coq.
 
 As both the input IR and output netlist format have been designed from scratch,
-they are not very useful for real world applications, as they require a
-different back end to be implemented from existing compilers.  In addition to
-that, it would most likely mean that the translation from higher-level language
-to the IR is unverified and could therefore contain bugs.  As the resulting
-netlist also uses a custom format, it cannot be fed directly to tools that can
-then translate it to a bitstream to place onto an \gls{FPGA}. The reason for
-designing a custom IR and netlist was so that these were compatible with each
-other, making proofs of equivalence between the two simpler.
+there is no description of a translation from a higher-level languages into the
+\gls{SSA} form, as well as no description on how to map the netlist language
+onto an \gls{FPGA}.  These translations would likely remain unverified.  A
+custom IR and netlist was used to describe how the correctness between the two
+languages could be stated and explores how the software language can interact
+with the hardware.
 
 Finally, it is unclear whether or not a translation algorithm from the IR to the
-netlist format was actually implemented, as the only example in the thesis seems
-to be compiled by hand to explain the proof.  There are also no benchmarks on
-real input programs showing the efficiency of the translation algorithm, and it
-is therefore unclear whether the framework would be able to prove more
-complicated optimisations that a compiler might perform on the source code.  The
-thesis seems to describe the correctness proofs by assuming a compiler exists
-which outputs various properties that are needed by the equivalence proof, such
-a mapping between variables and netlist wires and registers.
-
-Even though this Isabelle framework does provide some equivalence relation
-between an IR and a netlist and describes how the translation would be proven
-correct by matching states to one another, it is actually not usable in
-practice.  First of all, the IR is only represented in Isabelle and does not
-have a parser or a compiler which can target this IR.  In addition to that, the
-netlist format cannot be passed to any existing tool, to then be placed onto an
-\gls{FPGA}, meaning an additional, unverified translation would have to take
-place.  This further reduces the effectiveness of the correctness proof, as
-there are various stages that are not addressed by the proofs and therefore have
-to be assumed to be correct.
+netlist format was implemented, as the only example in the thesis seems to be
+compiled by hand to explain the correctness theorem with respect to that
+example.  There are also no benchmarks on real input programs showing the
+efficiency of the translation algorithm, and it is therefore unclear whether the
+framework would be able to prove more complicated optimisations that a compiler
+might perform on the source code.  The dissertation is likely assuming that
+high-level programs and their netlist implementations are verified according to
+the correctness property manually for each design, as there is no implementation
+or proof of an automatic translation from the software code into the mixed
+software/hardware design.
 
 \section{CompCert}%
 \label{sec:bg:compcert}
 
-\gls{CompCert}~\cite{leroy09_formal_verif_compil_back_end} is a formally
-verified C compiler written in
-Coq~\cite{bertot04_inter_theor_provin_progr_devel}.  Coq is a theorem prover,
-meaning algorithms written in Coq can be reasoned about in Coq itself by proving
-various properties about the algorithms.  To then run these algorithms that have
-been proven correct, they can be extracted directly to OCaml code and then
-executed, as there is a straightforward correspondence between Coq and OCaml
-code.  During this translation, all the proofs are erased, as they are not
-needed during the execution of the compiler, as they are only needed when the
-correctness of the compiler needs to be checked.  With this process, one can
-have a Compiler that satisfies various correctness properties and can therefore
-be proven to preserve the behaviour of the code.
+\gls{CompCert}~\cite{leroy06_formal_certif_compil_back_end,leroy09_formal_verif_realis_compil,leroy16_cfvoc}
+is a formally verified C compiler written in
+Coq~\cite{bertot04_inter_theor_provin_progr_devel}.  The verified compiler in
+Coq is extracted to OCaml code and can then be used.  CompCert contains eleven
+intermediate languages, which are used to gradually translate C code into
+assembly that has the same behaviour.  Proving the translation directly without
+going through the intermediate languages would be infeasible, especially with
+the many optimisations that are performed during the translation, as there is a
+large semantic gap between small-step operational semantics of assembly and the
+big-step operational Clight semantics.  The first three intermediate languages
+(C\#minor, C\#minorgen, Cminor) are used to transform Clight into a more
+assembly like language called \gls{RTL}.  This language consist of a \gls{CFG}
+of instructions, and is therefore well suited for various compiler optimisations
+such as constant propagation, dead-code elimination or function inlining.  After
+\gls{RTL}, each intermediate language is used to get closer to the assembly
+language of the architecture, performing operations such as register allocation.
 
-CompCert contains eleven intermediate languages, which are used to gradually
-translate C code into assembly that has the same behaviour.  Proving the
-translation directly without going through the intermediate languages would be
-infeasible, especially with the many optimisations that are performed during the
-translation, as assembly is very different to the abstract C code it receives.
-The first three intermediate languages (C\#minor, C\#minorgen, Cminor) are used
-to transform Clight into a more assembly like language called register transfer
-language (RTL).  This language consist of a control-flow graph of instructions,
-and is therefore well suited for various compiler optimisations such as constant
-propagation, dead-code elimination or function
-inlining~\cite{tristan08_formal_verif_trans_valid}.  After RTL, each
-intermediate language is used to get closer to the assembly language of the
-architecture, performing operations such as register allocation and making sure
-that the stack variables are correctly aligned.
+\definecolor{bgbox1}{HTML}{b3e2cd}
+\definecolor{bgbox2}{HTML}{cbd5e8}
+\definecolor{bgbox3}{HTML}{fdcdac}
+\definecolor{ircolor}{HTML}{e78ac3}
+
+\tikzset{
+  numlabel/.style={draw,circle,inner sep=0.5mm,fill=white},
+  ir/.style={draw,very thick,black, fill=ircolor!70, align=center},
+  pass/.style={draw, very thick, rounded corners, fill=white, align=center},
+  extpass/.style={draw, dotted, very thick, rounded corners, fill=white, align=center},
+  bgbox/.style={draw=none},
+  ed/.style={->, very thick, >=stealth},
+}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[node distance=1cm and 0.75cm,>=Latex,shorten >=1pt,font=\sffamily]
+    \node[ir] (compcertc) {CompCert C};
+    \node[pass,below=of compcertc] (evalorder) {specify evaluation\\order};
+    \node[left=of evalorder] (paddingfirst) {};
+    \node[ir,right=of evalorder] (cstrategy) {Cstrategy};
+    \node[pass,right=of cstrategy] (sideeffect) {remove\\side-effects};
+    \node[ir,right=of sideeffect] (clight) {Clight};
+    \node[pass,right=of clight] (simplify) {simplify};
+    \node[ir,below=of simplify] (csharpminor) {C\#minor};
+    \node[pass,left=of csharpminor] (stackallocation) {stack\\allocation};
+    \node[ir,left=of stackallocation] (cminor) {Cminor};
+    \node[pass,left=of cminor] (instrselection) {instruction\\selection};
+    \node[ir,left=of instrselection] (cminorsel) {CminorSel};
+    \node[pass,below=of cminorsel] (cfgconstr) {CFG\\construction};
+    \node[ir,right=of cfgconstr] (rtl) {\rtl{}};
+    \node[pass,right=of rtl] (regalloc) {register\\allocation};
+    \node[pass,below=of rtl] (opts) {optimisations};
+    \node[ir,right=of regalloc] (ltl) {\textsc{Ltl}};
+    \node[pass,right=of ltl] (linearisation) {linearisation};
+    \node[ir,below=of linearisation] (linear) {Linear};
+    \node[pass,below=of linear] (stackframe) {stack frame\\layout};
+    \node[ir,left=of stackframe] (mach) {Mach};
+    \node[pass,left=of mach] (assemblygen) {assembly\\generation};
+    \node[ir,below left=of assemblygen] (assembly) {Assembly};
+    \node[pass,right=of assembly] (nativegen) {native code\\generation};
+    \node[ir,right=of nativegen] (nativecode) {Native Code};
+    \path (paddingfirst) |- node (paddingsecond) {} (cfgconstr);
+    \begin{pgfonlayer}{background}
+      \node[fill=bgbox1,bgbox,fit={(paddingfirst)(instrselection)(evalorder)(cstrategy)(csharpminor)(cminor)}] (bgfirst)
+      {};
+      \node[fill=bgbox2,bgbox,fit={($(csharpminor.south east)-(0,2)$)(cfgconstr)(paddingsecond)(linearisation)(stackframe)}] (bgsecond)
+{};
+    \end{pgfonlayer}
+    \path (bgfirst.north west) -- node[rotate=90,yshift=-5mm]
+    (frontend) {Front End} (bgfirst.south west);
+    \path (bgsecond.north west) -- node[rotate=90,yshift=-5mm]
+    (backend) {Back End} (bgsecond.south west);
+    \draw[ed] (compcertc) -- (evalorder) -- (cstrategy);
+    \draw[ed] (cstrategy) -- (sideeffect) -- (clight);
+    \draw[ed] (clight) -- (simplify) -- (csharpminor);
+    \draw[ed] (csharpminor) -- (stackallocation) -- (cminor);
+    \draw[ed] (cminor) -- (instrselection) -- (cminorsel);
+    \draw[ed] (cminorsel) -- (cfgconstr) -- (rtl);
+    \draw[ed] (rtl) -- (regalloc) -- (ltl);
+    \draw[ed] (rtl) to [out=300,in=60] (opts) to [out=120,in=240] (rtl);
+    \draw[ed] (ltl) -- (linearisation) -- (linear);
+    \draw[ed] (linear) -- (stackframe) -- (mach);
+    \draw[ed] (mach) -- (assemblygen) -| (assembly);
+    \draw[ed] (assembly) -- (nativegen) -- (nativecode);
+  \end{tikzpicture}
+  \caption{CompCert intermediate languages in the front end and back end of the
+    compiler.  The parts outside of the coloured boxes are trusted, whereas all
+    the languages transformations within the coloured boxes are verified and
+    untrusted.}%
+  \label{fig:bg:compcert-languages}
+\end{figure}
 
 \subsection{Related Work to Scheduling}%
 \label{sec:related-work}
@@ -1294,7 +1347,7 @@ was not incorporated into its main branch.
 \textcite{six22_formal_verif_super_sched} formalise superblock scheduling, which
 is a restricted form of trace scheduling that is well-suited for VLIW
 processors.  Hyperblock scheduling is more general than superblock scheduling
-and is well-suited to our application domain, HLS.\@
+and is well-suited to our application domain, \gls{HLS}.\@
 \citeauthor{six22_formal_verif_super_sched}'s scheduler reorders instructions,
 and also combines them where it is advantageous to do so, so comparing symbolic
 states is more involved than it was for
@@ -1305,11 +1358,11 @@ comparison between our scheduler and
 \citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
 of CompCert called CompCertKVX.
 
-Outside of the realm of mechanised proof, most HLS tools implement some form of
+Outside of the realm of mechanised proof, most \gls{HLS} tools implement some form of
 static scheduling.  For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
 LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls} and
 Bambu~\cite[line~304]{ferrandi21_bambu} all employ SDC-based hyperblock
-scheduling.  Other HLS tools, such as
+scheduling.  Other \gls{HLS} tools, such as
 Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
 until runtime.  It is notable that these unverified tools tend towards fewer,
 larger passes, where several optimisations are packed into \enquote{scheduling}.
@@ -1318,10 +1371,10 @@ the best chance of finding a global optimum. Verified tools such as CompCert and
 Vericert, on the other hand, tend towards more, smaller passes that are
 individually feasible to prove correct.
 
-Several HLS tools are associated with translation validators, either for an
+Several \gls{HLS} tools are associated with translation validators, either for an
 individual scheduling
 pass~\cite{chouksey20_verif_sched_condit_behav_high_level_synth,
-  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the HLS
+  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the \gls{HLS}
 tool as a whole~\cite{mentor20_catap_high_level_synth, tiemeyer19_crest}. These
 typically work by establishing equivalence at the level of state machines,
 whereas we take the approach of comparing symbolic states, because
