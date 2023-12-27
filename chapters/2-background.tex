@@ -1356,7 +1356,37 @@ validator is also important to take into account.
 \subsection{CompCert Correctness Theorem}%
 \label{sec:bg:compcert-correctness-theorem}
 
-The compcert correctness theorem
+The correctness theorem of CompCert should ensure that the compiler does not
+introduce bugs into the program as it is translated from C into Assembly.  To do
+so, one must first define the execution of programs written in C, as well as
+programs written in Assembly.  This is done in CompCert using either big-step or
+small-step operational semantics.  Big-step semantics are mainly used to define
+the execution for languages in the front end of CompCert, whereas small-step
+semantics are used in the back end of CompCert, and is therefore the most
+relevant to this dissertation, so it is assumed that the small-step semantic
+framework of CompCert is used.
+
+\paragraph{Small-step semantics}
+
+Small-step semantics in CompCert are defined as state transitions that possibly
+emit observable events $t$.  A transition between states $s$ and $s'$, emitting
+events $t$, is denoted as a single step transition
+$s \oset{t}{\longrightarrow} s'$.  In addition to that, one needs to define an
+initial state and a final state.  Finally, each program is also associated with
+a global environment.  CompCert defines a small-step semantics framework that
+can be reused by most languages, defining additional useful constructs such as
+the reflexive, transitive closure of $\longrightarrow$ denoted as
+$\longrightarrow^{*}$ or the transitive \enquote{plus} closure denoted as
+$\longrightarrow^{+}$.  A semantics for a CompCert language is created by
+defining the type for the state, the definition for a step in the semantics,
+defining the initial and final states and the global environment of the program.
+
+\paragraph{Program behaviour}
+
+Once the semantics have been defined, the global behaviour of the program can be
+defined, which will be used to express the correctness theorem.
+
+\paragraph{Correctness theorem}
 
 \subsection{Instruction Scheduling in CompCert}%
 \label{sec:bg:instruction-scheduling-compcert}
