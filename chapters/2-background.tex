@@ -1232,19 +1232,22 @@ software/hardware design.
 \gls{CompCert}~\cite{leroy06_formal_certif_compil_back_end,leroy09_formal_verif_realis_compil,leroy16_cfvoc}
 is a formally verified C compiler written in
 Coq~\cite{bertot04_inter_theor_provin_progr_devel}.  The verified compiler in
-Coq is extracted to OCaml code and can then be used.  CompCert contains eleven
+Coq is extracted to OCaml code and can then be used.  CompCert comprises eleven
 intermediate languages, which are used to gradually translate C code into
 assembly that has the same behaviour.  Proving the translation directly without
 going through the intermediate languages would be infeasible, especially with
 the many optimisations that are performed during the translation, as there is a
 large semantic gap between small-step operational semantics of assembly and the
 big-step operational Clight semantics.  The first three intermediate languages
-(C\#minor, C\#minorgen, Cminor) are used to transform Clight into a more
-assembly like language called \gls{RTL}.  This language consist of a \gls{CFG}
-of instructions, and is therefore well suited for various compiler optimisations
-such as constant propagation, dead-code elimination or function inlining.  After
-\gls{RTL}, each intermediate language is used to get closer to the assembly
-language of the architecture, performing operations such as register allocation.
+(C\#minor, C\#minorgen, Cminor) are used to transform Clight, a deterministic
+subset of C, into a more assembly like language called \gls{RTL}.  This language
+consist of a \gls{CFG} of instructions, and is therefore well suited for various
+compiler optimisations such as constant propagation, dead-code elimination or
+function inlining.  After \gls{RTL}, each intermediate language is used to get
+closer to the assembly language of the architecture, performing operations such
+as register allocation.  \Cref{fig:bg:compcert-languages} gives a summary of
+each transformation that takes place in CompCert, from the input C language to
+the final native code that is run on the \gls{CPU}.
 
 \definecolor{bgbox1}{HTML}{b3e2cd}
 \definecolor{bgbox2}{HTML}{cbd5e8}
@@ -1319,8 +1322,44 @@ language of the architecture, performing operations such as register allocation.
   \label{fig:bg:compcert-languages}
 \end{figure}
 
-\subsection{Related Work to Scheduling}%
-\label{sec:related-work}
+CompCert proofs follow two main patterns.  The first type of correctness proof
+is a direct proof that the algorithm implemented in Coq is correct.  These types
+of proofs do not carry any run time cost, because they reason purely about the
+algorithm that was implemented and they can be erased when the C compiler is
+extracted to OCaml code.  The translation algorithm itself is proven correct, so
+no additional code that is associated with the proof is needed when one is using
+the compiler.  On the other hand, some transformations are easier to build a
+validator for that checks the result of the transformation instead of proving
+that the transformation algorithm always produces correct results.  This is
+called \emph{\gls{translation validation}}, and CompCert uses this technique to
+prove the correctness of the register allocation transformation, for example.
+Register allocation reduces to the graph colouring problem, where every register
+with overlapping liveness properties are connected by edges.  The algorithm is
+then tasked to colour the graph with the fewest colours so that connected nodes
+have different colours.  It is therefore clear that checking the colouring of
+such a graph is simple, as one can check that nodes connected by an edge have
+different colours.  However, proving that such an algorithm will always produce
+such a graph is more difficult because many heuristics can be used during the
+graph colour to try and achieve the fewest colours efficiently.  The algorithm
+that checks the colours of the graph is called the validator.  CompCert
+implements register allocation in this way, performing the register allocation
+in unverified OCaml code, and implementing a verified validator for register
+allocation in Coq.  This still produces a verified translation, as CompCert is
+allowed to fail on inputs, in which case no correctness theorem holds.  For
+translation validation, that means that as long as compilation only proceeds
+when the validator succeeds, it is equivalent to having verified the
+transformation correct.  However, unlike verifying transformations correct
+directly, using a validator means that it needs to check the correctness
+criterion every time the compiler is run, meaning the efficiency of the
+validator is also important to take into account.
+
+\subsection{CompCert Correctness Theorem}%
+\label{sec:bg:compcert-correctness-theorem}
+
+The compcert correctness theorem
+
+\subsection{Instruction Scheduling in CompCert}%
+\label{sec:bg:instruction-scheduling-compcert}
 
 The most closely related works to ours are those by
 \textcite{tristan08_formal_verif_trans_valid} and by
