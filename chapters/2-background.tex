@@ -1237,17 +1237,17 @@ intermediate languages, which are used to gradually translate C code into
 assembly that has the same behaviour.  Proving the translation directly without
 going through the intermediate languages would be infeasible, especially with
 the many optimisations that are performed during the translation, as there is a
-large semantic gap between small-step operational semantics of assembly and the
-big-step operational Clight semantics.  The first three intermediate languages
-(C\#minor, C\#minorgen, Cminor) are used to transform Clight, a deterministic
-subset of C, into a more assembly like language called \gls{RTL}.  This language
-consist of a \gls{CFG} of instructions, and is therefore well suited for various
-compiler optimisations such as constant propagation, dead-code elimination or
-function inlining.  After \gls{RTL}, each intermediate language is used to get
-closer to the assembly language of the architecture, performing operations such
-as register allocation.  \Cref{fig:bg:compcert-languages} gives a summary of
-each transformation that takes place in CompCert, from the input C language to
-the final native code that is run on the \gls{CPU}.
+large semantic gap between the semantics of Assembly and the semantics of
+Clight.  The first three intermediate languages (C\#minor, C\#minorgen, Cminor)
+are used to transform Clight, a deterministic subset of C, into a more assembly
+like language called \gls{RTL}.  This language consist of a \gls{CFG} of
+instructions, and is therefore well suited for various compiler optimisations
+such as constant propagation, dead-code elimination or function inlining.  After
+\gls{RTL}, each intermediate language is used to get closer to the assembly
+language of the architecture, performing operations such as register allocation.
+\Cref{fig:bg:compcert-languages} gives a summary of each transformation that
+takes place in CompCert, from the input C language to the final native code that
+is run on the \gls{CPU}.
 
 \definecolor{bgbox1}{HTML}{b3e2cd}
 \definecolor{bgbox2}{HTML}{cbd5e8}
@@ -1322,10 +1322,10 @@ the final native code that is run on the \gls{CPU}.
   \label{fig:bg:compcert-languages}
 \end{figure}
 
-CompCert proofs follow two main patterns.  The first type of correctness proof
-is a direct proof that the algorithm implemented in Coq is correct.  These types
-of proofs do not carry any run time cost, because they reason purely about the
-algorithm that was implemented and they can be erased when the C compiler is
+\gls{CompCert} proofs follow two main patterns.  The first type of correctness
+proof is a direct proof that the algorithm implemented in Coq is correct.  These
+types of proofs do not carry any run time cost, because they reason purely about
+the algorithm that was implemented and they can be erased when the C compiler is
 extracted to OCaml code.  The translation algorithm itself is proven correct, so
 no additional code that is associated with the proof is needed when one is using
 the compiler.  On the other hand, some transformations are easier to build a
@@ -1359,34 +1359,86 @@ validator is also important to take into account.
 The correctness theorem of CompCert should ensure that the compiler does not
 introduce bugs into the program as it is translated from C into Assembly.  To do
 so, one must first define the execution of programs written in C, as well as
-programs written in Assembly.  This is done in CompCert using either big-step or
-small-step operational semantics.  Big-step semantics are mainly used to define
-the execution for languages in the front end of CompCert, whereas small-step
-semantics are used in the back end of CompCert, and is therefore the most
-relevant to this dissertation, so it is assumed that the small-step semantic
-framework of CompCert is used.
+programs written in Assembly.
 
 \paragraph{Small-step semantics}
 
-Small-step semantics in CompCert are defined as state transitions that possibly
-emit observable events $t$.  A transition between states $s$ and $s'$, emitting
-events $t$, is denoted as a single step transition
-$s \oset{t}{\longrightarrow} s'$.  In addition to that, one needs to define an
-initial state and a final state.  Finally, each program is also associated with
-a global environment.  CompCert defines a small-step semantics framework that
-can be reused by most languages, defining additional useful constructs such as
-the reflexive, transitive closure of $\longrightarrow$ denoted as
-$\longrightarrow^{*}$ or the transitive \enquote{plus} closure denoted as
-$\longrightarrow^{+}$.  A semantics for a CompCert language is created by
-defining the type for the state, the definition for a step in the semantics,
-defining the initial and final states and the global environment of the program.
+Small-step semantics in CompCert are defined as a labelled transition system.  A
+transition between states $s$ and $s'$, emitting events $t$, is denoted as a
+single step $s \oset{t}{\longrightarrow} s'$.  In addition to that, one needs to
+define an initial state and a final state.  Finally, each program is also
+associated with a global environment.  CompCert defines a small-step semantics
+framework that can be reused by most languages, defining additional useful
+constructs such as the reflexive, transitive closure of $\longrightarrow$
+denoted as $\longrightarrow^{*}$ or the transitive \enquote{plus} closure
+denoted as $\longrightarrow^{+}$.  A semantics for a CompCert language is
+created by defining the type for the state, the definition for a step in the
+semantics, defining the initial and final states and the global environment of
+the program.
 
 \paragraph{Program behaviour}
 
 Once the semantics have been defined, the global behaviour of the program can be
-defined, which will be used to express the correctness theorem.
+defined, which will be used to express the correctness theorem.  A C program can
+behave in three main ways, it can either \emph{terminate successfully},
+\emph{diverge}, or finally \emph{go wrong}.  Successful termination happens when
+the final state is reached from the initial state, in which case the final state
+will contain the return-value of the main function in addition to a finite
+stream of events.  If the program diverges, then the program is executing
+indefinitely, in which case it will emit a possibly infinite stream of events
+but no return value.  Finally, if the program goes wrong, for example when
+undefined behaviour is encountered, then that means that there is no more valid
+step defined in the semantics from the current state.
 
-\paragraph{Correctness theorem}
+\subsubsection{Correctness theorem}
+
+The correctness theorem can be stated as a simulation between the semantics of
+the source program and the semantics of the compiled program.  The final
+correctness theorem in CompCert is a backwards simulation between the source
+program semantics and compiled program semantics, stated as follows.
+
+\begin{theorem}[Semantic preservation]\label{thm:semantic-preservation}
+  If a successfully compiled assembly program $C$ has a behaviour $B$ which does
+  not go wrong, then there must exist behaviour $B'$ of source program $S$ which
+  may be less defined than behaviour $B$, which is expressed by $B' \succsim B$.
+
+  {\normalfont\begin{equation*}
+      \yhfunction{compile\_c}\ S = \yhconstant{OK}\ C
+      \implies (\forall B\ldotp C \Downarrow B \implies (\exists B'\ldotp S
+      \Downarrow B' \land B' \succsim B))
+  \end{equation*}}
+\end{theorem}
+
+A direct corollary of this is the following semantic preservation, where one
+proves that the source program is \emph{safe}, i.e. that it is free of undefined
+behaviour.  In that case, one cannot define any more behaviour, so $B$ must be a
+valid behaviour for the source program.
+
+\begin{corollary}[Refinement of compilation]
+  If a successfully compiled assembly program $C$ has a behaviour $B$ and the
+  source program is \emph{safe}, meaning it is free of undefined behaviour, then
+  $B$ must be a behaviour of source program $S$.
+
+  {\normalfont\begin{equation*} \yhfunction{compile\_c}\ S = \yhconstant{OK}\ C
+      \land \mathit{safe}(S) \implies (\forall B\ldotp C \Downarrow B \implies S
+      \Downarrow B)
+  \end{equation*}}
+\end{corollary}
+
+This theorem correctly conveys the property that the compilation of the source
+program should not introduce any bugs, which is especially clear in the
+corollary.  As long as one proves that the source program does not have any
+undefined behaviour, then every behaviour of the compiled program needs to be a
+behaviour of the source program.
+
+These theorems are proven by showing simulations between the semantics of the
+source program and the semantics of the compiled program.  In particular,
+\cref{thm:semantic-preservation} can be proven to hold if one can show a
+backwards simulation between the source program and the compiled program, which
+is how the \namecref{thm:semantic-preservation} is proven in CompCert.  A
+backwards simulation is a number of relations between states and transitions of
+the semantics of both programs.  The heart of the backwards simulation can be
+represented as a \emph{simulation diagram}e
 
 \subsection{Instruction Scheduling in CompCert}%
 \label{sec:bg:instruction-scheduling-compcert}

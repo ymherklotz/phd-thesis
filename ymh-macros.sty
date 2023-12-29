@@ -572,10 +572,10 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \definecolor{functioncolour}{HTML}{721045}
 \definecolor{constantcolour}{HTML}{0000bb}
 
-\newcommand\yhkeywordsp[1]{\;\;\texttt{\textcolor{keywordcolour}{#1}}}
 \newcommand\yhkeyword[1]{\texttt{\textcolor{keywordcolour}{#1}}}
-\newcommand\yhfunctionsp[1]{\;\;\texttt{\textcolor{functioncolour}{#1}}}
+\newcommand\yhkeywordsp[1]{\;\;\yhkeyword{#1}}
 \newcommand\yhfunction[1]{\texttt{\textcolor{functioncolour}{#1}}}
+\newcommand\yhfunctionsp[1]{\;\;\yhfunction{#1}}
 \newcommand\yhconstant[1]{\texttt{\textcolor{constantcolour}{#1}}}
 
 \newif\ifANONYMOUS
