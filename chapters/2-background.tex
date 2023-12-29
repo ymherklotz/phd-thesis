@@ -1438,7 +1438,83 @@ backwards simulation between the source program and the compiled program, which
 is how the \namecref{thm:semantic-preservation} is proven in CompCert.  A
 backwards simulation is a number of relations between states and transitions of
 the semantics of both programs.  The heart of the backwards simulation can be
-represented as a \emph{simulation diagram}e
+represented as a \emph{simulation diagram}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{0.6\linewidth}
+    \centering
+    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+      \node (s1) {$s_1$};
+      \node[below=of s1] (s2) {$s_2$};
+      \node[right=of s1] (t1) {$c_1$};
+      \path (s2) -| node (t2) {$c_2$} (t1);
+      \draw[imparrow,dashed] (s1) -- node[left] {$t$} node[below right,font=\scriptsize] {$+$} (s2);
+      \draw[imparrow] (t1) -- node[right] {$t$} (t2);
+      \draw (s1) -- node[above] {$\approx$} (t1);
+      \draw[dashed] (s2) -- node[below] {$\approx$} (t2);
+      \begin{scope}[xshift=3cm]
+        \node (s1) {$s_1$}; \node[right=of s1] (t1) {$c_1$}; \node[below=of t1]
+        (t2) {$c_2$}; \draw[dashed] (s1) -- node[left,yshift=-1mm] {$\approx$}
+        (t2); \draw[imparrow] (t1) -- node[right] (nothing) {$\varnothing$}
+        (t2); \draw (s1) -- node[above] {$\approx$} (t1); \node[right=of
+        nothing] (wf) {$m(c_2) < m(c_1)$}; \path (nothing) -- node {$\land$}
+        (wf);
+      \end{scope}
+    \end{tikzpicture}
+  \caption{Backwards simulation diagrams.}%
+  \label{fig:bg:backwards-simulation-diagram}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[t]{0.35\linewidth}
+    \centering
+    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+      \node (s1) {$s_1$};
+      \node[below=of s1] (s2) {$s_2$};
+      \node[right=of s1] (t1) {$c_1$};
+      \path (s2) -| node (t2) {$c_2$} (t1);
+      \draw[imparrow] (s1) -- node[left] {$t$} node[below right,font=\scriptsize] {$+$} (s2);
+      \draw[imparrow,dashed] (t1) -- node[right] {$t$} (t2);
+      \draw (s1) -- node[above] {$\approx$} (t1);
+    \end{tikzpicture}
+    \caption{Progress property needed for the backwards simulation.}%
+    \label{fig:bg:backwards-progress-property}
+  \end{subfigure}
+  \caption{Examples of simulation diagrams that make up the backwards
+    simulation.}%
+  \label{fig:bg:backwards-simulation}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+      \node (s1) {$s_1$};
+      \node[below=of s1] (s2) {$s_2$};
+      \node[right=of s1] (t1) {$c_1$};
+      \path (s2) -| node (t2) {$c_2$} (t1);
+      \draw[imparrow] (s1) -- node[left] {$t$} (s2);
+      \draw[imparrow,dashed] (t1) -- node[right] {$t$} node[below left,font=\scriptsize] {$+$} (t2);
+      \draw (s1) -- node[above] {$\approx$} (t1);
+      \draw[dashed] (s2) -- node[below] {$\approx$} (t2);
+    \end{tikzpicture}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+      \node (s1) {$s_1$};
+      \node[right=of s1] (t1) {$c_1$};
+      \node[below=of s1] (s2) {$s_2$};
+      \draw[dashed] (t1) -- node[right,yshift=-1mm] (nothing) {$\approx$} (s2);
+      \draw[imparrow] (s1) -- node[left] {$\varnothing$} (s2);
+      \draw (s1) -- node[above] {$\approx$} (t1);
+      \node[right=of nothing] (wf) {$m(s_2) < m(s_1)$};
+      \path (nothing) -- node {$\land$} (wf);
+    \end{tikzpicture}
+  \end{subfigure}
+  \caption{Forwards simulation diagrams.}%
+  \label{fig:bg:forwards-simulation-diagram}
+\end{figure}
 
 \subsection{Instruction Scheduling in CompCert}%
 \label{sec:bg:instruction-scheduling-compcert}
@@ -1479,11 +1555,11 @@ comparison between our scheduler and
 \citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
 of CompCert called CompCertKVX.
 
-Outside of the realm of mechanised proof, most \gls{HLS} tools implement some form of
-static scheduling.  For instance, AMD Vitis HLS~\cite{amd23_vitis_forum},
-LegUp~\cite[][p.60]{canis15_legup}, Google XLS~\cite[line~112]{google23_xls} and
-Bambu~\cite[line~304]{ferrandi21_bambu} all employ SDC-based hyperblock
-scheduling.  Other \gls{HLS} tools, such as
+Outside of the realm of mechanised proof, most \gls{HLS} tools implement some
+form of static scheduling.  For instance, AMD Vitis
+HLS~\cite{amd23_vitis_forum}, LegUp~\cite[][p.60]{canis15_legup}, Google
+XLS~\cite[line~112]{google23_xls} and Bambu~\cite[line~304]{ferrandi21_bambu}
+all employ SDC-based hyperblock scheduling.  Other \gls{HLS} tools, such as
 Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
 until runtime.  It is notable that these unverified tools tend towards fewer,
 larger passes, where several optimisations are packed into \enquote{scheduling}.
@@ -1492,17 +1568,17 @@ the best chance of finding a global optimum. Verified tools such as CompCert and
 Vericert, on the other hand, tend towards more, smaller passes that are
 individually feasible to prove correct.
 
-Several \gls{HLS} tools are associated with translation validators, either for an
-individual scheduling
+Several \gls{HLS} tools are associated with translation validators, either for
+an individual scheduling
 pass~\cite{chouksey20_verif_sched_condit_behav_high_level_synth,
-  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the \gls{HLS}
-tool as a whole~\cite{mentor20_catap_high_level_synth, tiemeyer19_crest}. These
-typically work by establishing equivalence at the level of state machines,
-whereas we take the approach of comparing symbolic states, because
-\textcite{tristan08_formal_verif_trans_valid} showed it to be viable in the
-context of a verified compiler. Unlike our work, none of these translation
-validators provide mechanised proofs of equivalence, so might produce false
-positives.
+  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the
+\gls{HLS} tool as a whole~\cite{mentor20_catap_high_level_synth,
+  tiemeyer19_crest}. These typically work by establishing equivalence at the
+level of state machines, whereas we take the approach of comparing symbolic
+states, because \textcite{tristan08_formal_verif_trans_valid} showed it to be
+viable in the context of a verified compiler. Unlike our work, none of these
+translation validators provide mechanised proofs of equivalence, so might
+produce false positives.
 
 % \subsection{Diffs w.r.t. superblock scheduling}
 
