@@ -21,6 +21,10 @@
   {\raggedleft #3\par}%
 }
 
+\renewcommand{\figureformat}{\textbf{\figurename~\thefigure\autodot}}
+\renewcommand{\tableformat}{\textbf{\tablename~\thetable\autodot}}
+\renewcommand{\captionformat}{\textbf{:}\ }
+
 %\usepackage[autooneside=false]{scrlayer-scrpage}
 %\pagestyle{scrheadings}
 %\automark[section]{chapter}
@@ -108,7 +112,7 @@
 \makeatother
 \makeglossaries
 
-\usepackage{cleveref}
+\usepackage[noabbrev]{cleveref}
 
 \usepackage{ymh-macros}
 
@@ -190,7 +194,9 @@ Imperial College London.}
 \newacronym{ILP}{ILP}{integer linear programming}
 \newacronym{LP}{LP}{linear programming}
 \newglossaryentry{RTL}{type=\acronymtype, name={\textsc{Rtl}},
-  description={register transfer language}, first={register transfer language (\textsc{Rtl})}}
+  description={register transfer language}, first={register transfer language
+    (\textsc{Rtl})}}
+\newacronym{VLIW}{VLIW}{very large instruction word}
 
 \newterm[name={\enquote{plus} forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
 \newterm[name={\enquote{star} forward simulation},sort=starforwardsimulation]{star-forward-simulation}
@@ -231,6 +237,8 @@ Imperial College London.}
  % chapters/7-evaluation,
  % chapters/8-conclusion,
 }
+
+\setcapindent{1em}
 
 \begin{document}
 

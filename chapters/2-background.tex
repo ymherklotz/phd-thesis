@@ -1394,7 +1394,7 @@ step defined in the semantics from the current state.
 
 The correctness theorem can be stated as a simulation between the semantics of
 the source program and the semantics of the compiled program.  The final
-correctness theorem in CompCert is a backwards simulation between the source
+correctness theorem in CompCert is a backward simulation between the source
 program semantics and compiled program semantics, stated as follows.
 
 \begin{theorem}[Semantic preservation]\label{thm:semantic-preservation}
@@ -1434,17 +1434,34 @@ behaviour of the source program.
 These theorems are proven by showing simulations between the semantics of the
 source program and the semantics of the compiled program.  In particular,
 \cref{thm:semantic-preservation} can be proven to hold if one can show a
-backwards simulation between the source program and the compiled program, which
+backward simulation between the source program and the compiled program, which
 is how the \namecref{thm:semantic-preservation} is proven in CompCert.  A
-backwards simulation is a number of relations between states and transitions of
-the semantics of both programs.  The heart of the backwards simulation can be
-represented as a \emph{simulation diagram}
+backward simulation is a number of relations between states and transitions of
+the semantics of both programs.  The heart of the backward simulation can be
+represented as a \emph{simulation diagram} and shown in
+\cref{fig:bg:backwards-simulation}.  \Cref{fig:bg:backwards-simulation-diagram}
+shows the main two types of simulation diagrams that may hold for a specific
+transition, where the solid lines represent what can be assumed, and the dashed
+lines have to be shown to hold or exists.  First, for a step in the compiled
+program from state $c_1$ to state $c_2$ that emits trace $t$ and a state $s_1$
+that matches with the state $c_1$ using the $\approx$ relation, there must exist
+one or more steps in the source program that also emit the same trace $t$ and
+produces a state $s_2$ that matches with state $c_2$.  If the state transition
+in the compiled program does not emit a trace, but some measure on the state has
+a well-founded order that decreases, then the source semantics may stall as long
+as $s_1$ matches with both $c_1$ and $c_2$.  In addition to that, to be able to
+show semantic preservation from the backward simulation, one also needs to
+prove that the compiled program make progress if there exist transitions in the
+source program from two matching states $s_1$ and $c_1$.  This is shown in
+\cref{fig:bg:backwards-progress-property}.
+
+\tikzset{imparrow/.style={shorten >=1pt,>=Latex,->}}
 
 \begin{figure}
   \centering
   \begin{subfigure}[t]{0.6\linewidth}
     \centering
-    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+    \begin{tikzpicture}
       \node (s1) {$s_1$};
       \node[below=of s1] (s2) {$s_2$};
       \node[right=of s1] (t1) {$c_1$};
@@ -1462,12 +1479,13 @@ represented as a \emph{simulation diagram}
         (wf);
       \end{scope}
     \end{tikzpicture}
-  \caption{Backwards simulation diagrams.}%
+  \caption{Backward simulation diagrams with a well-founded order on the
+    compiled program state.}%
   \label{fig:bg:backwards-simulation-diagram}
   \end{subfigure}\hfill%
   \begin{subfigure}[t]{0.35\linewidth}
     \centering
-    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+    \begin{tikzpicture}
       \node (s1) {$s_1$};
       \node[below=of s1] (s2) {$s_2$};
       \node[right=of s1] (t1) {$c_1$};
@@ -1476,19 +1494,45 @@ represented as a \emph{simulation diagram}
       \draw[imparrow,dashed] (t1) -- node[right] {$t$} (t2);
       \draw (s1) -- node[above] {$\approx$} (t1);
     \end{tikzpicture}
-    \caption{Progress property needed for the backwards simulation.}%
+    \caption{Progress property needed for the backward simulation.}%
     \label{fig:bg:backwards-progress-property}
   \end{subfigure}
-  \caption{Examples of simulation diagrams that make up the backwards
+  \caption{Examples of simulation diagrams that make up the backward
     simulation.}%
   \label{fig:bg:backwards-simulation}
 \end{figure}
+
+Backward simulations are hard to prove by induction on the semantics of the
+compiled program.  This is because the matching relation requires that one
+define a decompilation of the compiled program into the source program to match
+individual instructions with individual sections of the code.  This may not be
+possible for many constructs, as statements generally compile to a group of
+instructions.  Instead, a forward simulation, shown in
+\cref{fig:bg:forwards-simulation-diagram}, is much more natural to prove
+correct, because one can induct over the semantics of the source program and
+define the matching relation in terms of the compilation.  However, without
+additional properties, the forward simulation is not sufficient to imply
+semantic preservation, because a forward simulation would allow for additional
+behaviours in the compiled program that were not behaviours of the source
+program.
+
+However, if one can show that the semantics of the compiled program is
+deterministic, then the forward simulation implies the backward
+simulation.\footnote{In practice, one can be more precise and have properties on
+  the source and compiled program, such that one can show that the source
+  program is \emph{receptive} and the target program \emph{determinate}.}  In
+addition to that, forward simulations as well as backward simulations can be
+composed.  This means that one can prove a forward simulation for each
+transformation shown in \cref{fig:bg:compcert-languages} from Clight to Assembly
+which implies a forward simulation from Clight to Assembly.  After showing that
+the semantics of Assembly is deterministic, one can then prove a backward
+simulation from Assembly to Clight.
 
 \begin{figure}
   \centering
   \begin{subfigure}[b]{0.48\linewidth}
     \centering
-    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+    \begin{tikzpicture}
       \node (s1) {$s_1$};
       \node[below=of s1] (s2) {$s_2$};
       \node[right=of s1] (t1) {$c_1$};
@@ -1501,7 +1545,7 @@ represented as a \emph{simulation diagram}
   \end{subfigure}\hfill%
   \begin{subfigure}[b]{0.48\linewidth}
     \centering
-    \begin{tikzpicture}[imparrow/.style={shorten >=1pt,>=Latex,->}]
+    \begin{tikzpicture}
       \node (s1) {$s_1$};
       \node[right=of s1] (t1) {$c_1$};
       \node[below=of s1] (s2) {$s_2$};
@@ -1512,26 +1556,47 @@ represented as a \emph{simulation diagram}
       \path (nothing) -- node {$\land$} (wf);
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Forwards simulation diagrams.}%
+  \caption{Forward simulation diagrams with a well-founded order on the source
+    program state.}%
   \label{fig:bg:forwards-simulation-diagram}
 \end{figure}
 
 \subsection{Instruction Scheduling in CompCert}%
 \label{sec:bg:instruction-scheduling-compcert}
 
-The most closely related works to ours are those by
+The most closely related works to this dissertation are those by
 \textcite{tristan08_formal_verif_trans_valid} and by
-\textcite{six22_formal_verif_super_sched}, so we begin this section by recapping
-our main points of similarity and difference.
+\textcite{six22_formal_verif_super_sched}.  These two works implement and verify
+scheduling of instructions in CompCert.  First, we will describe implementations
+of list scheduling in CompCert, followed by an implementation of superblock
+scheduling and finally an implementation of trace scheduling.  These scheduling
+methods all implement validators based on symbolic execution of the code.  The
+intuition behind this is that scheduling reorders instructions that are
+independent from each other, which should therefore not change the final
+symbolic expressions of the registers.
+
+Symbolic expressions are expressions in terms of initial values of registers at
+the start of the block.
+
+\subsubsection{List Scheduling}
 
 \textcite{tristan08_formal_verif_trans_valid} were the first to propose adding
-scheduling to a verified compiler, and we adopt their method for validating
-schedules -- running symbolic execution before and after scheduling and
-comparing the resultant symbolic states.  Their scheduler only \emph{reorders}
-instructions, so syntactic equality suffices for comparing symbolic states,
-whereas our scheduler can also \emph{modify} instructions (by manipulating
-predicates).  This means that our state comparisons are more involved, and we
-turn to a SAT solver to help resolve them
+scheduling to a verified compiler.  \textcite{six20_certif_effic_instr_sched}
+then optimise the validator and extend it so that it works with the Kalray KVX
+\gls{VLIW} processor and is integrated into a fork of CompCert called
+CompCertKVX~\cite[]{six23_c}.  In both these cases, the list scheduling
+algorithm works on the Mach intermediate language in CompCert.  The schedule is
+validated after the fact by running symbolic execution before and after
+scheduling and comparing the resultant symbolic states.  List scheduling is
+performed on \glspl{basic block}.  These are implicitly represented in
+\textcite{tristan08_formal_verif_trans_valid}, but are explicitly constructed in
+\textcite{six20_certif_effic_instr_sched} as an \textsc{AsmBlock} language,
+making it easier to reason about transformations in individual blocks.
+
+Scheduler only \emph{reorders} instructions, so syntactic equality suffices for
+comparing symbolic states, whereas our scheduler can also \emph{modify}
+instructions (by manipulating predicates).  This means that our state
+comparisons are more involved, and we turn to a SAT solver to help resolve them
 (\cref{sec:value_summaries}).  \citeauthor{tristan08_formal_verif_trans_valid}
 also devised the use of constraints to prevent the scheduler introducing
 undefined behaviour; we adopt this technique too, taking care to extend it to
@@ -1540,6 +1605,8 @@ handle predicates in such a way that valid schedules can still be validated
 comparison with \citeauthor{tristan08_formal_verif_trans_valid}'s work is not
 feasible because their method was implemented for an old version of CompCert and
 was not incorporated into its main branch.
+
+\subsubsection{Superblock and Extended Block Scheduling}
 
 \textcite{six22_formal_verif_super_sched} formalise superblock scheduling, which
 is a restricted form of trace scheduling that is well-suited for VLIW
@@ -1555,30 +1622,15 @@ comparison between our scheduler and
 \citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
 of CompCert called CompCertKVX.
 
-Outside of the realm of mechanised proof, most \gls{HLS} tools implement some
-form of static scheduling.  For instance, AMD Vitis
-HLS~\cite{amd23_vitis_forum}, LegUp~\cite[][p.60]{canis15_legup}, Google
-XLS~\cite[line~112]{google23_xls} and Bambu~\cite[line~304]{ferrandi21_bambu}
-all employ SDC-based hyperblock scheduling.  Other \gls{HLS} tools, such as
-Dynamatic~\cite{josipović18_dynam_sched_high_synth}, defer scheduling decisions
-until runtime.  It is notable that these unverified tools tend towards fewer,
-larger passes, where several optimisations are packed into \enquote{scheduling}.
-This minimises the number of times the solver needs to be invoked, and gives it
-the best chance of finding a global optimum. Verified tools such as CompCert and
-Vericert, on the other hand, tend towards more, smaller passes that are
-individually feasible to prove correct.
+\subsection{Trace Scheduling}%
+\label{sec:bg:trace-scheduling}
 
-Several \gls{HLS} tools are associated with translation validators, either for
-an individual scheduling
-pass~\cite{chouksey20_verif_sched_condit_behav_high_level_synth,
-  karfa06_formal_verif_method_sched_high_synth, kim04_autom_fsmd} or for the
-\gls{HLS} tool as a whole~\cite{mentor20_catap_high_level_synth,
-  tiemeyer19_crest}. These typically work by establishing equivalence at the
-level of state machines, whereas we take the approach of comparing symbolic
-states, because \textcite{tristan08_formal_verif_trans_valid} showed it to be
-viable in the context of a verified compiler. Unlike our work, none of these
-translation validators provide mechanised proofs of equivalence, so might
-produce false positives.
+% It is notable that these unverified tools tend towards fewer, larger passes,
+% where several optimisations are packed into \enquote{scheduling}.  This
+% minimises the number of times the solver needs to be invoked, and gives it the
+% best chance of finding a global optimum. Verified tools such as CompCert and
+% Vericert, on the other hand, tend towards more, smaller passes that are
+% individually feasible to prove correct.
 
 % \subsection{Diffs w.r.t. superblock scheduling}
 
