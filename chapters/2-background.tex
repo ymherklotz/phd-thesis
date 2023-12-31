@@ -1564,19 +1564,52 @@ simulation from Assembly to Clight.
 \subsection{Instruction Scheduling in CompCert}%
 \label{sec:bg:instruction-scheduling-compcert}
 
-The most closely related works to this dissertation are those by
-\textcite{tristan08_formal_verif_trans_valid} and by
-\textcite{six22_formal_verif_super_sched}.  These two works implement and verify
-scheduling of instructions in CompCert.  First, we will describe implementations
-of list scheduling in CompCert, followed by an implementation of superblock
-scheduling and finally an implementation of trace scheduling.  These scheduling
-methods all implement validators based on symbolic execution of the code.  The
-intuition behind this is that scheduling reorders instructions that are
-independent from each other, which should therefore not change the final
-symbolic expressions of the registers.
+There are a few implementations of scheduling algorithms in CompCert or in
+derivatives of CompCert that are relevant to this dissertation, as the
+scheduling algorithm is central to the \gls{HLS} transformation.  First, we will
+describe implementations of list scheduling in CompCert, followed by an
+implementation of superblock scheduling and finally an implementation of trace
+scheduling.  These scheduling methods all implement validators based on symbolic
+execution of the code.
 
 Symbolic expressions are expressions in terms of initial values of registers at
-the start of the block.
+the start of the block.  For example, \cref{fig:bg:symbolic-evaluation} shows an
+example of symbolic execution, where the result is a map from \emph{resources},
+which might be memory or registers, to symbolic expressions, which are
+expressions in terms of initial values of registers.  As long as one can show
+that equivalence of symbolic expressions and equivalence of symbolic states
+implies equivalent behaviour of the original block of code, one can validate
+code transformations that will not affect the symbolic representation.
+
+\begin{figure}
+  \centering
+  \hfill\begin{subfigure}[t]{2cm}
+    \centering
+\begin{rtllisting}
+z := x + y;
+t := z * y;
+M[12] := x;
+y := M[x];
+\end{rtllisting}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[t]{0.48\linewidth}
+    \vspace{-1\baselineskip}
+    \begin{equation*}
+      \begin{array}{rcl}
+        \mrtl{z} & \mapsto & \avar{x} \aadd \avar{y}\\
+        \mrtl{t} & \mapsto & (\avar{x} \aadd \avar{y}) \amul \avar{y}\\
+        \mrtl{M} & \mapsto & \mrtl{store}(\avar{M}, \avar{x}, 12)\\
+        \mrtl{y} & \mapsto & \mrtl{load}(\mrtl{store}(\avar{M}, \avar{x}, 12),
+                             \avar{x})\\
+        r & \mapsto & r^0 \quad \text{for all other registers } r\\
+      \end{array}
+    \end{equation*}
+  \end{subfigure}
+  \caption[Example of symbolic execution adapted from Tristan and Leroy]{Example
+    of symbolic execution adapted from
+    \textcite{tristan08_formal_verif_trans_valid}.}
+  \label{fig:bg:symbolic-evaluation}
+\end{figure}
 
 \subsubsection{List Scheduling}
 
