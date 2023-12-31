@@ -1626,15 +1626,16 @@ y := M[x];
 scheduling to a verified compiler.  \textcite{six20_certif_effic_instr_sched}
 then optimise the validator and extend it so that it works with the Kalray KVX
 \gls{VLIW} processor as a post-pass scheduling step in their translation and is
-integrated into a fork of CompCert called CompCertKVX~\cite[]{six23_c}.  In both
-these cases, the list scheduling algorithm works on the Mach intermediate
-language in CompCert.  The schedule is validated after the fact by running
-symbolic execution before and after scheduling and comparing the resultant
-symbolic states.  List scheduling is performed on \glspl{basic block}.  These
-are implicitly represented in \textcite{tristan08_formal_verif_trans_valid}, but
-are explicitly constructed in \textcite{six20_certif_effic_instr_sched} as an
-\textsc{AsmBlock} language, making it easier to reason about transformations in
-individual blocks.
+integrated into a fork of CompCert called CompCert KVX~\cite[]{six23_c}.  In
+both these cases, the list scheduling algorithm works on the Mach intermediate
+language in CompCert, but in the case of CompCert KVX the list scheduling pass
+is also used to transform the Mach into Assembly.  The schedule is validated
+after the fact by running symbolic execution before and after scheduling and
+comparing the resultant symbolic states.  List scheduling is performed on
+\glspl{basic block}.  These are implicitly represented in
+\textcite{tristan08_formal_verif_trans_valid}, but are explicitly constructed in
+\textcite{six20_certif_effic_instr_sched} as an \textsc{AsmBlock} language,
+making it easier to reason about transformations in individual blocks.
 
 If the scheduler only \emph{reorders} instructions, structural equality suffices
 for comparing symbolic states.  \citeauthor*{six20_certif_effic_instr_sched}
@@ -1673,23 +1674,30 @@ undefined behaviour, \citeauthor*{tristan08_formal_verif_trans_valid} introduce
 the concept of \emph{constraints}, which is the set of all previously
 encountered operations.  In the case of the example, the set of the original
 block would be empty, whereas the constraints of the second block would be
-$\set{\mrtl{5} \adiv \mrtl{r1}}$.
+$\set{\mrtl{5} \adiv \mrtl{r1}}$.  For correctness, the scheduled basic block
+should therefore not introduce new constraints, like in the previous example.
+Instead, the validation has to ensure that the constraints of the scheduled
+block are a subset of the constraints of the original block.
+
+Together, this forms a validation algorithm for list scheduling by comparing the
+symbolic states of the basic blocks for equivalence, and ensuring that the
+constraints form a subset.  The post-pass scheduler by
+\citeauthor*{six20_certif_effic_instr_sched} optimises the validation algorithm
+by using hash-consing to replace the expensive expression comparison by pointer
+comparisons and adds rewriting to the symbolic expressions to verify peephole
+optimisations.\YH{TODO: Check this again.}
 
 \subsubsection{Superblock and Extended Block Scheduling}
 
-\textcite{six22_formal_verif_super_sched} formalise superblock scheduling, which
-is a restricted form of trace scheduling that is well-suited for VLIW
-processors.  Hyperblock scheduling is more general than superblock scheduling
-and is well-suited to our application domain, \gls{HLS}.\@
-\citeauthor{six22_formal_verif_super_sched}'s scheduler reorders instructions,
-and also combines them where it is advantageous to do so, so comparing symbolic
-states is more involved than it was for
-\citeauthor{tristan08_formal_verif_trans_valid}, but it still does not require a
-SAT solver because there are no predicates to reason about.  A direct empirical
-comparison between our scheduler and
-\citeauthor{six22_formal_verif_super_sched}'s is difficult because
-\citeauthor{six22_formal_verif_super_sched}'s is based on an incompatible fork
-of CompCert called CompCertKVX.
+\textcite{six22_formal_verif_super_sched} then formalise superblock scheduling
+as a pre-pass optimisation at the \rtl{} level, which is a restricted form of
+trace scheduling that is well-suited for VLIW processors.  The idea is to
+translate \rtl{} code into \textsc{RtlPath} code, which is a superblock
+representation of the original code, containing various traces through the
+program.  \citeauthor{six22_formal_verif_super_sched}'s scheduler then reorders
+instructions within a superblock trace, and also combines them where it is
+advantageous to do so, also making it necessary to allow for rewrites in the
+symbolic expressions.\YH{TODO: Check this.}
 
 \subsection{Trace Scheduling}%
 \label{sec:bg:trace-scheduling}
