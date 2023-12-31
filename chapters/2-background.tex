@@ -1693,11 +1693,11 @@ optimisations.\YH{TODO: Check this again.}
 as a pre-pass optimisation at the \rtl{} level, which is a restricted form of
 trace scheduling that is well-suited for VLIW processors.  The idea is to
 translate \rtl{} code into \textsc{RtlPath} code, which is a superblock
-representation of the original code, containing various traces through the
+representation of the original code containing various traces through the
 program.  \citeauthor{six22_formal_verif_super_sched}'s scheduler then reorders
 instructions within a superblock trace, and also combines them where it is
-advantageous to do so, also making it necessary to allow for rewrites in the
-symbolic expressions.\YH{TODO: Check this.}
+advantageous to do so, making it necessary to allow for rewrites in the symbolic
+expressions as well.\YH{TODO: Check this.}
 
 \subsection{Trace Scheduling}%
 \label{sec:bg:trace-scheduling}
