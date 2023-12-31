@@ -1576,10 +1576,19 @@ Symbolic expressions are expressions in terms of initial values of registers at
 the start of the block.  For example, \cref{fig:bg:symbolic-evaluation} shows an
 example of symbolic execution, where the result is a map from \emph{resources},
 which might be memory or registers, to symbolic expressions, which are
-expressions in terms of initial values of registers.  As long as one can show
-that equivalence of symbolic expressions and equivalence of symbolic states
-implies equivalent behaviour of the original block of code, one can validate
-code transformations that will not affect the symbolic representation.
+expressions in terms of initial values of registers.  The symbolic execution
+proceeds sequentially through the linear block and updates the symbolic state.
+If a register is read from, its current symbolic expression is looked up in the
+symbolic state and replaces the register to build a new symbolic expression.
+
+The symbolic state can then be used to validate code transformations.  If the
+code transformation only reorders instructions, then the correctness of the
+transformation only relies on data dependencies, which is naturally encoded in
+the symbolic state.  As long as one can show that the symbolic expressions of
+two registers are structurally equivalent, then this means that the reordering
+of instructions did not violate any data dependencies, and this should imply
+that the behaviour of the original block and the reordered block are the same as
+well.
 
 \begin{figure}
   \centering
@@ -1616,28 +1625,55 @@ y := M[x];
 \textcite{tristan08_formal_verif_trans_valid} were the first to propose adding
 scheduling to a verified compiler.  \textcite{six20_certif_effic_instr_sched}
 then optimise the validator and extend it so that it works with the Kalray KVX
-\gls{VLIW} processor and is integrated into a fork of CompCert called
-CompCertKVX~\cite[]{six23_c}.  In both these cases, the list scheduling
-algorithm works on the Mach intermediate language in CompCert.  The schedule is
-validated after the fact by running symbolic execution before and after
-scheduling and comparing the resultant symbolic states.  List scheduling is
-performed on \glspl{basic block}.  These are implicitly represented in
-\textcite{tristan08_formal_verif_trans_valid}, but are explicitly constructed in
-\textcite{six20_certif_effic_instr_sched} as an \textsc{AsmBlock} language,
-making it easier to reason about transformations in individual blocks.
+\gls{VLIW} processor as a post-pass scheduling step in their translation and is
+integrated into a fork of CompCert called CompCertKVX~\cite[]{six23_c}.  In both
+these cases, the list scheduling algorithm works on the Mach intermediate
+language in CompCert.  The schedule is validated after the fact by running
+symbolic execution before and after scheduling and comparing the resultant
+symbolic states.  List scheduling is performed on \glspl{basic block}.  These
+are implicitly represented in \textcite{tristan08_formal_verif_trans_valid}, but
+are explicitly constructed in \textcite{six20_certif_effic_instr_sched} as an
+\textsc{AsmBlock} language, making it easier to reason about transformations in
+individual blocks.
 
-Scheduler only \emph{reorders} instructions, so syntactic equality suffices for
-comparing symbolic states, whereas our scheduler can also \emph{modify}
-instructions (by manipulating predicates).  This means that our state
-comparisons are more involved, and we turn to a SAT solver to help resolve them
-(\cref{sec:value_summaries}).  \citeauthor{tristan08_formal_verif_trans_valid}
-also devised the use of constraints to prevent the scheduler introducing
-undefined behaviour; we adopt this technique too, taking care to extend it to
-handle predicates in such a way that valid schedules can still be validated
-(\cref{sec:handling-discarded-expressions}).  We remark that a direct empirical
-comparison with \citeauthor{tristan08_formal_verif_trans_valid}'s work is not
-feasible because their method was implemented for an old version of CompCert and
-was not incorporated into its main branch.
+If the scheduler only \emph{reorders} instructions, structural equality suffices
+for comparing symbolic states.  \citeauthor*{six20_certif_effic_instr_sched}
+also perform peephole optimisations and therefore include a symbolic expression
+rewriting step that normalises the symbolic expressions based on the rewrites
+that the scheduler can perform.  However, the scheduler is unverified, and it
+could therefore introduce new instructions.  This means that the comparison of
+the symbolic state does not imply equivalent behaviour, consider the following
+example:
+
+\begin{center}
+\begin{tikzpicture}
+\node (initial) {\begin{minipage}{0.3\linewidth}
+\begin{rtllisting}
+r3 := r2 + 4;
+\end{rtllisting}
+\end{minipage}};
+\node[right=3.5cm of initial] (scheduled) {
+  \begin{minipage}{0.2\linewidth}
+\begin{rtllisting}
+r3 := 5 / r1;
+r3 := r2 + 4;
+\end{rtllisting}
+  \end{minipage}
+};
+\draw[-{Latex[length=3mm]}] (initial) -- node [below] {scheduling}
+($(scheduled.west)-(1.5,0)$);
+\end{tikzpicture}
+\end{center}
+
+In this case, the scheduler introduces an additional instruction that is later
+overwritten.  The symbolic states will therefore be equivalent, however, the
+transformed block may encounter undefined behaviour when \rtlinline`r1` is 0.
+To guard against the scheduler introducing additional instructions that may have
+undefined behaviour, \citeauthor*{tristan08_formal_verif_trans_valid} introduce
+the concept of \emph{constraints}, which is the set of all previously
+encountered operations.  In the case of the example, the set of the original
+block would be empty, whereas the constraints of the second block would be
+$\set{\mrtl{5} \adiv \mrtl{r1}}$.
 
 \subsubsection{Superblock and Extended Block Scheduling}
 
