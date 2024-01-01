@@ -672,6 +672,25 @@ and Philippou, Anna",
 	note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes}
 }
 
+@article{gourdin23_fvopbs,
+	author = {Gourdin, L\'{e}o and Bonneau, Benjamin and Boulm\'{e}, Sylvain and Monniaux, David and B\'{e}rard, Alexandre},
+	title = {Formally Verifying Optimizations with Block Simulations},
+	year = {2023},
+	issue_date = {October 2023},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {7},
+	number = {OOPSLA2},
+	url = {https://doi.org/10.1145/3622799},
+	doi = {10.1145/3622799},
+	abstract = {CompCert (ACM Software System Award 2021) is the first industrial-strength compiler with a mechanically checked proof of correctness. Yet, CompCert remains a moderately optimizing C compiler. Indeed, some optimizations of “gcc ‍-O1” such as Lazy Code Motion (LCM) or Strength Reduction (SR) were still missing: developing these efficient optimizations together with their formal proofs remained a challenge. Cyril Six et al. have developed efficient formally verified translation validators for certifying the results of superblock schedulers and peephole optimizations. We revisit and generalize their approach into a framework (integrated into CompCert) able to validate many more optimizations: an enhanced superblock scheduler, but also Dead Code Elimination (DCE), Constant Propagation (CP), and more noticeably, LCM and SR. In contrast to other approaches to translation validation, we co-design our untrusted optimizations and their validators. Our optimizations provide hints, in the forms of invariants or CFG morphisms, that help keep the formally verified validators both simple and efficient. Such designs seem applicable beyond CompCert.},
+	journal = {Proc. ACM Program. Lang.},
+	month = {oct},
+	articleno = {224},
+	numpages = {30},
+	keywords = {Formal verification of compiler optimizations, the Coq proof assistant, Symbolic execution, Translation validation}
+}
+
 @inproceedings{greaves08_kiwi,
 	author = {Greaves, David J. and Singh, Satnam},
 	publisher = {{IEEE} Computer Society},

@@ -1648,21 +1648,21 @@ example:
 
 \begin{center}
 \begin{tikzpicture}
-\node (initial) {\begin{minipage}{0.3\linewidth}
+\node[] (initial) {\begin{minipage}{2.6cm}
 \begin{rtllisting}
 r3 := r2 + 4;
 \end{rtllisting}
 \end{minipage}};
 \node[right=3.5cm of initial] (scheduled) {
-  \begin{minipage}{0.2\linewidth}
+  \begin{minipage}{2.6cm}
 \begin{rtllisting}
 r3 := 5 / r1;
 r3 := r2 + 4;
 \end{rtllisting}
   \end{minipage}
 };
-\draw[-{Latex[length=3mm]}] (initial) -- node [below] {scheduling}
-($(scheduled.west)-(1.5,0)$);
+\draw[-{Latex[length=3mm]}] ($(initial.east)+(0.5,0)$) -- node [below] {scheduling}
+($(scheduled.west)-(0.5,0)$);
 \end{tikzpicture}
 \end{center}
 
@@ -1686,6 +1686,124 @@ constraints form a subset.  The post-pass scheduler by
 by using hash-consing to replace the expensive expression comparison by pointer
 comparisons.
 
+\subsection{Trace Scheduling}%
+\label{sec:bg:trace-scheduling}
+
+\begin{figure}
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below=of e] (f) {};
+      \path (f) -| node[instrnode,fill=nodef,dashed] (fp) {} (d);
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeg,below=of fp,dashed] (gp) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \begin{pgfonlayer}{background}
+        \node[fit={(b)(c)(d)(e)(f)(g)(gp)(fp)},bblock] (fitall) {};
+        \node[fit={(h)},bblock] (fith) {};
+        \node[fit={(a)},bblock] (fita) {};
+      \end{pgfonlayer}
+      \draw[->] (a) -- (fitb);
+      \draw[->] (b) -- (c);
+      \draw[->] (b) -- (d);
+      \draw[->] (d) -- (fp);
+      \draw[->] (c) -- (e);
+      \draw[->] (e) -- (f);
+      \draw[->] (f) -- (g);
+      \draw[->] (g) -- (fith);
+      \draw[->] (fp) -- (gp);
+      \draw[->] (gp) -- (fith);
+      \draw[dashed] (f) -- (fp);
+      \draw[dashed] (g) -- (gp);
+      \draw[->] (g) to [loop,looseness=1.2,out=150,in=150] (fitb.north west);
+      \draw[->] (gp) to [loop,looseness=1.2,out=30,in=30] (fitb.north east);
+    \end{tikzpicture}
+    \caption{Graph of trees}\label{fig:block-comparison:graph-of-trees}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \pgfdeclarelayer{bga}
+    \pgfdeclarelayer{bgb}
+    \pgfdeclarelayer{bgc}
+    \pgfsetlayers{bgc,bgb,bga,main}
+    \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
+      \node[instrnode,fill=nodea] (a) {};
+      \node[instrnode,fill=nodeb,below=of a] (b) {};
+      \node[instrnode,fill=nodec,below left=of b] (c) {};
+      \node[instrnode,fill=noded,below right=of b] (d) {};
+      \node[instrnode,fill=nodee,below=of c] (e) {};
+      \node[instrnode,fill=nodef,below right=of e,yshift=-2mm] (f) {};
+      \node[instrnode,fill=nodeg,below=of f] (g) {};
+      \node[instrnode,fill=nodeh,below right=of g] (h) {};
+      \begin{pgfonlayer}{bga}
+        \node[fit={(c)(e)},bblock,fill=black!10] (fitce) {};
+      \end{pgfonlayer}
+      \begin{pgfonlayer}{bgb}
+        \node[fit={(b)(d)(fitce)},bblock] (fitcond) {};
+        \node[fit={(f)(g)},bblock] (fitstraight) {};
+      \end{pgfonlayer}
+      \begin{pgfonlayer}{bgc}
+        \node[fit={(fitcond)(fitstraight)},bblock,fill=black!20] (fitall) {};
+        \node[fit={(h)},bblock,fill=black!20] (fith) {};
+        \node[fit={(a)},bblock,fill=black!20] (fita) {};
+      \end{pgfonlayer}
+      \draw[->] (a) -- (fitall);
+      \draw[->] (b) -- (d);
+      \draw[->] (b) -- (fitce.north);
+      \draw[->] (c) -- (e);
+      \draw[->] (f) -- (g);
+      \draw[->] (fitcond) -- (fitstraight);
+      \draw[->] (g) -- (fith);
+      \draw[->] (g) to [loop,looseness=1.4,out=150,in=150] ($(fitall.north) - (0.3,0)$);
+    \end{tikzpicture}
+    \caption{Block transfer language (\textsc{Btl})}\label{fig:block-comparison:btl}
+  \end{subfigure}
+  \caption{Comparison of basic blocks, superblocks and hyperblocks.}%
+  \label{fig:block-comparison}
+\end{figure}
+
+\textcite{tristan08_formal_verif_trans_valid} also formalises a version of trace
+scheduling, where instructions can be moved along traces of the program that are
+free of back edges, and can therefore be moved across basic block boundaries.
+This gives more freedom to the scheduler, leading to more optimal code in most
+cases.  The first part of the trace scheduling algorithm is to transform the
+\gls{CFG} into a graph of trees representation, shown in
+\cref{fig:block-comparison:graph-of-trees}.  This representation is similar to
+the superblock representation in that tail duplication is needed to represent
+any internal joining control flow.  However, this tail duplication then means
+that the whole block can be represented as a single tree.  Instructions can then
+be reordered by the scheduler within a tree.  In general, tail duplication
+should be avoided as it can result in an exponential increase in the number of
+nodes.  The boundaries of the trees are chosen by calculating possible cut
+points in the \gls{CFG}, which correspond to labels that are the target of back
+edges, or function calls.
+
+Validation can then be done by running the symbolic execution over the tree and
+comparing symbolic states in the same way as was done for list scheduling when
+one reaches the leaves of the tree (i.e. the exit nodes).  While traversing the
+tree, one must also ensure that the same conditions are encountered and
+evaluated, and these have to remain in the same order in the tree.  Instructions
+that are moved after a control flow statement need to be duplicated by the
+scheduler to remain correct.
+
+In general, this validation technique for trace scheduling is effective at
+verifying complex schedules, but it can quickly become infeasible to check the
+equivalence as the size of the blocks grows.  This is mainly due to two sources
+of inherent inefficiencies in the validation algorithm.  First, the size of the
+symbolic expressions can grow exponentially as they do not share any
+subexpressions, which means that comparing two expressions can take time.  This
+affects both the list scheduling and the trace scheduling validator, and is
+addressed by \citeauthor*{six20_certif_effic_instr_sched} through hash-consing.
+Secondly, comparing two trees symbolically can also contain an exponential
+number of comparisons of symbolic states.  This means that the choice of cut
+points becomes important to try and minimise the size of the trees and still
+achieve a good schedule.
+
 \subsubsection{Superblock and Extended Block Scheduling}
 
 \textcite{six22_formal_verif_super_sched} then formalise superblock scheduling
@@ -1704,14 +1822,29 @@ expressions as well.
 The validator works similarly to the post-pass list scheduling algorithm in
 CompCert KVX, but it is extended to support symbolic expression normalisation to
 verify rewrites and expansion of instructions correct.  It therefore also
-includes all the optimisations from the list scheduling pass such as
-hash-consing.  In addition,
+includes all the optimisations from the list scheduling post-pass scheduler in
+CompCert KVX such as hash-consing.  In addition to that, liveness is added to
+the correctness theorem so that equivalence only needs to be checked for
+registers that are live at this particular superblock exit.  This makes it
+possible to introduce new registers, and allows for instructions to be expanded
+into multiple instructions, without having to reason about any intermediate
+registers that were introduced.
 
-However, in contrast to the list scheduling transformation, the superblock
-transformation requires validation of symbolic states at each exit of the
-
-\subsection{Trace Scheduling}%
-\label{sec:bg:trace-scheduling}
+In contrast to the list scheduling transformation, the superblock transformation
+requires validation of symbolic states at each exit of the superblock with the
+corresponding exit in the scheduled \gls{superblock}.
+\textcite[]{gourdin23_fvopbs} later replaced \textsc{Rtlpath} with \textsc{Btl},
+a general intermediate block language.  This block languages is defined as a
+nested structure of blocks with conditionals, and are therefore general enough
+to represent \glspl{hyperblock}.  As the language is not restricted to
+superblocks anymore, the scheduler could be modified to work with \emph{extended
+  blocks}, which are hyperblocks without any internal joining \gls{control
+  flow}.  This made the scheduler more flexible, making it possible to apply
+light loop pipelining optimisations by scheduling an unrolled loop.  However,
+the symbolic execution is still performed on each trace through the program, and
+no sharing between tracing takes place, meaning that the validation is
+exponential in the number of internal joins.  Only extended blocks are scheduled
+so this is avoided.
 
 % It is notable that these unverified tools tend towards fewer, larger passes,
 % where several optimisations are packed into \enquote{scheduling}.  This
@@ -1763,6 +1896,23 @@ transformation requires validation of symbolic states at each exit of the
 
 \section{Summary}%
 \label{sec:bg:summary}
+
+This chapter described the process of high-level synthesis, as well as how
+verification is normally performed when using high-level synthesis to produce
+hardware designs.  The main conclusion is that when using high-level synthesis
+one is mainly relying on testing to check the equivalence between high-level
+designs and the low-level hardware design.  Further testing in then purely
+performed on the low-level hardware design at the register-transfer level, where
+it can be difficult to verify behaviour compared to using the high-level design.
+
+We then gave an overview of CompCert, describing the correctness theorem and
+describing existing attempts at formally verifying instruction scheduling, which
+is the main optimisation and transformation that \gls{HLS} tools perform to
+generate hardware.  The current formalised scheduling passes are mainly
+targeting \glspl{CPU}, where it is more important to schedule instructions over
+traces.  \gls{HLS} benefits from using general hyperblocks, especially combining
+blocks where control flow is joined internally, meaning it benefits from a
+different intermediate representation that is more tailored to hardware.
 
 %%% Local Variables:
 %%% mode: latex
