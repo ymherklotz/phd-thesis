@@ -1832,19 +1832,24 @@ registers that were introduced.
 
 In contrast to the list scheduling transformation, the superblock transformation
 requires validation of symbolic states at each exit of the superblock with the
-corresponding exit in the scheduled \gls{superblock}.
-\textcite[]{gourdin23_fvopbs} later replaced \textsc{Rtlpath} with \textsc{Btl},
-a general intermediate block language.  This block languages is defined as a
-nested structure of blocks with conditionals, and are therefore general enough
-to represent \glspl{hyperblock}.  As the language is not restricted to
-superblocks anymore, the scheduler could be modified to work with \emph{extended
-  blocks}, which are hyperblocks without any internal joining \gls{control
-  flow}.  This made the scheduler more flexible, making it possible to apply
-light loop pipelining optimisations by scheduling an unrolled loop.  However,
-the symbolic execution is still performed on each trace through the program, and
-no sharing between tracing takes place, meaning that the validation is
-exponential in the number of internal joins.  Only extended blocks are scheduled
-so this is avoided.
+corresponding exit in the scheduled \gls{superblock}.  This is similar to the
+validation of graph of trees, except that traces are still lists instead of
+trees.  \textcite[]{gourdin23_fvopbs} later replaced \textsc{Rtlpath} with
+\textsc{Btl}, a general intermediate block language shown in
+\cref{fig:block-comparison:btl}.  This block languages is defined as a nested
+structure of blocks with conditionals, and are therefore general enough to
+represent \glspl{hyperblock}.  The main difference between the graph of trees
+representation and \textsc{Btl} is that graph of trees cannot represent a
+sequence of two trees, which is representable in \textsc{Btl}.  As the language
+is not restricted to superblocks anymore, the scheduler was modified to work
+with \emph{extended blocks}, which are essentially equivalent to the graph of
+trees representation, as they are trees without any internal joining
+\gls{control flow}.  This makes the scheduler more flexible, making it possible
+to apply light loop pipelining optimisations by scheduling an unrolled loop.
+However, the symbolic execution is still performed on each trace through the
+program, and no sharing between tracing takes place, meaning that the validation
+is exponential in the number of internal joins.  Only extended blocks are
+scheduled so this is avoided.
 
 % It is notable that these unverified tools tend towards fewer, larger passes,
 % where several optimisations are packed into \enquote{scheduling}.  This
