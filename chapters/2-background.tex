@@ -1684,20 +1684,31 @@ symbolic states of the basic blocks for equivalence, and ensuring that the
 constraints form a subset.  The post-pass scheduler by
 \citeauthor*{six20_certif_effic_instr_sched} optimises the validation algorithm
 by using hash-consing to replace the expensive expression comparison by pointer
-comparisons and adds rewriting to the symbolic expressions to verify peephole
-optimisations.\YH{TODO: Check this again.}
+comparisons.
 
 \subsubsection{Superblock and Extended Block Scheduling}
 
 \textcite{six22_formal_verif_super_sched} then formalise superblock scheduling
 as a pre-pass optimisation at the \rtl{} level, which is a restricted form of
-trace scheduling that is well-suited for VLIW processors.  The idea is to
-translate \rtl{} code into \textsc{RtlPath} code, which is a superblock
-representation of the original code containing various traces through the
-program.  \citeauthor{six22_formal_verif_super_sched}'s scheduler then reorders
+trace scheduling that was specifically developed to target VLIW
+processors~\cite[]{hwu93_super}.  The idea is to translate \rtl{} code into
+\textsc{Rtlpath} code, which is a superblock representation of the original code
+containing multiple traces through the extended non-branching block.  The
+superblock construction needs to take into account which traces through the
+program will be executed more frequently and must group those together.
+\citeauthor{six22_formal_verif_super_sched}'s scheduler then reorders
 instructions within a superblock trace, and also combines them where it is
 advantageous to do so, making it necessary to allow for rewrites in the symbolic
-expressions as well.\YH{TODO: Check this.}
+expressions as well.
+
+The validator works similarly to the post-pass list scheduling algorithm in
+CompCert KVX, but it is extended to support symbolic expression normalisation to
+verify rewrites and expansion of instructions correct.  It therefore also
+includes all the optimisations from the list scheduling pass such as
+hash-consing.  In addition,
+
+However, in contrast to the list scheduling transformation, the superblock
+transformation requires validation of symbolic states at each exit of the
 
 \subsection{Trace Scheduling}%
 \label{sec:bg:trace-scheduling}
