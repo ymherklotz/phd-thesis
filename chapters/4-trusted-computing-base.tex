@@ -327,35 +327,39 @@ that the C memory model that \compcert{} uses matches with the interpretation of
 arrays used in Verilog.  The \compcert{} memory model is infinite, whereas our
 representation of arrays in Verilog is inherently finite.  There have already
 been efforts to define a general finite memory model for all intermediate
-languages in \compcert{}, such as \compcert{}\-S~\cite{besson18_compc} or
-\compcert{}-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages
-intact and translate to a more concrete finite memory model in the back end,
-such as in \compcert{}\-ELF~\cite{wang20_compc}.  We also define such a
-translation from \compcert{}'s standard infinite memory model to finite arrays
-that can be represented in Verilog.  There is therefore no more notion of an
-abstract memory model and all the interactions to memory are encoded in the
-hardware itself.
+languages in \compcert{}, such as CompCertS~\cite{besson18_compc} or
+CompCert-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages intact
+and translate to a more concrete finite memory model in the back end, such as in
+Comp\-Cert\-ELF~\cite{wang20_compc}.  We also define such a translation from
+\compcert{}'s standard infinite memory model to finite arrays that can be
+represented in Verilog.  There is therefore no more notion of an abstract memory
+model and all the interactions to memory are encoded in the hardware itself.
 
 %\JW{I'm not quite sure I understand. Let me check: Are you saying that previous work has shown how all the existing CompCert passes can be adapted from an infinite to a finite memory model, but what we're doing is leaving the default (infinite) memory model for the CompCert front end, and just converting from an infinite memory model to a finite memory model when we go from 3AC to HTL?}\YH{Yes exactly, most papers changed the whole memory model to thread through properties that were then needed in the back end, but we currently don't need to do that.  I need to double check though for CompCertELF, it doesn't actually seem to be the case.  Will edit this section later.}
 
 \definecolor{compcertmemmodel}{HTML}{e2ccea}
 \definecolor{vericertmemmodel}{HTML}{cbe1db}
+\definecolor{compcertmemmodeldark}{HTML}{5b2c6d}
+\definecolor{vericertmemmodeldark}{HTML}{386156}
 \begin{figure}
   \centering
-  \begin{tikzpicture}
-    \fill[compcertmemmodel,rounded corners=3pt] (0,0) rectangle (5,-5);
-    \fill[vericertmemmodel,rounded corners=3pt] (7,0) rectangle (12,-5);
-    \node[right] at (0,-0.3) {\small \textbf{\compcert{}'s Memory Model}};
-    \node[right] at (7,-0.3) {\small \textbf{Verilog Memory Representation}};
-    \node[right] (x0) at (0.2,-1.9) {\small 0};
-    \node[right] (x1) at (0.2,-2.5) {\small 1};
+  \begin{tikzpicture}[>=Latex,font=\sffamily]
+    \fill[compcertmemmodel,rounded corners=3pt] (0,1) rectangle (5,-5);
+    \fill[vericertmemmodel,rounded corners=3pt] (7,1) rectangle (12.5,-5);
+    \node[right] at (0,0.7) {\footnotesize \textbf{\compcert{}'s Memory Model}};
+    \node[right] at (7,0.7) {\footnotesize \textbf{Verilog Memory
+        Representation}};
+    \node[right] (baselabel) at (0.2,-1.3) {\small \textbf{\texttt{base}}};
+    \node[right] (x0) at (0.2,-1.9) {\small \texttt{0}};
+    \node[right] (x1) at (0.2,-2.5) {\small \texttt{1}};
     \node[rotate=90] (x2) at (0.43,-3.1) {$\cdots$};
     \foreach \x in {0,...,6}{%
-      \node[right] (s\x) at (2.5,-1-\x*0.3) {\small \x};
+      \node[right] (s\x) at (2.5,-1-\x*0.3) {\small \texttt{\x}};
       \node[right] (t\x) at (4,-1-\x*0.3) {};
       \draw[->] (s\x) -- (t\x);
     }
-
+    \path (s0) ++(-0.3,0.6) node[right] {\small\textbf{\texttt{addr}}};
+    \path (t0) ++(0.65,0.6) node[left] {\small\textbf{\texttt{data}}};
     \node[right] at (t0) {\small \texttt{DE}};
     \node[right] at (t1) {\small \texttt{AD}};
     \node[right] at (t2) {\small \texttt{BE}};
@@ -366,48 +370,50 @@ hardware itself.
     \node[right] at (3.1,-3.1) {$\cdots$};
 
     \node[right] at (3.1,-4) {$\cdots$};
-    \node[scale=1.3] at (6,-2.5) {\Huge $\Rightarrow$};
+    \draw[line width=1.7mm,->] (5,-2.5) -- (6.9,-2.5);
 
     \draw[->] (x0) -- (s3);
     \draw[->] (x1) -- (2.5,-4);
-    \draw (0,-4.3) -- (5,-4.3);
     \node at (2.5,-4.7) {\small \texttt{x[0] = 0xDEADBEEF;}};
 
-    \draw (7.2,-1.2) rectangle (9.4,-3.9);
-    \draw (9.6,-1.2) rectangle (11.8,-3.9);
+    \begin{scope}[xshift=2.5mm,yshift=3mm]
+      \draw (7.2,-1.2) rectangle (9.4,-3.9); \draw (9.6,-1.2) rectangle
+      (11.8,-3.9);
 
-    \foreach \x in {0,...,8}{%
-      \draw (7.2,-1.2-\x*0.3) -- (9.4,-1.2-\x*0.3);
-      \draw (9.6,-1.2-\x*0.3) -- (11.8,-1.2-\x*0.3);
-      \node (b\x) at (8.3,-1.35-\x*0.3) {};
-      \node (nb\x) at (10.7,-1.35-\x*0.3) {};
-    }
+      \foreach \x in {0,...,8}{%
+        \draw (7.2,-1.2-\x*0.3) -- (9.4,-1.2-\x*0.3); \draw (9.6,-1.2-\x*0.3) --
+        (11.8,-1.2-\x*0.3); \node (b\x) at (8.3,-1.35-\x*0.3) {}; \node (nb\x)
+        at (10.7,-1.35-\x*0.3) {}; }
 
-    \node[scale=1.2] at (b0) {\tiny\texttt{0: Some 00000000}};
-    \node[scale=1.2] at (b1) {\tiny\texttt{1: Some 12345600}};
-    \node[scale=1.2] at (b2) {\tiny\texttt{2: Some 00000000}};
-    \node[scale=1.2] at (b3) {\tiny\texttt{3: Some 00000000}};
-    \node[scale=1.2] at (b4) {\tiny\texttt{4: Some 00000000}};
-    \node[scale=1.2] at (b5) {\tiny\texttt{5: Some 00000000}};
-    \node[scale=1.2] at (b6) {\tiny\texttt{6: Some 00000000}};
-    \node[scale=1.2] at ($(b7) - (0,0.05)$) {$\cdots$};
-    \node[scale=1.2] at (b8) {\tiny\texttt{N: Some 00000000}};
+      \node[scale=1.2] at (b0) {\tiny\texttt{0: Some 00000000}};
+      \node[scale=1.2] at (b1) {\tiny\texttt{1: Some 12345600}};
+      \node[scale=1.2] at (b2) {\tiny\texttt{2: Some 00000000}};
+      \node[scale=1.2] at (b3) {\tiny\texttt{3: Some 00000000}};
+      \node[scale=1.2] at (b4) {\tiny\texttt{4: Some 00000000}};
+      \node[scale=1.2] at (b5) {\tiny\texttt{5: Some 00000000}};
+      \node[scale=1.2] at (b6) {\tiny\texttt{6: Some 00000000}};
+      \node[scale=1.2] at ($(b7) - (0,0.05)$) {$\cdots$}; \node[scale=1.2] at
+      (b8) {\tiny\texttt{N: Some 00000000}};
 
-    \node[scale=1.2] at (nb0) {\tiny\texttt{0: Some DEADBEEF}};
-    \node[left,scale=1.2] at (nb1) {\tiny\texttt{1: None}};
-    \node[left,scale=1.2] at (nb2) {\tiny\texttt{2: None}};
-    \node[left,scale=1.2] at (nb3) {\tiny\texttt{3: None}};
-    \node[left,scale=1.2] at (nb4) {\tiny\texttt{4: None}};
-    \node[left,scale=1.2] at (nb5) {\tiny\texttt{5: None}};
-    \node[left,scale=1.2] at (nb6) {\tiny\texttt{6: None}};
-    \node[scale=1.2] at ($(nb7) - (0,0.05)$) {$\cdots$};
-    \node[left,scale=1.2] at (nb8) {\tiny\texttt{N: None}};
+      \node[scale=1.2] at (nb0) {\tiny\texttt{0: Some DEADBEEF}};
+      \node[left,scale=1.2] at (nb1) {\tiny\texttt{1: None}};
+      \node[left,scale=1.2] at (nb2) {\tiny\texttt{2: None}};
+      \node[left,scale=1.2] at (nb3) {\tiny\texttt{3: None}};
+      \node[left,scale=1.2] at (nb4) {\tiny\texttt{4: None}};
+      \node[left,scale=1.2] at (nb5) {\tiny\texttt{5: None}};
+      \node[left,scale=1.2] at (nb6) {\tiny\texttt{6: None}}; \node[scale=1.2]
+      at ($(nb7) - (0,0.05)$) {$\cdots$}; \node[left,scale=1.2] at (nb8)
+      {\tiny\texttt{N: None}};
 
-    \node at (8.3,-1) {$\Gamma_{a}$};
-    \node at (10.7,-1) {$\Delta_{a}$};
+      \node at (8.3,-0.9) {$\Gamma_{a}$}; \node at (10.7,-0.9) {$\Delta_{a}$};
+    \end{scope}
 
-    \draw (7,-4.3) -- (12,-4.3);
     \node at (9.5,-4.7) {\small \texttt{stack[0] <= 0xDEADBEEF;}};
+
+    \draw[very thick,draw=vericertmemmodeldark] (7,-4.3) -- (12.5,-4.3);
+    \draw[very thick,draw=compcertmemmodeldark] (0,-4.3) -- (5,-4.3);
+    \draw[very thick,draw=vericertmemmodeldark] (7,0.3) -- (12.5,0.3);
+    \draw[very thick,draw=compcertmemmodeldark] (0,0.3) -- (5,0.3);
   \end{tikzpicture}
   %\Description{\compcert{}'s memory model is translated into a more concrete memory model based on Verilog arrays.  Two association maps are therefore needed to keep track of the blocking and nonblocking assignments.}
   \caption{Change in the memory model during the translation of \rtl{} into

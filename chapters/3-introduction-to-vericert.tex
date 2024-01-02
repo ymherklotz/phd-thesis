@@ -2,30 +2,37 @@
 \label{sec:introduction-to-vericert}
 
 \begin{quote}\itshape
-  This section describes the main architecture of the HLS tool, and the way in
-  which the Verilog back end was added to \compcert{}.  This section also covers
+  This chapter describes the main architecture of the HLS tool, and the way in
+  which the Verilog back end was added to \compcert{}.  This chapter also covers
   an example of converting a simple C program into hardware, expressed in the
   Verilog language.
 \end{quote}
 
-\subsection{Main Design Decisions}
+\noindent Our solution to the verification problem in \gls{HLS} is Vericert, a
+formally verified \gls{HLS} tool.  First, we will describe the main design
+decisions behind Vericert in \cref{sec:itv:main-design-decisions} and we will
+then give an example of a translation from C code into Verilog through Vericert
+in \cref{sec:itv:translating-c-to-verilog}.
+
+\section{Main Design Decisions}%
+\label{sec:itv:main-design-decisions}
 
 \paragraph{Choice of source language}
 C was chosen as the source language as it remains the most common source
 language amongst production-quality HLS tools~\cite{canis13_l,
   amd23_vitis_high_synth, intel20_hsc, pilato13_bambu}. This, in turn, may be
-because it is \enquote{[t]he starting point for the vast majority of algorithms
-  to be implemented in hardware}~\cite{gajski10_what_hls}, lending a degree of
-practicality.  The availability of
+because it is \textquote[{\textcite{gajski10_what_hls}}]{[t]he starting point
+  for the vast majority of algorithms to be implemented in hardware}, lending a
+degree of practicality.  The availability of
 \compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid
 basis for formally verified C compilation.
 %Since a lot of existing code for HLS is written in C, supporting C as an input language, rather than a custom domain-specific language, means that \vericert{} is more practical.
 %An alternative was to support LLVM IR as an input language, however, to get a full work flow from a higher level language to hardware, a front end for that language to LLVM IR would also have to be verified. \JW{Maybe save LLVM for the `Choice of implementation language'?}
 We considered Bluespec~\cite{nikhil04_bsv}, but decided that although it
-\enquote{can be classed as a high-level language}~\cite{greaves19_resear_note},
-it is too hardware-oriented to be suitable for traditional HLS.  We also
-considered using a language with built-in parallel constructs that map well to
-parallel hardware, such as occam~\cite{page91_compil_occam},
+\textquote[{\textcite{greaves19_resear_note}}]{can be classed as a high-level
+  language}, it is too hardware-oriented to be suitable for traditional HLS.  We
+also considered using a language with built-in parallel constructs that map well
+to parallel hardware, such as occam~\cite{page91_compil_occam},
 Spatial~\cite{koeplinger18_s} or Scala~\cite{bachrach12_chisel}.
 % However, this would not qualify as being HLS due to the manual parallelism that would have to be performed. \JW{I don't think the presence of parallelism stops it being proper HLS.}
 %\JP{I think I agree with Yann here, but it could be worded better. At any rate not many people have experience writing what is essentially syntactic sugar over a process calculus.}
@@ -65,60 +72,94 @@ suitable for us because they lack formal semantics.
 
 \begin{figure}
   \centering
-  % JW: resizebox is associated with puppies dying
-  %\resizebox{0.85\textwidth}{!}{
   \begin{tikzpicture}
-    [language/.style={fill=white,rounded corners=3pt,minimum height=7mm},
-    continuation/.style={},
-    linecount/.style={rounded corners=3pt,dashed}]
-    \fill[compcert,rounded corners=3pt] (-1,-0.5) rectangle (9.9,2);
-    \fill[formalhls,rounded corners=3pt] (-1,-1) rectangle (9.9,-2.4);
-    %\draw[linecount] (-0.95,-0.45) rectangle (3.6,1);
-    %\draw[linecount] (4,-0.45) rectangle (7.5,1);
-    \node[language] at (-0.3,0) (clight) {\textsc{Clight}};
-    \node[continuation] at (1,0) (conta) {$\cdots$};
-    \node[language] at (2.7,0) (cminor) {\textsc{CminorSel}};
-    \node[language] at (4.7,0) (rtl) {\rtl{}};
-    \node[language] at (6.2,0) (ltl) {\textsc{Ltl}};
-    \node[language,anchor=west] at (8.4,0) (aarch) {aarch64};
-    \node[language,anchor=west] at (8.4,0.8) (x86) {x86};
-    \node[continuation,anchor=west] at (8.4,1.4) (backs) {$\cdots$};
-    \node[continuation] at (7.3,0) (contb) {$\cdots$};
-    \node[language] at (4.7,-1.5) (htl) {\htl{}};
-    \node[language] at (6.7,-1.5) (verilog) {Verilog};
-    \node[anchor=west] at (-0.9,1.6) {\textbf{\compcert{}}};
-    \node[anchor=west] at (-0.9,-1.4) {\textbf{\vericert{}}};
-    %%\node[anchor=west] at (-0.9,0.7) {\small $\sim$ 27 kloc};
-    %%\node[anchor=west] at (4.1,0.7) {\small $\sim$ 46 kloc};
-    %%\node[anchor=west] at (2,-1.5) {\small $\sim$ 17 kloc};
-    \node[align=center] at (3.2,-2) {\footnotesize \gls{BRAM}\\[-0.5em]\footnotesize insertion};
-    \draw[->,thick] (clight) -- (conta);
-    \draw[->,thick] (conta) -- (cminor);
-    \draw[->,thick] (cminor) -- (rtl);
-    \draw[->,thick] (rtl) -- (ltl);
-    \draw[->,thick] (ltl) -- (contb);
-    \draw[->,thick] (contb) -- (aarch);
-    \draw[->,thick] (contb) to [out=0,in=200] (x86.west);
-    \draw[->,thick] (contb) to [out=0,in=190] (backs.west);
-    \draw[->,thick] (rtl) -- (htl);
-    \draw[->,thick] (htl) -- (verilog);
-    \draw[->,thick] (htl.west) to [out=180,in=150] (4,-2.2) to [out=330,in=270] (htl.south);
-  \end{tikzpicture}%}
-%  \alt{The compilation flow of \compcert{}, showing where \vericert{} branches off.}
+    [font=\strut\sffamily]
+    \node[ir] (compcertc) {CompCert C};
+    \node[right=2cm of compcertc] (frontend) {};
+    \begin{pgfonlayer}{background}
+          \node[bgbox,fill=bgbox1,minimum height=4cm,minimum width=3cm,yshift=3mm]
+    (frontendbg) at (frontend) {};
+    \end{pgfonlayer}
+    \node[pass] (frontendpass) at (frontend) {$\vphantom{A}\cdots$};
+    \node[right=3.5cm of frontend] (rtlghost) {};
+    \begin{pgfonlayer}{background}
+      \node[bgbox,fill=bgbox2,minimum height=4cm,minimum width=3cm,yshift=3mm]
+      (rtlghostbg) at (rtlghost) {};
+    \end{pgfonlayer}
+    \node[ir,below=2mm of rtlghost,xshift=-8mm] (rtl) {\rtl{}};
+    \node[pass,right=5mm of rtl] (rtlpass) {$\vphantom{A}\cdots$};
+    \node[pass,above=2mm of rtlghost] (opts) {optimisations};
+    \node[anchor=south,above=2mm of opts] (backend) {Back End};
+    \node[ir,right=2cm of rtlghost] (nativecode) {Native Code};
+    \path (backend) -| node {Front End} (frontend);
+    \draw[ed] (compcertc) -- (frontendpass) -- ++(2cm,0) |- (rtl);
+    \draw[ed] (rtl) -- (rtlpass) -- ++(1cm,0) |- (nativecode);
+    \draw[very thick] (opts) to [out=310,in=20] (rtl);
+    \draw[edr] (rtl) to [out=90,in=220] (opts);
+    \node[pass,below=2.3cm of compcertc] (findbb) {find\\basic blocks};
+    \node[ir,right=of findbb] (rtlblock) {\rtlblock{}};
+    \draw[ed] (rtlblock) to [out=220,in=320,loop,looseness=7] (rtlblock);
+    \node[pass,right=of rtlblock] (schedule) {schedule};
+    \node[pass,below=of rtlblock] (ifconv) {if-conversion};
+    \node[ir,right=of schedule] (rtlpar) {\rtlpar{}};
+    \node[pass,below=of findbb,yshift=-2cm] (hyperblock destruction) {hyperblock\\destruction};
+    \node[ir,right=of hyperblock destruction] (rtlsubpar) {\rtlsubpar{}};
+    \node[pass,right=of rtlsubpar] (htl generation) {\htl{} \\
+      generation};
+    \node[ir,right=of htl generation] (htl) {\htl{}};
+    \node[pass,right=of htl] (bram insertion) {BRAM \\ insertion};
+    \node[ir,below=of bram insertion] (htlmem) {\htl{}};
+    \node[pass,left=of htlmem] (forward substitution) {forward \\ substitution};
+    \node[ir,left=of forward substitution] (htlsubst) {\htl{}};
+    \node[pass,left=of htlsubst] (verilog generation) {verilog \\ generation};
+    \node[ir,left=of verilog generation] (verilog) {Verilog};
+
+    \begin{pgfonlayer}{background}
+      \node[bgbox,fit={(findbb)(rtlblock)(ifconv)(rtlpar)}] (schedulebox) {};
+      \node[bgbox,fit={(hyperblock destruction)(bram
+        insertion)(htlmem)(forward substitution)(verilog)}] (hardwaregenbox) {};
+    \end{pgfonlayer}
+
+      \path (hardwaregenbox.north west) --
+      node[font=\sffamily\small,align=center,rotate=90,yshift=5mm] (hardwaregen label)
+      {Hardware Generation\\\Cref{sec:hardware-generation}}
+      (hardwaregenbox.south west);
+      \path (schedulebox.north west) --
+      node[font=\sffamily\small,align=center,rotate=90,yshift=5mm] (schedule label)
+      {Hyperblock Scheduling\\\Cref{sec:hyperblock-scheduling}}
+      (schedulebox.south west);
+
+      \begin{pgfonlayer}{background}
+        \node[bgbox,fill=bgbox4,fit={(hyperblock destruction)(bram
+          insertion)(htlmem)(forward substitution)(verilog)(hardwaregen label)}]
+        (hardwaregenboxb) {};
+      \node[bgbox,fill=bgbox3,fit={(findbb)(rtlblock)(ifconv)(rtlpar)(schedule
+        label)}] (scheduleboxb) {};
+      \filldraw[bgbox,fill=bgbox3] (scheduleboxb.north west) rectangle
+      (hardwaregenboxb.north east
+      |- scheduleboxb.south east);
+      \end{pgfonlayer}
+
+    \path (rtlghostbg.west) -| node[font=\sffamily\small,anchor=south,rotate=90] {CompCert} (hardwaregen label);
+
+    \draw[ed] (rtl) -- ++(0,-1.3cm) -| (findbb) -- (rtlblock);
+    \draw[ed] (rtlblock) -- (schedule) -- (rtlpar);
+    \draw[ed] (rtlpar) -- ++(0,-2.7cm) -| (hyperblock destruction) -- (rtlsubpar);
+    \draw[ed] (rtlsubpar) -- (htl generation) -- (htl);
+    \draw[ed] (htl) -- (bram insertion) -- (htlmem);
+    \draw[ed] (htlmem) -- (forward substitution) -- (htlsubst);
+    \draw[ed] (htlsubst) -- (verilog generation) -- (verilog);
+  \end{tikzpicture}
   \caption{\vericert{} as a Verilog back end to \compcert{}.}%
   \label{fig:rtlbranch}
 \end{figure}
 
 \paragraph{Architecture of \vericert{}}
-The main work flow of \vericert{} is given in \cref{fig:rtlbranch}, which shows
-those parts of the translation that are performed in \compcert{}, and those that
-have been added.  This includes translations to two new intermediate languages
-added in \vericert{}, \htl{} and Verilog, as well as an additional optimisation
-pass labelled as ``\gls{BRAM} insertion''.
 
-\def\numcompcertlanguages{ten}
-
-\compcert{} translates Clight\footnote{A deterministic subset of C with pure expressions.} input into assembly output via a sequence of intermediate languages; we must decide which of these \numcompcertlanguages{} languages is the most suitable starting point for the HLS-specific translation stages.
+An overview of \vericert{}'s workflow is given in \cref{fig:rtlbranch}, which
+shows that \vericert{} branches off from \compcert{} at the \rtl{} stage,
+followed by a number of transformations related to the scheduling instructions,
+and finally transformations that generate the final hardware.
 
 We select CompCert's register transfer language (\rtl{}) as the starting
 point. Branching off \emph{before} this point (at CminorSel or earlier) denies
@@ -130,95 +171,42 @@ this point (at LTL or later) then \compcert{} has already performed register
 allocation to reduce the number of registers and spill some variables to the
 stack; this transformation is not required in HLS because there are many more
 registers available, and these should be used instead of \gls{BRAM} whenever
-possible. %\JP{``\compcert{} performs register allocation during the translation to LTL, with some registers spilled onto the stack: this is unnecessary in HLS since as many registers as are required may be described in the output RTL.''} \JP{Maybe something about FPGAs being register-dense (so rarely a need to worry about the number of flops)?}
+possible.
 
 \rtl{} is also attractive because it is the closest intermediate language to
-LLVM IR, which is used by several existing HLS
-compilers. %\JP{We already ruled out LLVM as a starting point, so this seems like it needs further qualification.}\YH{Well not because it's not a good starting point, but the ecosystem in Coq isn't as good.  I think it's still OK here to say that being similar to LLVM IR is an advantage?}
-It has an unlimited number of pseudo-registers, and is represented as a
-\gls{CFG} where each instruction is a node with links to the instructions that
-can follow it. One difference between LLVM \gls{IR} and \rtl{} is that \rtl{} includes
-operations that are specific to the chosen target architecture; we chose to
-target the x86\_32 back end because it generally produces relatively dense \rtl{}
-thanks to the availability of complex addressing
-modes.% reducing cycle counts in the absence of an effective scheduling approach.
+LLVM \gls{IR}, which is used by several existing HLS compilers.  It has an
+unlimited number of pseudo-registers, and is represented as a \gls{CFG} where
+each instruction is a node with links to the instructions that can follow it.
+\rtl{} does not have the SSA property, however, this is not required for the
+translation to hardware and mainly assists the static analysis passes.  One
+difference between LLVM \gls{IR} and \rtl{} is that \rtl{} includes operations
+that are specific to the chosen target architecture; we chose to target the
+x86\_32 back end because it generally produces relatively dense \rtl{} thanks to
+the availability of complex addressing modes.
 
-\subsection{An Introduction to Verilog}
+From the \rtl{} representation, Vericert first generates a hyperblock
+representation called \rtlblock{} by first generating basic blocks and then
+performing general if-conversion to combine blocks.  The hyperblock is
+represented as a basic block of predicated instructions with an exit instruction
+to leave the basic block prematurely.  This hyperblock is then scheduled and
+transformed into \rtlpar{}, which places each instruction into a specific state.
+The scheduling process is described in detail in
+\cref{sec:hyperblock-scheduling}.
 
-This section will introduce Verilog for readers who may not be familiar with the language, concentrating on the features that are used in the output of \vericert{}.  Verilog is a hardware description language (HDL) and is used to design hardware ranging from complete CPUs that are eventually produced as integrated circuits, to small application-specific accelerators that are placed on FPGAs.  Verilog is a popular language because it allows for fine-grained control over the hardware, and also provides high-level constructs to simplify development.
-
-Verilog behaves quite differently to standard software programming languages due to it having to express the parallel nature of hardware.  The basic construct to achieve this is the always-block, which is a collection of assignments that are executed every time some event occurs.  In the case of \vericert{}, this event is either a positive (rising) or a negative (falling) clock edge.  All always-blocks triggering on the same event are executed in parallel. Always-blocks can also express control-flow using if-statements and case-statements.
-%\NR{Might be useful to talk about registers must be updated only within an always-block.} \JW{That's important for Verilog programming in general, but is it necessary for understanding this paper?}\YH{Yeah, I don't think it is too important for this section.}
-
-\begin{figure}
-  \centering
-  \begin{subfigure}{0.55\linewidth}
-\begin{minted}[linenos,xleftmargin=20pt,fontsize=\footnotesize]{verilog}
-module main(input rst, input y, input clk,
-            output reg z);
-  reg tmp, state;
-  always @(posedge clk)
-    case (state)
-      1'b0: tmp <= y;
-      1'b1: begin tmp <= 1'b0; z <= tmp; end
-    endcase
-  always @(posedge clk)
-    if (rst) state <= 1'b0;
-    else case (state)
-      1'b0: if (y) state <= 1'b1;
-            else state <= 1'b0;
-      1'b1: state <= 1'b0;
-    endcase
-endmodule
-\end{minted}
-  \end{subfigure}\hfill%
-  \begin{subfigure}{0.45\linewidth}
-    \centering
-    \begin{tikzpicture}
-      \node[draw,circle,inner sep=6pt] (s0) at (0,0) {$S_{\mathit{start}} / \texttt{x}$};
-      \node[draw,circle,inner sep=8pt] (s1) at (1.5,-3) {$S_{1} / \texttt{1}$};
-      \node[draw,circle,inner sep=8pt] (s2) at (3,0) {$S_{0} / \texttt{1}$};
-      \node (s2s) at ($(s2.west) + (-0.3,1)$) {\texttt{00}};
-      \node (s2ss) at ($(s2.east) + (0.3,1)$) {\texttt{1x}};
-      \draw[-{Latex[length=2mm,width=1.4mm]}] ($(s0.west) + (-0.3,1)$) to [out=0,in=120] (s0);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s0)
-           to [out=-90,in=150] node[midway,left] {\texttt{01}} (s1);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s1)
-      to [out=80,in=220] node[midway,left] {\texttt{xx}} (s2);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
-      to [out=260,in=50] node[midway,right] {\texttt{01}} (s1);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
-      to [out=120,in=40] ($(s2.west) + (-0.3,0.7)$) to [out=220,in=170] (s2);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
-      to [out=60,in=130] ($(s2.east) + (0.3,0.7)$) to [out=310,in=10] (s2);
-    \end{tikzpicture}
-  \end{subfigure}
-%  \alt{Verilog code of a state machine, and its equivalent state machine diagram.}
-  \caption{A simple state machine implemented in Verilog, with its diagrammatic representation on the right. The \texttt{x} stands for ``don't care'' and each transition is labelled with the values of the inputs \texttt{rst} and \texttt{y} that trigger the transition.  The output that will be produced is shown in each state.}%
-  \label{fig:tutorial:state_machine}
-\end{figure}
-
-
-A simple state machine can be implemented as shown in
-\cref{fig:tutorial:state_machine}.  At every positive edge of the clock
-(\texttt{clk}), both of the always-blocks will trigger simultaneously.  The
-first always-block controls the values in the register \texttt{tmp} and the
-output \texttt{z}, while the second always-block controls the next state the
-state machine should go to.  When the \texttt{state} is 0, \texttt{tmp} will be
-assigned to the input \texttt{y} using nonblocking assignment, denoted by
-\texttt{<=}.  Nonblocking assignment assigns registers in parallel at the end of
-the clock cycle, rather than sequentially throughout the always-block. In the
-second always-block, the input \texttt{y} will be checked, and if it's high it
-will move on to the next state, otherwise it will stay in the current state.
-When \texttt{state} is 1, the first always-block will reset the value of
-\texttt{tmp} and then set \texttt{z} to the original value of \texttt{tmp},
-since nonblocking assignment does not change its value until the end of the
-clock cycle.  Finally, the last always-block will set the state to 0 again.
+Next, the hyperblocks are destroyed again to explicitly place instructions into
+individual states.  Next, \htl{} is generated, which is a language that models
+an \gls{FSMD}.  A few low-level and hardware specific optimisations are
+performed at this level, including \gls{BRAM} insertion, which generates a
+proper memory interface for any interaction with the stack, and forward
+substitution, which ensures that the writes to registers are parallelised by
+transforming blocking assignment into nonblocking assignment.  Finally,
+syntactic Verilog is generated from \htl{}, which consists of translating the
+\gls{FSMD} into a case statement and implementing the memory interface in
+Verilog.
 
 \begin{figure}
   \centering
-  \begin{subfigure}[b]{0.3\linewidth}
-    \begin{subfigure}[t]{1\linewidth}
+    \begin{subfigure}[b]{0.48\linewidth}
 \begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
 int main() {
     int x[2] = {3, 6};
@@ -227,84 +215,44 @@ int main() {
 }
 \end{minted}
       \caption{Example C code passed to \vericert{}.}\label{fig:accumulator_c}
-    \end{subfigure}\\\vspace{3em}
-    \begin{subfigure}[b]{1\linewidth}
+    \end{subfigure}\hfill%
+    \begin{subfigure}[b]{0.48\linewidth}
 \begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
 main() {
-    x5 = 3
-    int32[stack(0)] = x5
-    x4 = 6
-    int32[stack(4)] = x4
-    x1 = 1
-    x3 = stack(0) (int)
-    x2 = int32[x3 + x1
-               * 4 + 0]
-    return x2
+    9:  x5 = 3
+    8:  int32[stack(0)] = x5
+    7:  x4 = 6
+    6:  int32[stack(4)] = x4
+    5:  x1 = 1
+    4:  x3 = stack(0) (int)
+    3:  x2 = int32[x3 + x1 * 4 + 0]
+        goto 1
+    2:  x2 = 0
+    1:  return x2
 }
 \end{minted}
-      \caption{\rtl{} produced by the \compcert{} front-end without any optimisations.}\label{fig:accumulator_rtl}
+      \caption{\rtl{} produced by the \compcert{} front end without any optimisations.}\label{fig:accumulator_rtl}
     \end{subfigure}
-  \end{subfigure}\hfill%
-  \begin{subfigure}[b]{0.65\linewidth}
-\begin{minted}[fontsize=\tiny,linenos,xleftmargin=20pt]{verilog}
-module main(reset, clk, finish, return_val);
-  input [0:0] reset, clk;
-  output reg [0:0] finish = 0;
-  output reg [31:0] return_val = 0;
-  reg [31:0] reg_3 = 0, addr = 0, d_in = 0, reg_5 = 0, wr_en = 0;
-  reg [0:0] en = 0, u_en = 0;
-  reg [31:0] state = 0, reg_2 = 0, reg_4 = 0, d_out = 0, reg_1 = 0;
-  reg [31:0] stack [1:0];
-  // \gls{BRAM} interface
-  always @(negedge clk)
-    if ({u_en != en}) begin
-      if (wr_en) stack[addr] <= d_in;
-      else d_out <= stack[addr];
-      en <= u_en;
-    end
-  // data path
-  always @(posedge clk)
-    case (state)
-      32'd11: reg_2 <= d_out;
-      32'd8: reg_5 <= 32'd3;
-      32'd7: begin u_en <= ( ~ u_en); wr_en <= 32'd1;
-                   d_in <= reg_5; addr <= 32'd0; end
-      32'd6: reg_4 <= 32'd6;
-      32'd5: begin u_en <= ( ~ u_en); wr_en <= 32'd1;
-                   d_in <= reg_4; addr <= 32'd1; end
-      32'd4: reg_1 <= 32'd1;
-      32'd3: reg_3 <= 32'd0;
-      32'd2: begin u_en <= ( ~ u_en); wr_en <= 32'd0;
-                   addr <= {{{reg_3 + 32'd0} + {reg_1 * 32'd4}} / 32'd4}; end
-      32'd1: begin finish = 32'd1; return_val = reg_2; end
-      default: ;
-    endcase
-  // control logic
-  always @(posedge clk)
-    if ({reset == 32'd1}) state <= 32'd8;
-    else case (state)
-           32'd11: state <= 32'd1;        32'd4: state <= 32'd3;
-           32'd8: state <= 32'd7;         32'd3: state <= 32'd2;
-           32'd7: state <= 32'd6;         32'd2: state <= 32'd11;
-           32'd6: state <= 32'd5;         32'd1: ;
-           32'd5: state <= 32'd4;         default: ;
-         endcase
-endmodule
-\end{minted}
-\caption{Verilog produced by \vericert{}. It demonstrates the instantiation of
-  the \gls{BRAM} (lines 9--15), the \glsfmttext{data path} (lines 16--32) and the control logic (lines 33--42).}\label{fig:accumulator_v}
-\end{subfigure}
-\caption{Translating a simple program from C to Verilog.}\label{fig:accumulator_c_rtl}
-% \NR{Is the default in line 41 of (c) supposed to be empty?}\YH{Yep, that's how it's generated.}
+    \caption{Translating a simple program from C to \rtl{}.}\label{fig:accumulator_c_rtl}
 \end{figure}
 
-\subsection{Translating C to Verilog by Example}
+\begin{figure}
+  \centering
+  \inputminted[fontsize=\footnotesize,linenos,xleftmargin=20pt]{systemverilog}{figures/3-introduction-to-vericert/translated-verilog.sv}
+  \caption{Verilog implementation of \rtl{} code produced by CompCert produced
+    by scheduling the code, instantiating a BRAM and translating to Verilog.}
+  \label{fig:accumulator:verilog-implementation}
+\end{figure}
+
+\section{Translating C to Verilog by Example}%
+\label{sec:itv:translating-c-to-verilog}
+
 \Cref{fig:accumulator_c_rtl} illustrates the translation of a simple program
 that stores and retrieves values from an array.  In this section, we describe
 the stages of the \vericert{} translation, referring to this program as an
 example.
 
-\subsubsection{Translating C to \rtl{}}
+\subsection{Translating C to \rtl{}}
 
 The first stage of the translation uses unmodified \compcert{} to transform the
 C input, shown in \cref{fig:accumulator_c}, into a \rtl{} intermediate
@@ -319,7 +267,7 @@ supported in most HLS tools anyway~\cite{thomas16_srcht}.
 
 %\JW{Is that definitely true? Was discussing this with Nadesh and George recently, and I ended up not being so sure. Inlining could actually lead to \emph{reduced} resource usage because once everything has been inlined, the (big) scheduling problem could then be solved quite optimally. Certainly inlining is known to increase register pressure, but that's not really an issue here. If we're  not sure, we could just say that inlining everything leads to bloated Verilog files and the inability to support recursion, and leave it at that.}\YH{I think that is true, just because we don't do scheduling.  With scheduling I think that's true, inlining actually becomes quite good.}
 
-\subsubsection{Translating \rtl{} to \htl{}}
+\subsection{Translating \rtl{} to \htl{}}
 
 %   + TODO Explain the main mapping in a short simple way
 
@@ -358,38 +306,45 @@ optimisations like proper \gls{BRAM} insertion.
 \definecolor{control}{HTML}{b3e2cd}
 \definecolor{data}{HTML}{fdcdac}
 \begin{tikzpicture}
-  \begin{scope}[scale=1.15]
+  \begin{scope}[scale=1.3]
   \fill[control,fill opacity=1] (6.5,0) rectangle (12,5);
   \fill[data,fill opacity=1] (0,0) rectangle (5.5,5);
-  \node at (1,4.7) {Data-path};
-  \node at (7.5,4.7) {Control Logic};
+  \shade[left color=data, right color=control] (6.7,0) rectangle (5.3,5);
+  \node[anchor=north west,font=\bfseries\sffamily] at (0.2,4.9) {Data Path};
+  \node[anchor=north west,font=\bfseries\sffamily] at (6.9,4.9) {Control Logic};
 
-  \fill[white,rounded corners=10pt] (7,0.5) rectangle (11.5,2.2);
-  \node at (8,2) {\footnotesize Next State FSM};
-  \foreach \x in {8,...,2}
-    {\pgfmathtruncatemacro{\y}{8-\x}%
-      \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s\x) at (7.5+\y/2,1.35) {\tiny \x};}
-  \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s1c) at (11,1.35) {\tiny 1};
-  \node[draw,circle,inner sep=0,minimum size=13,scale=0.8] (s1) at (s1c) {};
+  \filldraw[fill=white,rounded corners=3pt] (7,0.5) rectangle (11.5,2.2);
+  \node at (8.2,2) {\footnotesize \texttt{Next State FSM}};
+  \begin{scope}[xshift=5mm,yshift=-1mm]
   \foreach \x in {8,...,3}
+    {\pgfmathtruncatemacro{\y}{8-\x}%
+      \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s\x) at
+      (7.5+\y/2,1.35) {};}
+  \node[font=\tiny] at (s8) {8};
+  \node[font=\tiny] at (s7) {14};
+  \node[font=\tiny] at (s6) {15};
+  \node[font=\tiny] at (s5) {16};
+  \node[font=\tiny] at (s4) {18};
+  \node[font=\tiny] (s1c) at (s3) {17};
+  \node[draw,circle,inner sep=0,minimum size=13,scale=0.8] (s1) at (s1c) {};
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (s1) to [loop,looseness=5,out=45,in=-45] (s1);
+  \foreach \x in {8,...,4}
     {\pgfmathtruncatemacro{\y}{\x-1}\draw[-{Latex[length=1mm,width=0.7mm]}] (s\x) -- (s\y);}
-  \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s11) at (10.5,0.9) {\tiny 11};
-  \draw[-{Latex[length=1mm,width=0.7mm]}] (s2) -- (s11);
-  \draw[-{Latex[length=1mm,width=0.7mm]}] (s11) -- (s1);
   \draw[-{Latex[length=1mm,width=0.7mm]}] (7.2,1.7) to [out=0,in=100] (s8);
+  \end{scope}
 
-  \node[draw,fill=white] (nextstate) at (9.25,3) {\tiny Current State};
+  \node[draw,fill=white] (nextstate) at (9.25,3) {\tiny \texttt{current state}};
   \draw[-{Latex[length=1mm,width=0.7mm]}] let \p1 = (nextstate) in
     (11.5,1.25) -| (11.75,\y1) -- (nextstate);
   \draw let \p1 = (nextstate) in (nextstate) -- (6,\y1) |- (6,1.5);
   \node[scale=0.5,rotate=60] at (7.5,0.75) {\texttt{clk}};
-  \node[scale=0.5,rotate=60] at (7.7,0.75) {\texttt{rst}};
+  \node[scale=0.5,rotate=60] at (7.7,0.82) {\texttt{reset}};
   \draw[-{Latex[length=1mm,width=0.7mm]}] (7.65,-0.5) -- (7.65,0.5);
   \draw[-{Latex[length=1mm,width=0.7mm]}] (7.45,-0.5) -- (7.45,0.5);
 
-  \fill[white,rounded corners=10pt] (2,0.5) rectangle (5,3);
+  \filldraw[fill=white,rounded corners=3pt] (2,0.5) rectangle (5,3);
   \filldraw[fill=white] (0.25,0.5) rectangle (1.5,2.75);
-  \node at (2.6,2.8) {\footnotesize Update};
+  \node at (2.6,2.8) {\footnotesize \texttt{Update}};
   \node[align=center] at (0.875,2.55) {\footnotesize \texttt{\gls{BRAM}}};
   \node[scale=0.5] at (4.7,1.5) {\texttt{state}};
   \draw[-{Latex[length=1mm,width=0.7mm]}] (6,1.5) -- (5,1.5);
@@ -397,7 +352,7 @@ optimisations like proper \gls{BRAM} insertion.
   \node[scale=0.5,rotate=60] at (4.1,0.9) {\texttt{finished}};
   \node[scale=0.5,rotate=60] at (3.9,0.95) {\texttt{return\_val}};
   \node[scale=0.5,rotate=60] at (2.5,0.75) {\texttt{clk}};
-  \node[scale=0.5,rotate=60] at (2.7,0.75) {\texttt{rst}};
+  \node[scale=0.5,rotate=60] at (2.7,0.82) {\texttt{reset}};
 
   \node[scale=0.5,right,inner sep=5pt] (ram1) at (2,2.1) {\texttt{u\_en}};
   \node[scale=0.5,right,inner sep=5pt] (ram2) at (2,1.9) {\texttt{wr\_en}};
@@ -447,18 +402,19 @@ optimisations like proper \gls{BRAM} insertion.
   \node at (3.5,4.55) {\footnotesize \texttt{Registers}};
   \draw[-{Latex[length=1mm,width=0.7mm]}] (2,2.4) -| (1.75,4) -- (2.8,4);
   \draw[-{Latex[length=1mm,width=0.7mm]}] (4.2,4) -- (5.25,4) |- (5,2.4);
-  \draw[-{Latex[length=1mm,width=0.7mm]}] (5.25,2.4) -- (6.2,2.4) |- (7,1.8);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (5.25,2.4) -- (5.9,2.4) arc (180:0:.1)
+  -- (6.2,2.4) |- (7,1.8);
 
-  \node[scale=0.5] at (3.5,4.2) {\texttt{reg\_1}};
-  \node[scale=0.5] at (3.5,4) {\texttt{reg\_2}};
-  \node[scale=0.5] at (3.5,3.8) {\texttt{reg\_3}};
-  \node[scale=0.5] at (3.5,3.6) {\texttt{reg\_4}};
-  \node[scale=0.5] at (3.5,3.4) {\texttt{reg\_5}};
+  \node[scale=0.5] at (3.5,4.2) {\texttt{reg\_2}};
+  \node[scale=0.5] at (3.5,4) {\texttt{reg\_4}};
+  \node[scale=0.5] at (3.5,3.8) {\texttt{reg\_6}};
+  \node[scale=0.5] at (3.5,3.6) {\texttt{reg\_8}};
+  \node[scale=0.5] at (3.5,3.4) {\texttt{reg\_10}};
 \end{scope}
 \end{tikzpicture}
 %  \alt{Diagram displaying the data-path and its internal modules, as well as the control logic and its state machine.}
 \caption{The FSMD for the example shown in \cref{fig:accumulator_c_rtl}, split
-  into a data-path and control logic for the next state calculation.  The Update
+  into a data path and control logic for the next state calculation.  The update
   block takes the current state, current values of all registers and at most one
   value stored in the \gls{BRAM}, and calculates a new value that can either be
   stored back in the \gls{BRAM} or in a
@@ -512,7 +468,7 @@ The only 32-bit instructions that we do not translate are case-statements
 (\texttt{Icall}, \texttt{Ibuiltin}, and \texttt{Itailcall}), because we enable
 inlining by default.
 
-\subsubsection{Translating \htl{} to Verilog}
+\subsection{Translating \htl{} to Verilog}
 
 Finally, we have to translate the \htl{} code into proper
 Verilog. % and prove that it behaves the same as the \rtl{} according to the Verilog semantics.

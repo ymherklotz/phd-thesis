@@ -157,6 +157,97 @@ individual resources on the \gls{FPGA}.  The result can be seen in
 place-and-route process placed logical functions into \glspl{LUT} and connected
 them together correctly, also making use of a \gls{BRAM} and a \gls{DSP}.
 
+\section{An Introduction to Verilog}%
+\label{sec:bg:intro-to-verilog}
+
+This section will introduce Verilog for readers who may not be familiar with the
+language, concentrating on the features that are used in the output of
+\vericert{}.  Verilog is a hardware description language (HDL) and is used to
+design hardware ranging from complete CPUs that are eventually produced as
+integrated circuits, to small application-specific accelerators that are placed
+on FPGAs.  Verilog is a popular language because it allows for fine-grained
+control over the hardware, and also provides high-level constructs to simplify
+development.
+
+Verilog behaves quite differently to standard software programming languages due
+to it having to express the parallel nature of hardware.  The basic construct to
+achieve this is the always-block, which is a collection of assignments that are
+executed every time some event occurs.  In the case of \vericert{}, this event
+is either a positive (rising) or a negative (falling) clock edge.  All
+always-blocks triggering on the same event are executed in
+parallel. Always-blocks can also express control-flow using if-statements and
+case-statements.
+
+% \NR{Might be useful to talk about registers must be updated only within an
+% always-block.} \JW{That's important for Verilog programming in general, but is
+% it necessary for understanding this paper?}\YH{Yeah, I don't think it is too
+% important for this section.}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}{0.55\linewidth}
+\begin{minted}[linenos,xleftmargin=20pt,fontsize=\footnotesize]{verilog}
+module main(input rst, input y, input clk,
+            output reg z);
+  reg tmp, state;
+  always @(posedge clk)
+    case (state)
+      1'b0: tmp <= y;
+      1'b1: begin tmp <= 1'b0; z <= tmp; end
+    endcase
+  always @(posedge clk)
+    if (rst) state <= 1'b0;
+    else case (state)
+      1'b0: if (y) state <= 1'b1;
+            else state <= 1'b0;
+      1'b1: state <= 1'b0;
+    endcase
+endmodule
+\end{minted}
+  \end{subfigure}\hfill%
+  \begin{subfigure}{0.45\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \node[draw,circle,inner sep=6pt] (s0) at (0,0) {$S_{\mathit{start}} / \texttt{x}$};
+      \node[draw,circle,inner sep=8pt] (s1) at (1.5,-3) {$S_{1} / \texttt{1}$};
+      \node[draw,circle,inner sep=8pt] (s2) at (3,0) {$S_{0} / \texttt{1}$};
+      \node (s2s) at ($(s2.west) + (-0.3,1)$) {\texttt{00}};
+      \node (s2ss) at ($(s2.east) + (0.3,1)$) {\texttt{1x}};
+      \draw[-{Latex[length=2mm,width=1.4mm]}] ($(s0.west) + (-0.3,1)$) to [out=0,in=120] (s0);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s0)
+           to [out=-90,in=150] node[midway,left] {\texttt{01}} (s1);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s1)
+      to [out=80,in=220] node[midway,left] {\texttt{xx}} (s2);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
+      to [out=260,in=50] node[midway,right] {\texttt{01}} (s1);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
+      to [out=120,in=40] ($(s2.west) + (-0.3,0.7)$) to [out=220,in=170] (s2);
+      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
+      to [out=60,in=130] ($(s2.east) + (0.3,0.7)$) to [out=310,in=10] (s2);
+    \end{tikzpicture}
+  \end{subfigure}
+%  \alt{Verilog code of a state machine, and its equivalent state machine diagram.}
+  \caption{A simple state machine implemented in Verilog, with its diagrammatic representation on the right. The \texttt{x} stands for ``don't care'' and each transition is labelled with the values of the inputs \texttt{rst} and \texttt{y} that trigger the transition.  The output that will be produced is shown in each state.}%
+  \label{fig:tutorial:state_machine}
+\end{figure}
+
+
+A simple state machine can be implemented as shown in
+\cref{fig:tutorial:state_machine}.  At every positive edge of the clock
+(\texttt{clk}), both of the always-blocks will trigger simultaneously.  The
+first always-block controls the values in the register \texttt{tmp} and the
+output \texttt{z}, while the second always-block controls the next state the
+state machine should go to.  When the \texttt{state} is 0, \texttt{tmp} will be
+assigned to the input \texttt{y} using nonblocking assignment, denoted by
+\texttt{<=}.  Nonblocking assignment assigns registers in parallel at the end of
+the clock cycle, rather than sequentially throughout the always-block. In the
+second always-block, the input \texttt{y} will be checked, and if it's high it
+will move on to the next state, otherwise it will stay in the current state.
+When \texttt{state} is 1, the first always-block will reset the value of
+\texttt{tmp} and then set \texttt{z} to the original value of \texttt{tmp},
+since nonblocking assignment does not change its value until the end of the
+clock cycle.  Finally, the last always-block will set the state to 0 again.
+
 \section{High-Level Synthesis}%
 \label{sec:bg:hls}
 

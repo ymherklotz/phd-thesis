@@ -618,6 +618,22 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 
 \newcommand{\printpublication}[1]{\AtNextCite{\defcounter{maxnames}{99}}\fullcite{#1_bold}\nocite{#1}}
 
+\definecolor{bgbox1}{HTML}{b3e2cd}
+\definecolor{bgbox2}{HTML}{cbd5e8}
+\definecolor{bgbox3}{HTML}{fdcdac}
+\definecolor{bgbox4}{HTML}{d5e3b3}
+\definecolor{ircolor}{HTML}{e78ac3}
+
+\tikzset{
+  numlabel/.style={draw,circle,inner sep=0.5mm,fill=white},
+  ir/.style={draw,very thick,black, fill=ircolor!70, align=center},
+  pass/.style={draw, very thick, rounded corners, fill=white, align=center},
+  extpass/.style={draw, dotted, very thick, rounded corners, fill=white, align=center},
+  bgbox/.style={draw=none},
+  ed/.style={->, very thick, >=stealth},
+  edr/.style={<-, very thick, >=stealth},
+}
+
 %\newcommand{\quote}{``#1''}
 
 %%% Local Variables:
