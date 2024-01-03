@@ -450,7 +450,7 @@ The invariant used in the proofs is that block 0 should be equivalent to the mer
 %  \end{subfigure}
 %\end{figure}
 
-\subsection{Deterministic Verilog Semantics}%
+\subsection{Determinate Verilog Semantics}%
 \label{sec:proof:deterministic}
 
 % Finally, to obtain the backward simulation that we want, it has to be shown
@@ -458,12 +458,12 @@ The invariant used in the proofs is that block 0 should be equivalent to the mer
 % possible program with that behaviour.  This only has to be performed for the
 % final intermediate language, which is Verilog, so that the backward simulation
 % holds for the whole chain from Clight to Verilog.
-The final lemma we need is that the Verilog semantics is deterministic. This
+The final lemma we need is that the Verilog semantics is determinate. This
 result allows us to replace the forwards simulation we have proved with the
 backwards simulation we desire.
 
 \begin{lemma}\label{lemma:deterministic}
-  If a Verilog program $V$ admits behaviours $B_1$ and $B_2$, then $B_1$ and
+  If a Verilog program $V\!$ admits behaviours $B_1$ and $B_2$, then $B_1$ and
   $B_2$ must be the same.
 
   \begin{equation*}
@@ -472,9 +472,9 @@ backwards simulation we desire.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-  The Verilog semantics is deterministic because the order of operation of all
-  the constructs is defined, so there is only one way to evaluate the module,
-  and hence only one possible behaviour. This was proven for the small-step
+  The Verilog semantics is determinate because the order of operation of all the
+  constructs is defined, so there is only one way to evaluate the module, and
+  hence only one possible behaviour. This was proven for the small-step
   semantics shown in \cref{fig:inference_module}.
 \end{proof}
 
