@@ -17,11 +17,11 @@ associated with a trace of I/O events, but since external function calls are not
 supported in \vericert{}, this trace will always be empty.
 
 \begin{theorem}
-  Whenever the translation from $C$ succeeds and produces Verilog $V$, and all
+  Whenever the translation from $C$ succeeds and produces Verilog $V\!$, and all
   observable behaviours of $C$ are safe, then $V$ has behaviour $B$ only if $C$
   has behaviour $B$.
   \begin{equation*}
-    \forall C, V, B,\quad \yhfunction{HLS} (C) = \yhconstant{OK} (V) \land \mathit{Safe}(C) \implies (V \Downarrow B \implies C \Downarrow B).
+    \forall C\ V\ B\ldotp\quad \yhfunction{HLS} (C) = \yhconstant{OK} (V) \land \mathit{Safe}(C) \implies (V \Downarrow B \implies C \Downarrow B).
   \end{equation*}
 \end{theorem}
 
@@ -176,7 +176,7 @@ array, then during the merge, the entire array \texttt{x} from the nonblocking
 association map would replace the entire array from the blocking association
 map.  This would replace \texttt{x[0]} with its original value and therefore
 behave incorrectly. Accordingly, we modified the maps so they record updates on
-a per-el\-em\-ent basis. Our state $\Gamma$ is therefore further split up into
+a per\?element basis. Our state $\Gamma$ is therefore further split up into
 $\Gamma_{r}$ for instantaneous updates to variables, and $\Gamma_{a}$ for
 instantaneous updates to arrays ($\Gamma = (\Gamma_{r}, \Gamma_{a})$); $\Delta$
 is split similarly ($\Delta = (\Delta_{r}, \Delta_{a})$). The merge function
@@ -184,6 +184,7 @@ then ensures that only the modified indices get updated when $\Gamma_{a}$ is
 merged with the nonblocking map equivalent $\Delta_{a}$.
 
 \paragraph{Adding negative edge support}
+
 To reason about circuits that execute on the negative edge of the clock (such as
 our \gls{BRAM} interface described in \cref{sec:algorithm:optimisation:ram}),
 support for negative-edge-triggered always-blocks was added to the
@@ -466,7 +467,7 @@ backwards simulation we desire.
   $B_2$ must be the same.
 
   \begin{equation*}
-    \forall V, B_{1}, B_{2},\quad V \Downarrow B_{1} \land V \Downarrow B_{2} \implies B_{1} = B_{2}.
+    \forall V\ B_{1}\ B_{2}\ldotp\quad V \Downarrow B_{1} \land V \Downarrow B_{2} \implies B_{1} = B_{2}.
   \end{equation*}
 \end{lemma}
 
