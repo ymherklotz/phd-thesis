@@ -79,7 +79,7 @@ translation succeeds.
 How can we prove this theorem?  Note that like in CompCert, this theorem can be
 proven using a backwards simulation.  We use the same proof technique as in
 CompCert, extending the forward simulation from \rtl{} to Verilog.  Then, by
-proving that the Verilog semantics are \emph{determinate}, the composition of
+proving that the Verilog semantics are \emph{deterministic}, the composition of
 forward simulation in CompCert, as well ase the simulations in Vericert imply
 the backwards simulation needed to prove the theorem.  For each transformation
 this dissertation will therefore describe how the forward simulations are
@@ -102,7 +102,7 @@ large~\cite{06_ieee_stand_veril_hardw_descr_languag,05_ieee_stand_veril_regis_tr
 and is split into two standards, sone for synthesis and one for simulation.  The
 simulation semantics are similar to semantics one would expect, assigning
 detailed behaviour to each part of the Verilog language.  However, in contrast
-to programming languages, \textquote[{\textcite[pp. 699]{west10_cvd}}]{HDLs are
+to programming languages, \textquote[{\textcite[p.~699]{west10_cvd}}]{HDLs are
   better understood as a shorthand for describing digital hardware}, as
 synthesis tools try to understand what kind of hardware the user wanted to
 describe, which may sometimes behave differently to simulating the original
@@ -142,15 +142,15 @@ semantics is used to execute all the statements.  An example of a rule for
 executing an always-block that is triggered at the positive edge of the clock is
 shown below, where $\Sigma$ is the state of the registers in the module and $s$
 is the statement inside the always-block:
-
+%
 \begin{equation*}
   \inferrule[Always]{(\Sigma, s)\downarrow_{\text{stmnt}} \Sigma'}{(\Sigma,
     \yhkeyword{always} \texttt{ @(}\yhkeyword{posedge}\texttt{ clk) } s) \downarrow_{\text{always}^{+}} \Sigma'}
 \end{equation*}
-
-\noindent This rule says that assuming the statement $s$ in the always-block
-runs with state $\Sigma$ and produces the new state $\Sigma'$, the always-block
-will result in the same final state.  The rule is triggered once for every clock
+%
+This rule says that assuming the statement $s$ in the always-block runs with
+state $\Sigma$ and produces the new state $\Sigma'$, the always-block will
+result in the same final state.  The rule is triggered once for every clock
 cycle.
 
 Two types of assignments are supported in always-blocks: nonblocking and
@@ -180,32 +180,33 @@ and $\Delta$, which contains the values that will be assigned at the end of the
 clock cycle. $\Sigma$ can therefore be defined as follows:
 $\Sigma = (\Gamma, \Delta)$.  Nonblocking assignment can therefore be expressed
 as follows:
-
+%
 \begin{equation*}
   \inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}\\
 \end{equation*}
-
-\noindent where assuming that $\downarrow_{\text{expr}}$ evaluates an expression
-$e$ to a value $v$, the nonblocking assignment $d\ \yhkeyword{ <= } e$ updates
-the future state of the variable $d$ with value $v$.
+%
+where assuming that $\downarrow_{\text{expr}}$ evaluates an expression $e$ to a
+value $v$, the nonblocking assignment $d\ \yhkeyword{ <= } e$ updates the future
+state of the variable $d$ with value $v$.
 
 Finally, the following rule dictates how the whole module runs in one clock
 cycle:
-
+%
+\phantomsection{}
 \begin{equation*}
   \inferrule[Program]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\mathrm{module}^{+}}
     (\Gamma', \Delta')}{(\Gamma, \yhkeyword{module } \yhconstant{main}
     \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule})
-    \downarrow_{\text{program}} (\Gamma' \verilogmerge \Delta')}
+    \downarrow_{\text{program}} (\Gamma' \verilogmerge \Delta')}\label{infer:module_old}
 \end{equation*}
-
+%
 where $\Gamma$ is the initial state of all the variables, $\epsilon$ is the
 empty map because the $\Delta$ map is assumed to be empty at the start of the
 clock cycle, and $\vec{m}$ is a list of variable declarations and always-blocks
-that $\downarrow_{\text{module}}$ evaluates sequentially to obtain
-$(\Gamma', \Delta')$. The final state is obtained by merging these maps using
-the $//$ operator, which gives priority to the right-hand operand in a
-conflict. This rule ensures that the nonblocking assignments overwrite at the
+that $\downarrow_{\mathrm{module}^{+}}$ evaluates sequentially to obtain
+$(\Gamma', \Delta')$.  The final state is obtained by merging these maps using
+the $\verilogmerge$ operator, which gives priority to the right-hand operand in
+a conflict. This rule ensures that the nonblocking assignments overwrite at the
 end of the clock cycle any blocking assignments made during the cycle.
 
 \subsection{Changes to the semantics}
@@ -227,8 +228,7 @@ instead, which is the path we took.  This requires the addition of array
 operators to the semantics and correct reasoning of loads and stores to the
 array in different always-blocks simultaneously.  Consider the following Verilog
 code:
-
-\begin{samepage}
+%
   \begin{center}
 \begin{minted}[xleftmargin=40pt,linenos]{systemverilog}
 logic [31:0] x[1:0];
@@ -238,8 +238,7 @@ always @(posedge clk) begin
 end
 \end{minted}
   \end{center}
-\end{samepage}
-
+%
 This always-block modifies one array element using blocking assignment and then
 a second using nonblocking assignment.  If the existing semantics were used to
 update the array, then during the merge, the entire array \texttt{x} from the
@@ -253,27 +252,34 @@ $\Delta$ is split similarly ($\Delta = (\Delta_{r}, \Delta_{a})$). The merge
 function then ensures that only the modified indices get updated when
 $\Gamma_{a}$ is merged with the nonblocking map equivalent $\Delta_{a}$.
 
+The implementation of arrays is done using dependently typed arrays that keep
+track of their size, such that out-of-bounds accesses can be detected and
+handled appropriately.  \Cref{sec:verilog:memory} describes the implementation
+of this memory model in more detail, comparing it to the CompCert memory model.
+
 \paragraph{Adding negative edge support}
 
 To reason about circuits that execute on the negative edge of the clock (such as
-our \gls{BRAM} interface described in \cref{sec:algorithm:optimisation:ram}),
-support for negative-edge-triggered always-blocks was added to the
-semantics. This is shown in the modifications of the \nameref{infer:module} rule
-shown below:
-
+our \gls{BRAM} interface described briefly in \cref{sec:itv:rtlpar-to-htl}),
+support for negative-edge-triggered always-blocks was added to the semantics.
+This is shown in the modifications of the \nameref{infer:module} rule shown
+below:
+%
+\phantomsection{}
 \begin{equation*}
-  \inferrule[Module]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}\label{infer:module}
+  \inferrule[Program$^\pm$]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}\label{infer:module}
 \end{equation*}
-
+%
 The main execution of the module $\downarrow_{\text{module}}$ is split into
 $\downarrow_{\text{module}^{+}}$ and $\downarrow_{\text{module}^{-}}$, which are
 rules that only execute always-blocks triggered at the positive and at the
 negative edge respectively. The positive-edge-triggered always-blocks are
-processed in the same way as in the original \nameref{infer:module} rule. The
-output maps $\Gamma'$ and $\Delta'$ are then merged and passed as the blocking
-assignments map into the negative edge execution, so that all the blocking and
-nonblocking assignments are present.  Finally, all the negative-edge-triggered
-always-blocks are processed and merged to give the final state.
+processed in the same way as in the original \nameref{infer:module_old}
+rule. The output maps $\Gamma'$ and $\Delta'$ are then merged and passed as the
+blocking assignments map into the negative edge execution, so that all the
+blocking and nonblocking assignments are resolved.  Finally, all the
+negative-edge-triggered always-blocks are processed and merged to give the final
+state.
 
 \paragraph{Adding declarations} Explicit support for declaring inputs, outputs
 and internal variables was added to the semantics to make sure that the
@@ -283,13 +289,18 @@ simulates correctly.
 
 \paragraph{Removing support for external inputs to modules} Support for
 receiving external inputs was removed from the semantics for simplicity, as
-these are not needed for an HLS target. The main module in Verilog models the
-main function in C, and since the inputs to a C function should not change
+these are not needed for an \gls{HLS} target. The main module in Verilog models
+the main function in C, and since the inputs to a C function should not change
 during its execution, there is no need for external inputs for Verilog modules.
 
 \paragraph{Simplifying representation of bitvectors} Finally, we use 32-bit
 integers to represent bitvectors rather than arrays of booleans. This is because
-\vericert{} (currently) only supports types represented by 32 bits.
+\vericert{} (currently) only supports types represented by 32 bits.  However,
+extending Vericert would likely not require the full flexibility of bitvectors
+as arrays of booleans either, as long as fine-grained bit-size optimisations for
+registers are not introduced, because the Verilog subset could be restriced to
+bitvectors of sizes 4, 8, 16, 32 and 64, which are already supported by the
+CompCert integer type.
 
 \subsection{Integrating the Verilog semantics into \compcert{}'s model}
 \label{sec:verilog:integrating}
@@ -520,7 +531,7 @@ The invariant used in the proofs is that block 0 should be equivalent to the mer
 %  \end{subfigure}
 %\end{figure}
 
-\subsection{Determinate Verilog semantics}%
+\subsection{Deterministic Verilog semantics}%
 \label{sec:proof:deterministic}
 
 % Finally, to obtain the backward simulation that we want, it has to be shown
@@ -528,7 +539,7 @@ The invariant used in the proofs is that block 0 should be equivalent to the mer
 % possible program with that behaviour.  This only has to be performed for the
 % final intermediate language, which is Verilog, so that the backward simulation
 % holds for the whole chain from Clight to Verilog.
-The final lemma we need is that the Verilog semantics is determinate. This
+The final lemma we need is that the Verilog semantics is deterministic. This
 result allows us to replace the forwards simulation we have proved with the
 backwards simulation we desire.
 
@@ -542,9 +553,9 @@ backwards simulation we desire.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-  The Verilog semantics is determinate because the order of operation of all the
-  constructs is defined, so there is only one way to evaluate the module, and
-  hence only one possible behaviour. This was proven for the small-step
+  The Verilog semantics is deterministic because the order of operation of all
+  the constructs is defined, so there is only one way to evaluate the module,
+  and hence only one possible behaviour. This was proven for the small-step
   semantics shown in \cref{fig:inference_module}.
 \end{proof}
 
