@@ -18,6 +18,7 @@ in \cref{sec:itv:translating-c-to-verilog}.
 \label{sec:itv:main-design-decisions}
 
 \paragraph{Choice of source language}
+
 C was chosen as the source language as it remains the most common source
 language amongst production-quality HLS tools~\cite{canis13_l,
   amd23_vitis_high_synth, intel20_hsc, pilato13_bambu}. This, in turn, may be
@@ -25,21 +26,18 @@ because it is \textquote[{\textcite{gajski10_what_hls}}]{[t]he starting point
   for the vast majority of algorithms to be implemented in hardware}, lending a
 degree of practicality.  The availability of
 \compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid
-basis for formally verified C compilation.
-%Since a lot of existing code for HLS is written in C, supporting C as an input language, rather than a custom domain-specific language, means that \vericert{} is more practical.
-%An alternative was to support LLVM IR as an input language, however, to get a full work flow from a higher level language to hardware, a front end for that language to LLVM IR would also have to be verified. \JW{Maybe save LLVM for the `Choice of implementation language'?}
-We considered Bluespec~\cite{nikhil04_bsv}, but decided that although it
+basis for formally verified C compilation.  Since a lot of existing code for HLS
+is written in C, supporting C as an input language, rather than a custom
+domain-specific language, means that \vericert{} is more practical.  We
+considered Bluespec~\cite{nikhil04_bsv}, but decided that although it
 \textquote[{\textcite{greaves19_resear_note}}]{can be classed as a high-level
   language}, it is too hardware-oriented to be suitable for traditional HLS.  We
 also considered using a language with built-in parallel constructs that map well
 to parallel hardware, such as occam~\cite{page91_compil_occam},
 Spatial~\cite{koeplinger18_s} or Scala~\cite{bachrach12_chisel}.
-% However, this would not qualify as being HLS due to the manual parallelism that would have to be performed. \JW{I don't think the presence of parallelism stops it being proper HLS.}
-%\JP{I think I agree with Yann here, but it could be worded better. At any rate not many people have experience writing what is essentially syntactic sugar over a process calculus.}
-%\JW{I mean: there are plenty of software languages that involve parallel constructs. Anyway, perhaps we can just dismiss occam for being too obscure.}
-
 
 \paragraph{Choice of target language}
+
 Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an \gls{HDL} that can
 be synthesised into logic cells which can either be placed onto an \gls{FPGA} or
 turned into an \gls{ASIC}.  Verilog was chosen as the output language for
@@ -47,12 +45,21 @@ turned into an \gls{ASIC}.  Verilog was chosen as the output language for
 few formal semantics for it that could be used as a
 target~\cite{lööw19_verif_compil_verif_proces, meredith10_veril}.  Bluespec,
 previously ruled out as a source language, is another possible target and there
-exists a formally verified translation to circuits using
-K\^{o}ika~\cite{bourgeat20_essen_blues}. %\JP{This needs an extra comment maybe?}\YH{Maybe about bluespec not being an ideal target language because it's quite high-level?} % but targeting this language would not be trivial as it is not meant to be targeted by an automatic tool, instead strives to a formally verified high-level hardware description language instead.
+exists a formally verified translation to circuits of variants of Bluespec using
+K\^{o}ika~\cite{bourgeat20_essen_blues} or
+Fe-Si~\cite{braibant13_formal_verif_hardw_synth}.  However, Bluespec is mainly
+targeted at being a source language for hardware design and would present
+similar challenges to targeting a language like Verilog from a software
+language.
+
+% \JP{This needs an extra comment maybe?}\YH{Maybe about bluespec not being an
+% ideal target language because it's quite
+% high-level?} % but targeting this language would not be trivial as it is not meant to be targeted by an automatic tool, instead strives to a formally verified high-level hardware description language instead.
 
 %\JW{Can we mention one or two alternatives that we considered? Bluespec or Chisel or one of Adam Chlipala's languages, perhaps?}
 
 \paragraph{Choice of implementation language}
+
 We chose Coq as the implementation language because of its mature support for
 code extraction; that is, its ability to generate OCaml programs directly from
 the definitions used in the theorems.  We note that other authors have had some
@@ -204,6 +211,29 @@ syntactic Verilog is generated from \htl{}, which consists of translating the
 \gls{FSMD} into a case statement and implementing the memory interface in
 Verilog.
 
+\section{Translating C to Verilog by Example}%
+\label{sec:itv:translating-c-to-verilog}
+
+\Cref{fig:accumulator_c_rtl} illustrates the translation of a simple program
+that stores and retrieves values from an array.  In this section, we describe
+the stages of the \vericert{} translation, referring to this program as an
+example.
+
+\subsection{Translating C to \rtl{}}
+
+The first stage of the translation uses unmodified \compcert{} to transform the
+C input, shown in \cref{fig:accumulator_c}, into a \rtl{} intermediate
+representation, shown in \cref{fig:accumulator_rtl}.  As part of this
+translation, function inlining is performed on all functions, which allows us to
+support function calls without having to support the \texttt{Icall} \rtl{}
+instruction.  Although the duplication of the function bodies caused by inlining
+can increase the area of the hardware, it can have a positive effect on latency
+and is therefore a common HLS optimisation~\cite{noronha17_rapid_fpga}.
+Scheduling in particular benefits from inlining of function calls so that the
+instructions can be scheduled together and larger hyperblocks can be formed.
+Inlining precludes support for recursive function calls, but this feature is not
+supported in most HLS tools anyway~\cite{thomas16_srcht}.
+
 \begin{figure}
   \centering
     \begin{subfigure}[b]{0.48\linewidth}
@@ -236,91 +266,136 @@ main() {
     \caption{Translating a simple program from C to \rtl{}.}\label{fig:accumulator_c_rtl}
 \end{figure}
 
+\subsection{Scheduling \rtl{} instructions}
+
+The first step in the translation performed by Vericert is to schedule the
+instructions according to the resource constraints imposed by the hardware
+target.  An example of such a constraint is that two memory operations cannot be
+performed in the same cycle.  The goal is to schedule as many instructions as
+possible together to give the scheduler the most flexibility.  Vericert
+therefore constructs hyperblocks from the \rtl{} \gls{CFG}, by building basic
+blocks first and then performing if-conversion on blocks that should be merged.
+This is shown in \cref{fig:accumulator_seq}, where all the instructions can fit
+into a single basic block.  Each hyperblock can then be scheduled individually
+using \gls{SDC} scheduling by specifying any necessary constraints, the result
+of which is shown in \cref{fig:accumulator_par}, where one can see that
+instructions have been separated into separate states and instructions that can
+execute in parallel are placed into the same state.  Each memory operation is
+placed into its own state.  The instructions are placed into additional bundles,
+designated by parentheses, which could contain additional operations that are
+chained sequentially within one clock cycle.
+
+The \gls{SDC} scheduling algorithm itself is unverified but a verified validator
+checks the resulting schedule against the unscheduled program.  This makes it
+possible to change heuristics in the scheduler simply without it affecting the
+proof.  The scheduled program language is called \rtlpar{} and specifies in
+which cycle each instruction will be executed.  \rtlpar{} however still contains
+the coarse-grained structure of hyperblocks, so this structure is destroyed to
+produce \rtlsubpar{}, shown in \cref{fig:accumulator_par}.  The representation
+is still hardware agnostic even if the current implementation of the scheduler
+is specific to an \gls{FPGA} target, and therefore supports all \rtl{}
+instructions.  Details about the scheduler and proof of correctness is given in
+\cref{sec:hyperblock-scheduling}.  This representation is then ready to be
+translated into hardware.
+
 \begin{figure}
   \centering
-  \inputminted[fontsize=\footnotesize,linenos,xleftmargin=20pt]{systemverilog}{figures/3-introduction-to-vericert/translated-verilog.sv}
-  \caption{Verilog implementation of \rtl{} code produced by CompCert produced
-    by scheduling the code, instantiating a BRAM and translating to Verilog.}
-  \label{fig:accumulator_v}
+    \begin{subfigure}[b]{0.48\linewidth}
+\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+main() {
+  8: {
+    x5 = 3
+    int32[stack(0)] = x5
+    x4 = 6
+    int32[stack(4)] = x4
+    x1 = 1
+    x3 = stack(0) (int)
+    x2 = int32[x3 + x1 * 4 + 0]
+    nop
+    return x2
+  }
+}
+\end{minted}
+      \caption{Code in \rtlblock{} after basic blocks have been generated.}\label{fig:accumulator_seq}
+    \end{subfigure}\hfill%
+    \begin{subfigure}[b]{0.48\linewidth}
+\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+main() {
+  8: {
+    (x5 = 3)
+    (x4 = 6)
+    (x1 = 1)
+    (x3 = stack(0) (int))
+  }
+  14: { (int32[stack(0)] = x5) }
+  15: { (int32[stack(4)] = x4) }
+  16: { (x2 = int32[x3 + x1 * 4 + 0]) }
+  17: { (return x2) }
+}
+\end{minted}
+      \caption{\rtlsubpar{} code produced after scheduling and hyperblock destruction.}\label{fig:accumulator_par}
+    \end{subfigure}
+    \caption{Translating a simple program from C to \rtl{}.}\label{fig:accumulator_gblseqpar}
 \end{figure}
 
-\section{Translating C to Verilog by Example}%
-\label{sec:itv:translating-c-to-verilog}
+% + TODO Explain the main mapping in a short simple way
 
-\Cref{fig:accumulator_c_rtl} illustrates the translation of a simple program
-that stores and retrieves values from an array.  In this section, we describe
-the stages of the \vericert{} translation, referring to this program as an
-example.
+% + TODO Clarify connection between CFG and FSMD
 
-\subsection{Translating C to \rtl{}}
+% + TODO Explain how memory is mapped \JW{I feel like this could use some sort
+% of citation, but I'm not sure what. I guess this is all from "Hardware Design
+% 101", right?}\YH{I think I found a good one actually, which goes over the
+% basics.}  \JW{I think it would be worth having a sentence to explain how the C
+% model of memory is translated to a hardware-centric model of memory. For
+% instance, in C we have global variables/arrays, stack-allocated
+% variables/arrays, and heap-allocated variables/arrays (anything else?). In
+% Verilog we have registers and \gls{BRAM} blocks. So what's the correspondence
+% between the two worlds?  Globals and heap-allocated are not handled,
+% stack-allocated variables become registers, and stack-allocated arrays become
+% \gls{BRAM} blocks? Am I close?}\YH{Stack allocated variables become \gls{BRAM}
+% as well, so that we can deal with addresses easily and take addresses of any
+% variable.} \JW{I see, thanks. So, in short, the only registers in your
+% hardware designs are those that store things like the current state, etc. You
+% generate a fixed number of registers every time you synthesis -- you don't
+% generate extra registers to store any of the program variables. Right?}
 
-The first stage of the translation uses unmodified \compcert{} to transform the
-C input, shown in \cref{fig:accumulator_c}, into a \rtl{} intermediate
-representation, shown in \cref{fig:accumulator_rtl}.  As part of this
-translation, function inlining is performed on all functions, which allows us to
-support function calls without having to support the \texttt{Icall} \rtl{}
-instruction.  Although the duplication of the function bodies caused by inlining
-can increase the area of the hardware, it can have a positive effect on latency
-and is therefore a common HLS optimisation~\cite{noronha17_rapid_fpga}.
-Scheduling in particular benefits from inlining of function calls so that the
-instructions can be scheduled together and larger hyperblocks can be formed.
-Inlining precludes support for recursive function calls, but this feature is not
-supported in most HLS tools anyway~\cite{thomas16_srcht}.
+% \JP{I've become less comfortable with this term, but it's personal preference
+% so feel free to ignore. I think `generalised finite state machine' (i.e.\
+% thinking of the entire `data-path' as contributing to the overall state) is
+% more accurate.}\YH{Hmm, yes, I mainly chose FSMD because there is quite a lot
+% of literature around it.  I think for now I'll keep it but for the final draft
+% we could maybe change it.}  This means that the state transitions can be
+% translated into a simple finite state machine (FSM) where each state contains
+% data operations that update the memory and registers.
 
-\subsection{Translating \rtl{} to \htl{}}
+\subsection{Translating \rtlpar{} to \htl{}}
 
-%   + TODO Explain the main mapping in a short simple way
-
-%   + TODO Clarify connection between CFG and FSMD
-
-%   + TODO Explain how memory is mapped \JW{I feel like this could use some sort
-%   of citation, but I'm not sure what. I guess this is all from "Hardware
-%   Design 101", right?}\YH{I think I found a good one actually, which goes over
-%   the basics.}  \JW{I think it would be worth having a sentence to explain how
-%   the C model of memory is translated to a hardware-centric model of
-%   memory. For instance, in C we have global variables/arrays, stack-allocated
-%   variables/arrays, and heap-allocated variables/arrays (anything else?). In
-%   Verilog we have registers and \gls{BRAM} blocks. So what's the
-%   correspondence between the two worlds?  Globals and heap-allocated are not
-%   handled, stack-allocated variables become registers, and stack-allocated
-%   arrays become \gls{BRAM} blocks? Am I close?}\YH{Stack allocated variables
-%   become \gls{BRAM} as well, so that we can deal with addresses easily and
-%   take addresses of any variable.} \JW{I see, thanks. So, in short, the only
-%   registers in your hardware designs are those that store things like the
-%   current state, etc. You generate a fixed number of registers every time you
-%   synthesis -- you don't generate extra registers to store any of the program
-%   variables. Right?}
-
-%   \JP{I've become less comfortable with this term, but it's personal
-%   preference so feel free to ignore. I think `generalised finite state
-%   machine' (i.e.\ thinking of the entire `data-path' as contributing to the
-%   overall state) is more accurate.}\YH{Hmm, yes, I mainly chose FSMD because
-%   there is quite a lot of literature around it.  I think for now I'll keep it
-%   but for the final draft we could maybe change it.}  This means that the
-%   state transitions can be translated into a simple finite state machine (FSM)
-%   where each state contains data operations that update the memory and
-%   registers.
-
-The next translation is from \rtl{} to a new hardware translation language
-(\htl{}).  This involves going from a CFG representation of the computation to a
-\gls{FSMD} representation~\cite{hwang99_ffplp}. The core idea of the FSMD
-representation is that it separates the control flow from the operations on the
-memory and registers.  Hence, an \htl{} program consists of two maps from states
-to Verilog statements: the \emph{\gls{control logic}} map, which expresses state
-transitions, and the \emph{\gls{data path}} map, which expresses computations.
-\Cref{fig:accumulator_diagram} shows the resulting \gls{FSMD} architecture. The
-right-hand block is the control logic that computes the next state, while the
-left-hand block updates all the registers and \gls{BRAM} based on the current
-program state.
+The next translation is from \rtlpar{}, the program formed of scheduled
+hyperblocks, to an intermediate hardware translation language (\htl{}).  This
+translation involves going from a \gls{CFG} representation of the computation to
+an \gls{FSMD} representation~\cite{hwang99_ffplp}. An \gls{FSMD} is a
+generalised state machine where the state is supplemented by registers and
+memory that can store computations.  \Cref{fig:accumulator_diagram} shows the
+resulting \gls{FSMD} architecture for the running example. The right-hand block
+is the control logic that computes the next state, while the left-hand block
+updates all the registers and \gls{BRAM} based on the current program state.
+However, in general the state machine cannot be separated from the data path
+completely, because state updates may depend on computations in the data path
+and may depend on the value of registers.  Hence, an \htl{} program consists a
+map from states to Verilog statements, which update both the state register as
+well as other registers and interact with memory.
 
 The \htl{} language was mainly introduced to simplify the proof of translation
 from \rtl{} to Verilog, as these languages have very different semantics.  It
 serves as an intermediate language with similar semantics to \rtl{} at the top
 level, using maps to represents what to execute at every state, and similar
 semantics to Verilog at the lower level by already using Verilog statements
-instead of more abstract instructions.  Compared to plain Verilog, \htl{} is
-simpler to manipulate and analyse, thereby making it easier to prove
-optimisations like proper \gls{BRAM} insertion.
+instead of more abstract instructions to perform computations.  The next state
+is also computed explicitly in each state by modifying the state register.XS
+Compared to plain Verilog and due to using maps to represent the Verilog
+statement that should execute at every state, \htl{} is simpler to manipulate
+and analyse, thereby making it easier to prove optimisations like \gls{BRAM}
+insertion.
 
 \begin{figure}
   \centering
@@ -442,6 +517,14 @@ optimisations like proper \gls{BRAM} insertion.
   register.}\label{fig:accumulator_diagram}
 \end{figure}
 
+\begin{figure}
+  \centering
+  \inputminted[fontsize=\footnotesize,linenos,xleftmargin=20pt]{systemverilog}{figures/3-introduction-to-vericert/translated-verilog.sv}
+  \caption{Verilog implementation of \rtl{} code produced by CompCert produced
+    by scheduling the code, instantiating a BRAM and translating to Verilog.}
+  \label{fig:accumulator_v}
+\end{figure}
+
 %\JP{Does it? Verilog has neither physical registers nor RAMs, just language constructs which the synthesiser might implement with registers and RAMs. We should be clear whether we're talking about the HDL representation, or the synthesised result: in our case these can be very different since we don't target any specific architectural features of an FPGA fabric of ASIC process.}
 \paragraph{Translating memory}
 
@@ -468,7 +551,7 @@ of the \gls{BRAM} interface can be seen in \cref{fig:accumulator_diagram}.
 \paragraph{Translating instructions}
 
 Most \rtl{} instructions correspond to hardware constructs.  For example, line 2
-in \cref{fig:accumulator_rtl} shows a 32-bit register \texttt{x5} being
+which in \cref{fig:accumulator_rtl} shows a 32-bit register \texttt{x5} being
 initialised to 3, after which the control flow moves execution to line 3. This
 initialisation is also encoded in the Verilog generated from \htl{} at state 8
 in the always-block implementing the \gls{FSMD}, shown at line 43 in

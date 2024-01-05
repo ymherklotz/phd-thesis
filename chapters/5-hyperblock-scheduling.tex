@@ -1780,23 +1780,25 @@ encountered expressions, as motivated in
 \begin{figure*}
   \centering
   \begin{tabular}{rr@{~}r@{~}ll}~
-    \llabel{arithmetic expressions} & $\exprtype$     & ::= & $\base{\regtype}$ & \rlabel{initial value of register} \\
+    arithmetic \\
+    \llabel{expressions} & $\exprtype$     & ::= & $\base{\regtype}$ & \rlabel{initial value of register} \\
     & & | & $\anload{\memexprtype}{\exprtype}$ & \rlabel{load from memory} \\
     & & | & $\exprtype \mathbin{\exproptype} \exprtype$ & \rlabel{binary arithmetic operation} \\
-    \llabel{memory expressions} & $\memexprtype$ & ::= & $\emptyabstrmem$ & \rlabel{initial contents of memory} \\
+    memory \\ \llabel{expressions} & $\memexprtype$ & ::= & $\emptyabstrmem$ & \rlabel{initial contents of memory} \\
     & & | & $\anstore{\memexprtype}{\exprtype}{\exprtype}$ & \rlabel{updated memory} \\
-    \llabel{predicate expressions} & $\predexprtype$ & ::= & $\base{\predvartype}$ |
+    predicate \\ \llabel{expressions} & $\predexprtype$ & ::= & $\base{\predvartype}$ |
                                                         $\neg \base{\predvartype}$ & \rlabel{initial value of predicate}\\
     & & | & $\exprtype \mathbin{\condoptype} \exprtype$ |
                                                         $\neg (\exprtype
                                                         \mathbin{\condoptype} \exprtype)$ & \rlabel{binary conditional operation} \\
-    & & | & $\ltrue$ | $\lfalse$ | $\predexprtype \land \predexprtype$ | $\predexprtype \lor \predexprtype$ & \rlabel{true, false, and, or} \\
-    \llabel{value summaries} & $\predicated{t}$ & = &
+    & & | & $\ltrue$ | $\lfalse$ & \rlabel{true, false} \\
+    & & | & $\predexprtype \land \predexprtype$ | $\predexprtype \lor \predexprtype$ & \rlabel{and, or} \\
+    value\\ \llabel{summaries} & $\predicated{t}$ & = &
     %$\listt{(t~\text{if}~\pred)}$
     $\settype{\guardtype \times t}$
           & \rlabel{select an element of $t$ according} \\
     & & & & \rlabel{to which predicate holds} \\
-    \llabel{symbolic states} & $\forestregset{\symbstate} \in \forestregset{\symbstatetype}$ & $=$ & $\regtype \rightarrow
+    symbolic \\ \llabel{states} & $\forestregset{\symbstate} \in \forestregset{\symbstatetype}$ & $=$ & $\regtype \rightarrow
                                                         \predicated{\exprtype}$
                                                                                &
                                                                                  \rlabel{expressions for registers} \\
@@ -2849,8 +2851,41 @@ was simply unworkable.
 %   \end{proof}
 % \end{lemma}
 
-\section{Efficient Validated 3-Valued Logic Using an SMT Solver}
+\section{Validated 3-Valued Logic Using an SMT Solver}%
 \label{sec:hs:efficient-smt-solver-validation}
+
+\begin{figure}
+\begin{mathpar}
+\inferrule[]{ }{\evalpred{\rs}{\predtrue}{\bvrai}}
+\and
+\inferrule[]{ }{\evalpred{\rs}{\predfalse}{\bfalse}}
+\and
+\inferrule[]{ }{\evalpred{\rs}{\predundef}{\boolundef}}
+\and
+\inferrule[]
+          {\evalcond{\rs}{\varcond}{\varbool}}
+          {\evalpred{\rs}{\predatompos{\varcond}}{\varbool}}
+\and
+\inferrule[]
+          {\evalpred{\rs}{\varpred_1}{\varbool_1} \\
+           \evalpred{\rs}{\varpred_2}{\varbool_2}
+          }
+          {\evalpred{\rs}{\varpred_1 \predor \varpred_2}{\varbool_1 \boolor
+              \varbool_2}}
+\and
+\inferrule[]
+          {\evalcond{\rs}{\varcond}{\varbool}}
+          {\evalpred{\rs}{\predatomneg{\varcond}}{1-\varbool}}
+\and
+\inferrule[]
+          {\evalpred{\rs}{\varpred_1}{\varbool_1} \\
+           \evalpred{\rs}{\varpred_2}{\varbool_2}
+          }
+          {\evalpred{\rs}{\varpred_1 \predand \varpred_2}{\varbool_1 \booland \varbool_2}}
+\end{mathpar}
+\caption{Evaluation of GSA predicates.}
+\label{fig:evalpred}
+\end{figure}
 
 \YH{TODO: Fill in this Section.  This could probably be a chapter as well.}
 

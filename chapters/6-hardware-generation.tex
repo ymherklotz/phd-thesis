@@ -156,7 +156,7 @@ added to the original block leading to this next block.  Fresh locations for new
 blocks are chosen by keeping track of the greatest location in the current
 function.
 
-\subsection{Proof of Hyperblock Destruction}
+\subsection{Proof of hyperblock destruction}
 
 The proof of hyperblock destruction is relatively simple using a
 \gls{plus-forward-simulation}.  Then, for each input states, there are one or
@@ -175,7 +175,7 @@ a program represented by an \gls{FSMD}.  This section will describe the
 language.  Then, the transformation from \rtlsubpar{} to \htl{} is shown, together
 with an overview of its correctness proof.
 
-\subsection{\htl{} Structure and Semantics}%
+\subsection{\htl{} structure and semantics}%
 \label{sec:hg:htl-structure-and-semantics}
 
 At a high level, \htl{} is structured like many other \compcert{} languages,
@@ -254,7 +254,7 @@ Finally, there are three \emph{well-formedness} criteria which are used to
 enforce an ordering between the registers, mainly to be able to show that
 registers are independent from each other.
 
-\subsection{\htl{} Generation Algorithm}%
+\subsection{\htl{} generation algorithm}%
 \label{sec:hg:htl-generation-algorithm}
 
 The generation of \htl{} is relatively straight-forward, as most instructions
@@ -268,7 +268,7 @@ individual instructions is described in
 translation of control-flow statements is described in
 \cref{sec:hg:translating-control-flow-instructions}.
 
-\subsubsection{Translating Individual Arithmetic Instructions}%
+\subsubsection{Translating individual arithmetic instructions}%
 \label{sec:hg:translating-individual-arithmetic-instructions}
 
 The arithmetic operation is then assigned to the destination register using
@@ -307,7 +307,7 @@ translation from \rtlsubpar{} to \htl{} is shown in
   \label{fig:hg:htl-generation}
 \end{figure}
 
-\paragraph{Implementing the \texttt{Oshrximm} Instruction}%
+\paragraph{Implementing the \texttt{Oshrximm} instruction}%
 \label{sec:algorithm:optimisation:oshrximm}
 
 % Mention that this optimisation is not performed sometimes (clang -03).
@@ -338,7 +338,7 @@ the equivalence of the representation in terms of divisions and shifts is proven
 over the integers and the specification, thereby making it simpler to prove the
 correctness of the Verilog implementation in terms of shifts.
 
-\subsubsection{Translating Memory}
+\subsubsection{Translating memory}
 \label{sec:hg:translating-memory}
 
 Translating memory operations and the memory itself is one of the trickiest part
@@ -403,7 +403,7 @@ out-of-range.  Gating it fully with an if-statement, as shown in
 \cref{fig:hg:htl-generation}, ensures that the Verilog statement can always be
 executed, assuming that the \rtlsubpar{} instruction can also be executed.
 
-\subsubsection{Translating Control-Flow Instructions}%
+\subsubsection{Translating control flow instructions}%
 \label{sec:hg:translating-control-flow-instructions}
 
 Most control-flow instructions also map nicely to hardware, however, the way
@@ -459,7 +459,7 @@ any following instructions.
 
 \YH{TODO: Describe return instruction translation.}
 
-\subsubsection{Translating the Top-Level Function}
+\subsubsection{Translating the top-level function}
 
 Each \rtlsubpar{} function is translated separately, and within each function,
 each block is translated to a Verilog statement.  In addition to that, new
@@ -469,7 +469,7 @@ addition to that, the top-level translation also needs to ensure that it is
 compiling a translation unit with the \texttt{main} function, as linking with
 other translation units is not supported by the Verilog semantics.
 
-\subsection{\htl{} Generation Correctness Proof}%
+\subsection{\htl{} generation correctness proof}%
 \label{sec:hg:htl-generation-correctness-proof}
 
 \YH{TODO: Move this section earlier, or maybe remove it completely it I have
@@ -580,7 +580,7 @@ shows the result that needs to be proven in this subsection.
 %%  the implementation of the algorithm.
 %%\end{proof}
 
-\subsubsection{Forward Simulation Proof of Translation}
+\subsubsection{Forward simulation proof of translation}
 
 To prove that the translation described in \cref{sec:hg:htl-generation} results
 in the desired forward simulation, we must first define a relation that matches
@@ -755,7 +755,7 @@ modify any other states.
 
 %We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the \gls{BRAM} to be equal to the value that the user set.  This means that the \gls{BRAM} should be enabled whenever the two signals are different, and disabled otherwise.
 
-\subsection{BRAM Model Semantics}%
+\subsection{BRAM model semantics}%
 \label{sec:hg:bram-model-semantics}
 
 \Cref{fig:ram_load_store} gives an example of how the \gls{BRAM} interface
@@ -811,7 +811,7 @@ again.
   \caption{Timing diagrams showing the execution of loads and stores over multiple clock cycles.}\label{fig:ram_load_store}
 \end{figure}
 
-\subsection{BRAM Insertion and Correctness Proof}%
+\subsection{BRAM insertion and correctness proof}%
 \label{sec:hg:bram-insertion-and-correctness-proof}
 
 \begin{figure}
@@ -840,7 +840,7 @@ in parallel to the state machine.  However, as the \gls{BRAM} is triggered by
 the falling edge of the clock, it will execute in between standard clock cycles,
 and a merge of the association maps is performed in between each.
 
-\subsubsection{From Implementation to Specification}
+\subsubsection{From implementation to specification}
 
 The first step in proving the simulation correct is to build a specification of
 the translation algorithm.  There are five possibilities for the transformation
@@ -945,7 +945,7 @@ applies to the translation of loads.)
 \label{sec:hg:memory-transformation-specification}
 \end{figure}
 
-\subsubsection{From Specification to Simulation}
+\subsubsection{From specification to simulation}
 
 Another simulation proof is performed to prove that the insertion of the
 \gls{BRAM} is semantics preserving.  As in \cref{lemma:simulation_diagram}, we
@@ -1223,7 +1223,7 @@ statement is that a register is not assigned using blocking assignment after a
 nonblocking assignment, as otherwise the input and output statement would have
 different results.
 
-\subsection{Forward Substitution Correctness Proof}%
+\subsection{Forward substitution correctness proof}%
 \label{sec:hg:forward-substitution-correctness-proof}
 
 The main sub-proof that is needed to prove the forward simulation correct is
@@ -1385,7 +1385,7 @@ end
   \label{fig:hg:ram-instantiation}
 \end{figure}
 
-\subsection{Forward Simulation from \htl{} to Verilog}%
+\subsection{Forward simulation from \htl{} to Verilog}%
 \label{sec:proof:htl_verilog}
 
 The \htl{}-to-Verilog simulation is conceptually simple, as the only

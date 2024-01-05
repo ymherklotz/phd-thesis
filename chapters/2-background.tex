@@ -359,7 +359,7 @@ accept C as input.
 In this dissertation we will be focusing on the more traditional \gls{HLS}
 conversion from software languages into hardware designs.
 
-\subsection{Data structures for Intermediate Languages}%
+\subsection{Data structures for intermediate languages}%
 \label{sec:bg:data-structures-for-intermediate-languages}
 
 This \namecref{sec:bg:data-structures-for-intermediate-languages} describes how
@@ -592,7 +592,7 @@ without any incoming edges using data dependencies, thereby being more flexible
 in how instructions are rearranged without having the downsides of having to
 introduce additional nodes.
 
-\subsection{Grouping Instructions Into Blocks}%
+\subsection{Grouping instructions into blocks}%
 \label{sec:bg:intermediate-language}
 
 This \namecref{sec:bg:intermediate-language} describes the representation of
@@ -781,7 +781,7 @@ Vericert in this dissertation, followed by describing \gls{dynamic scheduling}
 in \cref{sec:bg:dynamic-scheduling}, which is an alternative scheduling
 technique with different trade-offs to static scheduling.
 
-\subsection{Static Scheduling}%
+\subsection{Static scheduling}%
 \label{sec:bg:static-scheduling}
 
 Static scheduling is used by the majority of synthesis tools~\cite{canis13_l,
@@ -813,7 +813,7 @@ according to a priority function and picking a subset of these nodes to actually
 be scheduled as long as the resources used by the subset is not greater than the
 available resources.
 
-\subsubsection{System of Difference Constraints Scheduling}
+\subsubsection{System of difference constraints scheduling}
 
 The main static scheduling algorithm used by \gls{HLS} tools is the
 \glsfirst{SDC}\glsunset{SDC} scheduling algorithm~\cite{cong06_sdc}.  It
@@ -884,7 +884,7 @@ and loop code motion~\cite[]{lattuada15_ctbsss}.  In this dissertation,
 \gls{SDC} scheduling refers to the initial implementation of the scheduling
 without any extensions.
 
-\subsection{Dynamic Scheduling}%
+\subsection{Dynamic scheduling}%
 \label{sec:bg:dynamic-scheduling}
 
 On the other hand, \gls{dynamic
@@ -1128,7 +1128,7 @@ implemented in hardware and the correctness could still be shown.
   \caption{Summary of related work}\label{fig:bg:related_euler}
 \end{figure}
 
-\subsection{Unmechanised Verification of HLS}%
+\subsection{Unmechanised verification of HLS}%
 \label{sec:bg:unmechanised-verification-of-hls}
 
 This section describes how \gls{HLS} designs are typically verified and also
@@ -1211,7 +1211,7 @@ No automatic scheduling is performed by the translation, and the designer has
 full control over the design and can manually pipeline and parallelise the
 design.
 
-\subsection{Mechanised Compiler Proofs in High-Level Hardware Design}%
+\subsection{Mechanised compiler proofs in high-level hardware design}%
 \label{sec:bg:mechanised-compiler-proofs}
 
 Even though a proof for the correctness of an algorithm might exist, this does
@@ -1280,7 +1280,7 @@ synthesis tool~\cite[]{lööw21_lutsig}.  This is concerned with translating
 register transfer level Verilog into netlist level Verilog, instead of
 translating from a higher-level specification into hardware.
 
-\subsection{HLS Formalised in Isabelle}
+\subsection{HLS formalised in Isabelle}
 
 Martin Ellis' work on the specification of hardware/software
 co-design~\cite{ellis08_csicgfu} is the first attempt towards mechanically
@@ -1444,7 +1444,7 @@ directly, using a validator means that it needs to check the correctness
 criterion every time the compiler is run, meaning the efficiency of the
 validator is also important to take into account.
 
-\subsection{CompCert Correctness Theorem}%
+\subsection{CompCert correctness theorem}%
 \label{sec:bg:compcert-correctness-theorem}
 
 The correctness theorem of CompCert should ensure that the compiler does not
@@ -1481,7 +1481,8 @@ but no return value.  Finally, if the program goes wrong, for example when
 undefined behaviour is encountered, then that means that there is no more valid
 step defined in the semantics from the current state.
 
-\subsubsection{Correctness theorem}
+\subsubsection{Correctness theorem}%
+\label{sec:bg:correctness-theorem}
 
 The correctness theorem can be stated as a simulation between the semantics of
 the source program and the semantics of the compiled program.  The final
@@ -1652,7 +1653,7 @@ simulation from Assembly to Clight.
   \label{fig:bg:forwards-simulation-diagram}
 \end{figure}
 
-\subsection{Instruction Scheduling in CompCert}%
+\subsection{Instruction scheduling in CompCert}%
 \label{sec:bg:instruction-scheduling-compcert}
 
 There are a few implementations of scheduling algorithms in CompCert or in
@@ -1711,7 +1712,7 @@ y := M[x];
   \label{fig:bg:symbolic-evaluation}
 \end{figure}
 
-\subsubsection{List Scheduling}
+\subsubsection{List scheduling}
 
 \textcite{tristan08_formal_verif_trans_valid} were the first to propose adding
 scheduling to a verified compiler.  \textcite{six20_certif_effic_instr_sched}
@@ -1777,7 +1778,7 @@ constraints form a subset.  The post-pass scheduler by
 by using hash-consing to replace the expensive expression comparison by pointer
 comparisons.
 
-\subsection{Trace Scheduling}%
+\subsection{Trace scheduling}%
 \label{sec:bg:trace-scheduling}
 
 \begin{figure}
@@ -1895,7 +1896,7 @@ number of comparisons of symbolic states.  This means that the choice of cut
 points becomes important to try and minimise the size of the trees and still
 achieve a good schedule.
 
-\subsubsection{Superblock and Extended Block Scheduling}
+\subsubsection{Superblock and extended block scheduling}
 
 \textcite{six22_formal_verif_super_sched} then formalise superblock scheduling
 as a pre-pass optimisation at the \rtl{} level, which is a restricted form of

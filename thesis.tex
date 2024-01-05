@@ -231,14 +231,16 @@ Imperial College London.}
  % copyright-assignment,
  % abstract,
  % acknowledgements,
+ % lists,
  % chapters/1-introduction,
  % chapters/2-background,
- chapters/3-introduction-to-vericert,
+ % chapters/3-introduction-to-vericert,
  chapters/4-trusted-computing-base,
  % chapters/5-hyperblock-scheduling,
  % chapters/6-hardware-generation,
  % chapters/7-evaluation,
  % chapters/8-conclusion,
+ % bibliography,
 }
 
 \setcapindent{1em}
@@ -253,13 +255,7 @@ Imperial College London.}
 
 \include{acknowledgements}
 
-\tableofcontents
-
-\listoffigures
-
-\listoftables
-
-\printglossary[type=acronym,nonumberlist]
+\include{lists}
 
 \glsresetall
 
@@ -279,12 +275,7 @@ Imperial College London.}
 
 \include{chapters/8-conclusion}
 
-\begingroup
-\singlespacing
-\printbibliography
-
-\printglossary[type=index,style=bookindex]
-\endgroup
+\include{bibliography}
 
 \end{document}
 

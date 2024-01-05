@@ -634,9 +634,201 @@ diagonal fill/.style 2 args={fill=#2, path picture={
   edr/.style={<-, very thick, >=stealth},
 }
 
+%\newcommand\JW[2][]{\st{#1} \textcolor{red}{#2}}
+
+%\newcommand{\sandrine}[1]{{\footnotesize\color{mygreen}{[S]#1}}}
+\definecolor{mblue}{HTML}{99dad4}
+\definecolor{mdarkblue}{HTML}{347c76}
+
+
+\newcommand{\ir}{{\sf GSA}}
+
+%% Text
+%\newcommand{\ie}{{\it i.e.}\xspace}
+\newcommand{\ie}{i.e.\xspace}
+\newcommand{\eg}{e.g.\xspace}
+\newcommand{\etal}{et al.\xspace}
+
+%% The cleveref package is also included, maybe easier to use?
+\newcommand*\figref[1]{Figure~\ref{fig:#1}}
+\newcommand{\sectref}[1]{Section~\ref{sec:#1}}
+
+%% Syntax
+
+\newcommand{\ssai}{\ensuremath i_{\it \phi}}
+\newcommand{\gsai}{\ensuremath i_{\it GSA}}
+
+\newcommand{\wfSSA}[1]{\ensuremath{\textsf{wfSSA}(#1)}}
+
+\newcommand{\muinstr}[3]{\ensuremath{#1 \gets \muf(#2, #3)}}
+\newcommand{\phiinstr}[2]{\ensuremath{#1 \gets \phif(#2)}}
+\newcommand{\gammainstr}[2]{\ensuremath{#1 \gets \gammaf(#2)}}
+\newcommand{\etainstr}[3]{\ensuremath{#1 \gets \etaf(#2, #3)}}
+\newcommand{\bulletinstr}[3]{\ensuremath{#1 \gets \bullet(#2, #3)}}
+\newcommand{\etab}{\ensuremath{\it block}_\etaf}
+\newcommand{\phib}{\ensuremath{\it block}_\phif}
+\newcommand{\mub}{\ensuremath{\it block}_\muf}
+\newcommand{\gammab}{\ensuremath{\it block}_\gammaf}
+\newcommand{\bulletb}{\ensuremath{\it b}_\bullet}
+
+\newcommand{\phiblock}{b_{\phi}}
+\newcommand{\etablock}{b_{\eta}}
+\newcommand{\gammablock}{b_{\gamma}}
+\newcommand{\select}{{\mathcal{E}}}
+\newcommand{\merge}{{\mathcal{M}}}
+%\newcommand{\merge}{{\delta}}
+\newcommand{\mergeblock}{b_{\merge}}
+%%\newcommand{\jointpoint}[2]{#1 \varpropto #2}
+\newcommand{\jointpoint}[2]{#2 \mathbin{\curlyvee} #1}
+\newcommand{\notjointpoint}[2]{#2 \mathbin{\slashed{\curlyvee}} #1}
+
+%%\newcommand{\indexpred}[4]{\ensuremath\mathsf{index}(#1 \stackrel{#3}{\mapsto} #2)}
+\newcommand{\indexpred}[4]{\ensuremath{\predsf{#3}{#2}_{#4} = #1}}
+
+\newcommand{\imap}{\ensuremath{\mathcal{I}}\xspace}
+\newcommand{\mmap}{\ensuremath{\mathcal{M}}\xspace}
+\newcommand{\emap}{\ensuremath{\mathcal{E}}\xspace}
+\newcommand{\phimap}{\ensuremath{\Phi}\xspace}
+
+\newcommand{\simplop}{\downharpoonleft}
+\newcommand{\simpl}[3]
+        {\ensuremath{#3 \mathbin{\simplop_{#2}}\xspace}}
+\newcommand{\hash}[1]{\ensuremath{h\left(#1\right)}}
+\newcommand{\projmap}[2]
+        {\ensuremath{#2 \mathbin{\simplop^{#1}\xspace}}}
+
+
+\newcommand{\predset}{\ensuremath{\mathbb P}\xspace}
+\newcommand{\varpred}{\ensuremath{p}}
+\newcommand{\varpredr}{\textrm{p}}
+\newcommand{\varhpred}{\ensuremath{\hash{\varpred}}}
+\newcommand{\predtrue}{\ensuremath{\mathsf{True}}}
+\newcommand{\predundef}{\ensuremath\mathsf{Undef}}
+\newcommand{\predfalse}{\ensuremath\mathsf{False}}
+\newcommand{\predor}{\ensuremath \mathbin{\mathsf \lor}}
+\newcommand{\predand}{\ensuremath \mathbin{\mathsf \land}}
+\newcommand{\predimp}{\ensuremath{\rightarrow_{\text{\L{}}}}}
+\newcommand{\predatompos}[1]{\ensuremath #1}
+
+\newcommand{\predatomneg}[1]{\ensuremath\overline{#1}}
+\newcommand{\condset}{\ensuremath {\mathbb C}}
+\newcommand{\varcond}{\ensuremath c}
+\newcommand{\varcondr}{\textrm c}
+
+\newcommand{\mexpred}[2]{\ensuremath{#1 \mathbin{\ltimes} #2}}
+\newcommand{\wellex}[2]{\ensuremath{#1~~\mathbin{\ltimes}}}
+\newcommand{\wellexorig}[2]{\ensuremath{#2 \mathbin{\models} #1 \mathbin{\ltimes}}}
+
+\newcommand{\renaming}[2]{\ensuremath\mathbb{R}\xspace}
+\newcommand{\specfun}[4]{\ensuremath #1,#2 \mathbin{\vdash} #3 \mathbin{\equiv} #4 \xspace}
+\newcommand{\specfunanonymous}[4]{\ensuremath \cdot \mathbin{\vdash} #3 \mathbin{\equiv} #4 \xspace}
+
+\newcommand{\simulation}[2]{\ensuremath{ #1 \mathbin{\simeq} #2 }}
+\newcommand{\agree}[5]{\ensuremath #2 \mathbin{\models}_{#5} #3 \mathbin{\approx} #4}
+%\newcommand{\agree}[5]{\ensuremath #1, #2 \mathbin{\models}_{#5} #3 \mathbin{\approx} #4}
+
+
+%% Semantics
+\newcommand{\bvrai}{\ensuremath{1}}
+\newcommand{\boolundef}{\ensuremath{\tfrac{1}{2}}}
+\newcommand{\bfalse}{\ensuremath{0}}
+\newcommand{\varbool}{\ensuremath{b}}
+\newcommand{\booland}{\ensuremath{\mathbin{\textsf{min}}}}
+\newcommand{\boolor}{\ensuremath{\mathbin{\textsf{max}}}}
+\newcommand{\boolimp}{\ensuremath{\rightarrow_{\text{\L{}}}}}
+\newcommand{\boolnot}{\ensuremath{-}}
+
+\newcommand{\evalpred}[3]{\ensuremath{#1 \mathbin{\models_\varpredr} #2 \mathbin{\Downarrow} #3}}
+\newcommand{\nevalpred}[3]{\ensuremath{#1 \mathbin{\models_{\varpredr}} {#2} \mathbin{\slashed{\Downarrow}} {#3}}}
+\newcommand{\evalcond}[3]{\ensuremath #1 \mathbin{\models_\varcondr} #2 \mathbin{\Downarrow} #3}
+
+
+\newcommand{\predsf}[2]{\ensuremath{{\sf preds}}(#2)} %% predecessors in f
+%\newcommand{\predsf}[2]{\ensuremath{{\sf preds}}(#1, #2)} %% predecessors in f
+
+\newcommand{\sdomop}{\ensuremath\mathbin{\succ}}
+\newcommand{\domop}{\ensuremath\mathbin{\succeq}}
+\newcommand{\sdom}[3]{\ensuremath #2 \sdomop #3}
+\newcommand{\notdom}[3]{\ensuremath #2 \mathbin{\slashed{\domop}} #3}
+\newcommand{\dom}[3]{\ensuremath #2 \domop #3}
+
+\newcommand{\predmap}[1]{\ensuremath{\mathbf{P}}}
+\newcommand{\hpredmap}[1]{\ensuremath{\mathbf{H}}}
+\newcommand{\predmapof}[3]{\ensuremath {#1}_{#2, #3}}
+
+\newcommand{\pcorrect}[4]
+           {\ensuremath{#2 \mathbin{\bf\sf coh} (#3,#4) }}
+%\newcommand{\pcorrect}[4]
+%           {\ensuremath{#1 \mathbin{\models} #2 \mathbin{\bf\sf coh} (#3,#4) }}
+\newcommand{\cohmap}[2]
+        {\ensuremath{#1 \ {\bf\sf coh}}}
+\newcommand{\cohmaporig}[2]
+        {\ensuremath{#2 \mathbin{\models} #1 \ {\bf\sf coh}}}
+
+
+\newcommand{\access}{\mathbin{!}}
+\newcommand{\accessmap}{\mathbin{\#}}
+\newcommand{\mapof}[2]{#1(#2) }
+\newcommand{\accessof}[2]{#1(#2) }
+
+\newcommand{\none}{\emptyset}
+\def\opt#1{#1^?}
+\def\some#1{\lfloor #1 \rfloor}
+\newcommand{\vide}{\epsilon}
+
+\newcommand{\nb}[1]{\#(#1)}
+\newcommand{\ssp}{\sigma}
+\newcommand{\args}{\ensuremath{\vv{v}}}
+\newcommand\mc{\lstinline}
+
+\newcommand{\muf}{\ensuremath \mu}
+\newcommand{\etaf}{\ensuremath \eta}
+\newcommand{\gammaf}{\ensuremath \gamma}
+\newcommand{\phif}{\ensuremath \phi}
+
+%% Specification and proof
+\newcommand{\rename}[4]{\ensuremath{{\sf rename}(#1, #2, #3, #4)\xspace}}
+
+
+\newcommand{\apcode}{\ensuremath{\simeq_{\iota}}}
+\newcommand{\matchcode}[3]{\ensuremath{ {#1} \mathbin{\simeq_{\iota}^{#3}} {#2} }}
+\newcommand{\apetacode}{\ensuremath{\simeq_{\eta}}}
+
+\newcommand{\matchetacode}[4]{\ensuremath{ {#4} \mathbin{\vdash} {#1} \mathbin{\simeq_{\etaf}^{#3}} {#2}}}
+\newcommand{\matchmergecode}[5]{\ensuremath{ {#5} \mathbin{\vdash} {#2} \mathbin{\simeq_{\merge}^{#4}} {#3}}}
+\newcommand{\matchmergecodeorig}[5]{\ensuremath{ {#1, #5} \mathbin{\vdash} {#2} \mathbin{\simeq_{\merge}^{#4}} {#3}}}
+\newcommand{\mergecode}{\ensuremath{\simeq_{\merge}}}
+
+\newcommand{\varf}{\ensuremath{f}}
+\newcommand{\vartf}{\ensuremath{\mathit{tf}}}
+
+\newcommand{\aphiinstr}{\approx_{\phif}}
+\newcommand{\matchphiinstr}[6]{\ensuremath{{#6} \mathbin{\vdash} {#2} \mathbin{\approx_{\phif}^{#5,#4}} {#3} }}
+\newcommand{\wfr}[3]{\ensuremath{\textsf{wf}(#2, #3, #1)}}
+
+% Semantics
+
+\def\evalstmt{\rightarrow}
+\newcommand{\sexect}[4]{#1 \vdash #2 \stackrel{#3}{\evalstmt} #4}
+\newcommand{\sexecttrans}[4]{#1 \vdash #2 \stackrel{#3}{\evalstmt} \!\!\!\!\!~^* #4}
+
+\newcommand{\sexec}[3]{{#1} \vdash {#2} \evalstmt {#3}}
+\newcommand{\sexecnos}[3]{#1 \stackrel{#2}{\evalstmt} #3}
+\newcommand{\mafleche}{\rightsquigarrow}
+\newcommand{\bulletstore}[4]{#1,#2 \vdash #3 \stackrel{\bullet}\mafleche #4}
+\newcommand{\etastore}[3]{#1 \vdash #2 \stackrel{\select}\mafleche #3}
+\newcommand{\mergestore}[4]{#1,#2 \vdash #3 \stackrel{\merge}\mafleche #4}
+\newcommand{\mustore}[4]{#1,#2 \vdash #3 \stackrel{\mu}\mafleche #4}
+\newcommand{\gammastore}[5]{#1,#2, #3\vdash #4 \stackrel{\gamma}\mafleche #5}
+\newcommand{\phistore}[4]{#1,#2 \vdash #3 \stackrel{\phi}\mafleche #4}
+\newcommand{\rs}{\mathit{rs}}
+
+\newcommand{\reachable}[2]{#1 \looparrowright #2}
+
 %\newcommand{\quote}{``#1''}
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "main"
+%%% TeX-master: "thesis"
+%%% TeX-engine: luatex
 %%% End:
