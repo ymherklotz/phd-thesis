@@ -1,5 +1,5 @@
-$pdflatex = 'lualatex -synctex=1 -interaction=nonstopmode -shell-escape';
-$pdf_mode = 1;
+$lualatex = 'lualatex %O -synctex=1 -interaction=nonstopmode -shell-escape %S';
+$pdf_mode = 4;
 
 @default_files = ('thesis.tex');
 @generated_exts = (@generated_exts, 'synctex.gz', 'run.xml');

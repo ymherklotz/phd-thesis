@@ -1,10 +1,10 @@
 \chapter{Trusted Computing Base}%
 \label{sec:trusted-computing-base}
 
-\begin{quote}\itshape
+\begin{chapsummary}
   This chapter describes the trusted computing base of Vericert, which includes
   the final correctness theorem and the formalised Verilog semantics.
-\end{quote}
+\end{chapsummary}
 
 \noindent The trusted computing base of verified software such as CompCert is
 the code that is not verified, and therefore needs to be trusted by the user
@@ -267,7 +267,7 @@ below:
 %
 \phantomsection{}
 \begin{equation*}
-  \inferrule[Program$^\pm$]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma'\ //\ \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\text{program}} (\Gamma''\ //\ \Delta'')}\label{infer:module}
+  \inferrule[Program$^\pm$]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma' \verilogmerge \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\mathrm{program}^\pm} (\Gamma''\verilogmerge \Delta'')}\label{infer:module}
 \end{equation*}
 %
 The main execution of the module $\downarrow_{\text{module}}$ is split into
@@ -285,13 +285,18 @@ state.
 and internal variables was added to the semantics to make sure that the
 generated Verilog also contains the correct declarations.  This adds some
 guarantees to the generated Verilog and ensures that it synthesises and
-simulates correctly.
+simulates correctly.  Otherwise, if there are bugs in the insertion of
+declarations, the Verilog would fail to synthesis or simulate.  This is done by
+adding a declaration entry for each register that is used.
 
 \paragraph{Removing support for external inputs to modules} Support for
-receiving external inputs was removed from the semantics for simplicity, as
-these are not needed for an \gls{HLS} target. The main module in Verilog models
-the main function in C, and since the inputs to a C function should not change
-during its execution, there is no need for external inputs for Verilog modules.
+receiving external inputs was removed from the semantics.  The main module in
+Verilog models the main function in C, and since the inputs to a C function
+should not change during its execution, there is no need for external inputs for
+Verilog modules.  In addition to that, this external inputs function was also
+used to model memory in the original semantics, which is not needed as arrays
+are fully supported.  This means that the \gls{BRAM} can faithfully be modelled
+as Verilog and it can be reasoned about.
 
 \paragraph{Simplifying representation of bitvectors} Finally, we use 32-bit
 integers to represent bitvectors rather than arrays of booleans. This is because
@@ -309,9 +314,9 @@ CompCert integer type.
   \centering
   \begin{minipage}{1.0\linewidth}
     \begin{mathpar}
-      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\text{program}} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\sigma]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\sigma]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
+      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\mathrm{program}^\pm} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\sigma]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\sigma]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
       %
-      \inferrule[Finish]{\Gamma_r[\mathit{fin}] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ \sigma\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \mathit{ret}]}\label{infer:finishstate}\and
+      \inferrule[Finish]{\Gamma_r[\mathit{fin}] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ n\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \mathit{ret}]}\label{infer:finishstate}\and
       %
       \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\sigma \mapsto n, \mathit{fin} \mapsto 0, \mathit{rst} \mapsto 0])\ \epsilon}\label{infer:callstate}\and
       %
@@ -327,15 +332,27 @@ execution passes. In this subsection, we explain how we extend our Verilog
 semantics with four special-purpose registers in order to integrate it into
 \compcert{}.
 
-\compcert{} executions pass through three main states:
+\compcert{} executions pass through three main states, which have been adapted
+to the Verilog semantics by using association maps for the registers and arrays.
+These three states otherwise match the states used by other languages,
+simplifying the integration of the Verilog semantics into \compcert{}.  These
+states, together with the transitions defined on the states, act as a weak
+calling convention for the hardware produced by the \gls{HLS} tool.  These are
+therefore not part of the general Verilog semantics themselves, but part of the
+Verilog semantics for designs produced through \gls{HLS}.
 \begin{description}
 \item[\texttt{State} $\mathit{sf}$ $m$ $v$ $\Gamma_{r}$ $\Gamma_{a}$] The main
   state when executing a function, with stack frame $\mathit{sf}$, current
   module $m$, current state $v$ and variable states $\Gamma_{r}$ and
-  $\Gamma_{a}$.
+  $\Gamma_{a}$.  The regular execution of the module will proceed from
+  \texttt{State} to \texttt{State} until the \textit{fin} signal is high.
   \item[\texttt{Callstate} $\mathit{sf}$ $m$ $\vec{r}$] The state that is
     reached when a function is called, with the current stack frame
-    $\mathit{sf}$, current module $m$ and arguments $\vec{r}$.
+    $\mathit{sf}$, current module $m$ and arguments $\vec{r}$.  In practice, as
+    there are no function calls in the Verilog semantics, this state is only
+    reached at the start of the main function.  A better name for this state
+    might therefore be \texttt{Resetstate}, as it corresponds to the behaviour
+    of the module when the reset input was asserted.
   \item[\texttt{Returnstate} $\mathit{sf}$ $v$] The state that is reached when a
     function returns back to the caller, with stack frame $\mathit{sf}$ and
     return value $v$.
@@ -345,19 +362,24 @@ To support this computational model, we extend the Verilog module we generate
 with the following four registers and a \gls{BRAM} block:
 
 \begin{description}
-\item[program counter] The program counter can be modelled using a register that
-  keeps track of the state, denoted as $\sigma$.
-  \item[function entry point] When a function is called, the entry point denotes
-    the first instruction that will be executed. This can be modelled using a
-    reset signal that sets the state accordingly, denoted as $\mathit{rst}$.
-  \item[return value] The return value can be modelled by setting a finished
-    flag to 1 when the result is ready, and putting the result into a 32-bit
-    output register. These are denoted as $\mathit{fin}$ and $\mathit{ret}$
-    respectively.
-%\JW{Is there a mismatch between `ret' in the figure and `rtrn' in the text?}
-  \item[stack] The function stack can be modelled as a \gls{BRAM} block, which
-    is implemented using an array in the module, and denoted as $\mathit{stk}$.
-%\JW{Is there a mismatch between `st' in the figure and `stk' in the text?}\YH{It was actually between $\Gamma_{a}$ and \mathit{stk}.  The \mathit{st} should have been $\sigma$.}
+\item[program counter] The program counter is modelled using a register that
+  keeps track of the state, denoted by $\sigma$.  This register should always
+  contain the current state, and will be checked on the next transition to pick
+  the next state.
+\item[function entry point] When a function is called, the entry point denotes
+  the first instruction that will be executed. This can be modelled using a
+  reset signal that sets the state accordingly, denoted as $\mathit{rst}$.  In
+  this translation, function calls are not implemented, so the reset signal
+  resets the main module and sets the state parameter for this main module.
+\item[return value] The return value can be modelled by setting a finished flag
+  to 1 when the result is ready, and putting the result into a 32-bit output
+  register. These are denoted as $\mathit{fin}$ and $\mathit{ret}$ respectively.
+  Instead of a return instruction, checking that $\mathit{fin}$ is 1 should
+  signal that the result is stored in the return register.
+\item[stack] The function stack can be modelled as a \gls{BRAM} block, which is
+  implemented using an array in the module, and denoted as $\mathit{stk}$.
+  When the main function is initially called, it allocates the stack, which
+  should match the \gls{BRAM} block that was implemented.
 \end{description}
 
 \Cref{fig:inference_module} shows the inference rules for moving between the
@@ -365,20 +387,31 @@ computational states.  The first, \nameref{infer:stepstate}, is the normal rule
 of execution.  It defines one step in the \texttt{State} state, assuming that
 the module is not being reset, that the finish state has not been reached yet,
 that the current and next state are $v$ and $v'$, and that the module runs from
-state $\Gamma$ to $\Gamma'$ using the \nameref{infer:stepstate} rule.  The
-\nameref{infer:finishstate} rule returns the final value of running the module
-and is applied when the $\mathit{fin}$ register is set; the return value is then
-taken from the $\mathit{ret}$ register.
+state $\Gamma$ to $\Gamma'$ using the \nameref{infer:stepstate} rule.  This rule
+also ensures that the state register contains the value of the current state, by
+checking the value of $\Gamma_r[\sigma]$.  It is then also ensured that the
+resulting state is also the value of the $\sigma$ register in the updated
+association map  $\Gamma'_r[\sigma]$.
+
+The \nameref{infer:finishstate} rule returns the final value of running the
+module and is applied when the $\mathit{fin}$ register is set; the return value
+is then taken from the $\mathit{ret}$ register.
 
 Note that there is no step from \texttt{State} to \texttt{Callstate}; this is
 because function calls are not supported, and it is therefore impossible in our
 semantics ever to reach a \texttt{Callstate} except for the initial call to
 main. So the \nameref{infer:callstate} rule is only used at the very beginning
-of execution; likewise, the \nameref{infer:returnstate} rule is only matched for
-the final return value from the main function.  Therefore, in addition to the
-rules shown in \cref{fig:inference_module}, an initial state and final state
-need to be defined:
+of execution; likewise, the \nameref{infer:finishstate} rule is only matched for
+the final return value from the main function.  The final rule called
+\nameref{infer:returnstate} is never reached in practice because of this, as the
+stack frame will always be empty.  This rule could ideally therefore be removed,
+however it is still present to match the state transitions used in CompCert.  To
+remove this rule, one would have to show that the stack frame remains empty by
+induction over the semantics.
 
+In addition to these rules, a valid semantics also needs an intial state and a
+final state.  These are therefore defined as follows:
+%
 \begin{mathpar}
   \inferrule[Initial]{\yhfunction{is\_internal}\
     P.\texttt{main}}{\yhfunction{initial\_state}\ (\yhconstant{Callstate}\ []\
@@ -401,23 +434,25 @@ state results in the program output of value $n$ when reaching a
 The Verilog semantics do not define a memory model for Verilog, as this is not
 needed for a hardware description language.  There is no preexisting
 architecture that Verilog will produce; it can describe any memory layout that
-is needed.  Instead of having specific semantics for memory, the semantics only
-needs to support the language features that can produce these different memory
-layouts, these being Verilog arrays.  We therefore define semantics for updating
-Verilog arrays using blocking and nonblocking assignment.  We then have to prove
-that the C memory model that \compcert{} uses matches with the interpretation of
-arrays used in Verilog.  The \compcert{} memory model is infinite, whereas our
-representation of arrays in Verilog is inherently finite.  There have already
-been efforts to define a general finite memory model for all intermediate
-languages in \compcert{}, such as CompCertS~\cite{besson18_compc} or
-CompCert-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages intact
-and translate to a more concrete finite memory model in the back end, such as in
-Comp\-Cert\-ELF~\cite{wang20_compc}.  We also define such a translation from
-\compcert{}'s standard infinite memory model to finite arrays that can be
-represented in Verilog.  There is therefore no more notion of an abstract memory
-model and all the interactions to memory are encoded in the hardware itself.
-
-%\JW{I'm not quite sure I understand. Let me check: Are you saying that previous work has shown how all the existing CompCert passes can be adapted from an infinite to a finite memory model, but what we're doing is leaving the default (infinite) memory model for the CompCert front end, and just converting from an infinite memory model to a finite memory model when we go from 3AC to HTL?}\YH{Yes exactly, most papers changed the whole memory model to thread through properties that were then needed in the back end, but we currently don't need to do that.  I need to double check though for CompCertELF, it doesn't actually seem to be the case.  Will edit this section later.}
+is needed.  Instead of having a specific semantics for memory, the Verilog
+semantics only needs to support the language features that can produce these
+different memory layouts, these being Verilog arrays.  We therefore define
+semantics for updating Verilog arrays using blocking and nonblocking assignment.
+This makes it possible to describe many different memory layouts in Verilog,
+providing a lot of flexibility.  We then have to develop a memory layout that
+will be targeted by the \gls{HLS} tool and prove that the C memory model that
+\compcert{} uses matches the interpretation of arrays used in Verilog together
+with the memory layout that was chosen.  The \compcert{} memory model is
+infinite, whereas our representation of arrays in Verilog is inherently finite.
+There have already been efforts to define a general finite memory model for all
+intermediate languages in \compcert{}, such as CompCertS~\cite{besson18_compc}
+or CompCert-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages
+intact and translating to a more concrete finite memory model in the back end,
+such as in Comp\-Cert\-ELF~\cite{wang20_compc}.  We also define such a
+translation from \compcert{}'s standard infinite memory model to finite arrays
+that can be represented in Verilog.  There is therefore no more notion of an
+abstract memory model and all the interactions to memory are encoded in the
+hardware itself.
 
 \definecolor{compcertmemmodel}{HTML}{e2ccea}
 \definecolor{vericertmemmodel}{HTML}{cbe1db}
@@ -497,51 +532,68 @@ model and all the interactions to memory are encoded in the hardware itself.
     \draw[very thick,draw=vericertmemmodeldark] (7,0.3) -- (12.5,0.3);
     \draw[very thick,draw=compcertmemmodeldark] (0,0.3) -- (5,0.3);
   \end{tikzpicture}
-  %\Description{\compcert{}'s memory model is translated into a more concrete memory model based on Verilog arrays.  Two association maps are therefore needed to keep track of the blocking and nonblocking assignments.}
   \caption{Change in the memory model during the translation of \rtl{} into
     \htl{}.  The state of the memories in each case is right after the execution
     of the store to memory.}\label{fig:memory_model_transl}
 \end{figure}
 
-%\JW{It's not completely clear what the relationship is between your work and those works. The use of `only' suggests that you've re-done a subset of work that has already been done -- is that the right impression?}\YH{Hopefully that's more clear.}
+This translation is represented in \cref{fig:memory_model_transl}.
+\compcert{}'s memory model is represented as a map from blocks to maps from
+memory addresses to memory contents.  Each block represents an area in memory;
+for example, a block can represent a global variable or a stack for a function.
+CompCert also includes permissions that are associated with each block, which
+are lost in the translation to arrays.  Instead, the array has a static size,
+which has to be the same size as the writable addresses in \compcert{}'s memory.
 
-This translation is represented in \cref{fig:memory_model_transl}.  \compcert{} defines a map from blocks to maps from memory addresses to memory contents.  Each block represents an area in memory; for example, a block can represent a global variable or a stack for a function. As there are no global variables, the main stack can be assumed to be block 0, and this is the only block we translate.
-%\JW{So the stack frame for a function called by main would be in a different block, is that the idea? Seems unusual not to have a single stack.}
-%\YH{Yeah exactly, it makes it much easier to reason about though, because everything is nicely isolated.  This is exactly what CompCertELF and CompCertS try and solve though.}
-%\JW{Would global variables normally be put in blocks 1, 2, etc.?}
-%\YH{Yes, although it may also be possible that they could be numbered 0, 1, 2, 3, 4, pushing the block of the stack higher.}
-Meanwhile, our Verilog semantics defines two finite arrays of optional values, one for the blocking assignments map $\Gamma_{\mathrm{a}}$ and one for the nonblocking assignments map $\Delta_{\mathrm{a}}$.
-%\JW{It's a slight shame that `block' is used in two different senses in the preceding two sentences. I guess that can't be helped.}
-%\YH{Ah that's true, I hadn't even noticed.  Yeah I think it would be good to keep the name ``block'' for CompCert's blocks.}
-The optional values are present to ensure correct merging of the two association maps at the end of the clock cycle. %During our translation we only convert block 0 to a Verilog memory, and ensure that it is the only block that is present.
-%This means that the block necessarily represents the stack of the main function.
-The invariant used in the proofs is that block 0 should be equivalent to the merged representation of the $\Gamma_{\mathrm{a}}$ and $\Delta_{\mathrm{a}}$ maps.
+Because there are no global variables in the C code, only the stack of the main
+function will be allocated in the memory.  Our Verilog semantics defines two
+finite arrays of optional values, one for the blocking assignments map
+$\Gamma_{\mathrm{a}}$ and one for the nonblocking assignments map
+$\Delta_{\mathrm{a}}$.  The optional values are present to ensure correct
+merging of the two association maps at the end of the clock cycle, so that
+information about which cells of the array were modified is present.  The
+invariant used in the proofs is that block associated with the function stack
+should be equivalent to the merged representation of the $\Gamma_{\mathrm{a}}$
+and $\Delta_{\mathrm{a}}$ maps.
 
-%However, in practice, assigning and reading from an array directly in the state machine will not produce a memory in the final hardware design, as the synthesis tool cannot identify the array as having the necessary properties that a \gls{BRAM} needs, even though this is the most natural formulation of memory.  Even though theoretically the memory will only be read from once per clock cycle, the synthesis tool cannot ensure that this is true, and will instead create a register for each memory location.  This increases the size of the circuit dramatically, as the \gls{BRAM} on the FPGA chip will not be reused.  Instead, the synthesis tool expects a specific interface that ensures these properties, and will then transform the interface into a proper \gls{BRAM} during synthesis.  Therefore, a translation has to be performed from the naive use of memory in the state machine, to a proper use of a memory interface.
+In particular, note that the Verilog arrays are word-addressable instead of the
+CompCert memory model which is byte-addressable.  The instruction set
+architectures of \glspl{CPU} usually specify memory as being byte-addressable,
+however, the implementation of the memory is not usually that straightforward.
+\Glspl{CPU} usually implement multiple levels of caching as well as converting
+virtual addresses to physical addresses and may operate on byte- or
+word-addressable memories behind the byte-addressable interface.  Often, the
+performance of the caches will be tuned to provide the best performance for
+reading and writing words to memory.  This makes it possible to have good
+general performance, and makes it possible to interact with larger, but slower
+memories such as \gls{DRAM}.  However, we are assuming that we are targeting an
+\gls{FPGA} without external \gls{DRAM}, so only fast \gls{BRAM} memory is used.
+This means that the memory architecture can be specialised to work well with
+words without using a complex memory architecture, by directly using a
+word-addressable \gls{BRAM}.  A single \gls{BRAM} is enough to support this
+subset of C that is translated to Verilog.
 
-%\begin{figure}
-%  \centering
-%  \begin{subfigure}[t]{0.48\linewidth}
-%    \includegraphics[width=\linewidth]{diagrams/store_waveform.pdf}
-%    \caption{Store waveform.}
-%  \end{subfigure}\hfill%
-%  \begin{subfigure}[t]{0.48\linewidth}
-%    \includegraphics[width=\linewidth]{diagrams/load_waveform.pdf}
-%    \caption{Load waveform.}
-%  \end{subfigure}
-%\end{figure}
+% However, in practice, assigning and reading from an array directly in the
+% state machine will not produce a memory in the final hardware design, as the
+% synthesis tool cannot identify the array as having the necessary properties
+% that a \gls{BRAM} needs, even though this is the most natural formulation of
+% memory.  Even though theoretically the memory will only be read from once per
+% clock cycle, the synthesis tool cannot ensure that this is true, and will
+% instead create a register for each memory location.  This increases the size
+% of the circuit dramatically, as the \gls{BRAM} on the FPGA chip will not be
+% reused.  Instead, the synthesis tool expects a specific interface that ensures
+% these properties, and will then transform the interface into a proper
+% \gls{BRAM} during synthesis.  Therefore, a translation has to be performed
+% from the naive use of memory in the state machine, to a proper use of a memory
+% interface.
 
 \subsection{Deterministic Verilog semantics}%
 \label{sec:proof:deterministic}
 
-% Finally, to obtain the backward simulation that we want, it has to be shown
-% that if we generate hardware with a specific behaviour, that it is the only
-% possible program with that behaviour.  This only has to be performed for the
-% final intermediate language, which is Verilog, so that the backward simulation
-% holds for the whole chain from Clight to Verilog.
 The final lemma we need is that the Verilog semantics is deterministic. This
 result allows us to replace the forwards simulation we have proved with the
-backwards simulation we desire.
+backwards simulation we desire.  This was proven for the small-step semantics
+shown in \cref{fig:inference_module}.
 
 \begin{lemma}\label{lemma:deterministic}
   If a Verilog program $V\!$ admits behaviours $B_1$ and $B_2$, then $B_1$ and
@@ -555,9 +607,23 @@ backwards simulation we desire.
 \begin{proof}[Proof sketch]
   The Verilog semantics is deterministic because the order of operation of all
   the constructs is defined, so there is only one way to evaluate the module,
-  and hence only one possible behaviour. This was proven for the small-step
-  semantics shown in \cref{fig:inference_module}.
+  and hence only one possible behaviour.  In particular, non-determinism in the
+  simulation of Verilog designs often comes from the fact that always-blocks are
+  evaluated in an arbitrary order.  However, as we ensure that always-blocks
+  only communicate using nonblocking assignment, the order of evaluation does
+  not change the final state, meaning a sequential evaluation of always-blocks
+  can be chosen.
 \end{proof}
+
+\section{Summary}
+
+In conclusion, the trusted computing base of Vericert is similar to that of
+CompCert.  The correctness theorem can remain unchanged, except for the change
+of the target language semantics.  The Verilog semantics can be formalised
+within CompCert's semantic framework.  We reuse an existing semantics by
+\textcite{lööw19_proof_trans_veril_devel_hol} and modify it to be a suitable
+\gls{HLS} target, in addition to integrating the semantics into CompCert's
+general state transition framework for its intermediate languages.
 
 %%% Local Variables:
 %%% mode: latex
