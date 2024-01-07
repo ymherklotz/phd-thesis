@@ -100,190 +100,125 @@ In this paper, we present:
 \Cref{fig:compcert_interm} shows the main components of our hyperblock scheduler
 and how they fit into the wider Vericert and CompCert projects.
 
-\begin{figure*}
-
+\begin{figure}
+\hypersetup{hidelinks}
 \centering
-\begin{tikzpicture}[
-yscale=-1
-]
-\node[ir] (clight) at (-0.7,0) {\strut Clight};
-\node[pass] (ccfront) at (2,0) {CompCert \\ frontend};
-\node[ir] (rtl) at (4,0) {\strut \rtl};
-\node[pass] (dataflow) at (6,0) {dataflow \\ optimisations};
-\node[ir] (ltl) at (8,0) {\strut \ltl};
-\node[pass] (ccback) at (10,0) {CompCert \\ backend};
-\node[ir] (asm) at (12,0) {\strut asm};
+\begin{tikzpicture}[font=\strut\sffamily]
+    \node[ir] (rtl) {\rtl{}};
+    \node[pass,right=of rtl] (findbb) {find\\basic blocks};
+    \node[ir,right=of findbb] (rtlblock) {\rtlblock{}};
+    \draw[ed] (rtlblock) to [out=300,in=240,loop,looseness=10] (rtlblock);
+    \node[pass,right=of rtlblock] (schedule) {schedule};
+    \node[pass,below=of rtlblock] (ifconv) {if-conversion};
+    \node[ir,right=of schedule] (rtlpar) {\rtlpar{}};
 
-\node[pass] (fsm) at (6,2) {FSM \\ generation};
-\node[ir] (htl) at (8,2) {\strut \htl};
-\node[pass] (vback) at (10,2) {Vericert \\ backend};
-\node[ir] (verilog) at (12,2) {\strut Verilog};
+    \node[blacknumlarge] at (rtlblock.north west)
+    {\ref{sec:hs:rtlblockdef}};
+    \node[blacknumlarge] at (rtlpar.north west)
+    {\ref{sec:hs:rtlblockdef}};
+    \node[blacknumlarge] at (ifconv.north west)
+    {\ref{sec:hs:if-conversion}};
+    \node[blacknumlarge] at (schedule.north west)
+    {\ref{sec:hs:implementing-scheduling}};
 
-\node[pass] (bbs) at (3.1,2) {\strut find BBs};
-\node[ir] (rtlb) at (3.1,4) {\strut \rtlblock};
-\node[pass] (ifc) at (0,4) {\strut if-conversion};
-\node[pass] (sched) at (5.3,4) {\strut schedule};
-\node[ir] (rtlp) at (7.3,4) {\strut \rtlpar};
-\node[pass] (fsub) at (10.2,4) {\strut forward  substitution};
+    \draw[ed] (rtl) -- (findbb) -- (rtlblock);
+    \draw[ed] (rtlblock) -- (schedule) -- (rtlpar);
 
-\node[anchor=north east, align=right] (cclabel) at (12.8,-1.1)
-{CompCert~\cite{leroy09_formal_verif_compil_back_end}};
-\begin{pgfonlayer}{background}
-\draw[bgbox, fill=bgbox1] (-1.5,-1.1) rectangle (12.8, 0.7);
-\end{pgfonlayer}
-
-\node[anchor=north east, align=right] (vlabel) at (12.8,0.9) {Vericert~\cite{herklotz21_fvhls}};
-\begin{pgfonlayer}{background}
-\draw[bgbox, fill=bgbox2] (4.5,0.9) rectangle (12.8, 2.7);
-\end{pgfonlayer}
-
-\node[anchor=north east, align=right] (thislabel) at (12.8,2.9) {This work};
-\begin{pgfonlayer}{background}
-\draw[bgbox, fill=bgbox3] (-1.5,0.9) -- (4.3,0.9) -- (4.3,2.9) -- (12.8,2.9) --(12.8,4.7) -- (-1.5,4.7) -- cycle;
-\end{pgfonlayer}
-
-\node[blacknum] at (rtl.north west) {1};
-\node[blacknum] at (rtlb.north west) {2};
-\node[blacknum] at (bbs.north west) {3};
-\node[blacknum] at (ifc.north west) {4};
-\node[blacknum] at (rtlp.north west) {5};
-\node[blacknum] at (sched.north west) {6};
-\node[blacknum] at (fsm.north west) {7};
-\node[blacknum] at (fsub.north west) {8};
-
-\draw[ed] (clight) to (ccfront);
-\draw[ed] (ccfront) to (rtl);
-\draw[ed] (rtl) to (dataflow);
-\draw[ed] (dataflow) to (ltl);
-\draw[ed] (ltl) to (ccback);
-\draw[ed] (ccback) to (asm);
-\draw[ed] (rtl) to (fsm);
-\draw[ed] (fsm) to (htl);
-\draw[ed] (htl) to (vback);
-\draw[ed] (vback) to (verilog);
-\draw[ed] (rtl) to (bbs);
-\draw[ed] (bbs) to (rtlb);
-\draw[ed] (rtlb) to[bend left=5] (ifc);
-\draw[ed] (ifc) to[bend left=5] (rtlb);
-\draw[ed] (rtlb) to (sched);
-\draw[ed] (sched) to (rtlp);
-\draw[ed] (rtlp) to (fsm);
-\draw[ed] (htl) to[bend left=10] (fsub);
-\draw[ed] (fsub) to[bend left=10] (htl);
-
- \end{tikzpicture}
+    \begin{pgfonlayer}{background}
+      \node[bgbox,fill=bgbox3,fit={(rtl)(findbb)(rtlblock)(schedule)(ifconv)(ifconv)(rtlpar)},minimum
+      width=\linewidth,inner sep=3mm] {};
+    \end{pgfonlayer}
+  \end{tikzpicture}
   \caption{New passes and intermediate languages introduced in this work.}%
   \label{fig:compcert_interm}
-\end{figure*}
+\end{figure}
 
-\begin{enumerate}[label=\protect\blacknum{\arabic*}]
-\item We intercept the CompCert flow at the Register Transfer
-  Language (\rtl).\footnote{Note that this is not the \rtl{} that stands for
-    Register-Transfer Level in hardware design.} In \rtl, each function in the
-  program is represented as a control-flow graph (CFG) whose nodes are
-  individual three-address instructions.
-\item We need to identify the basic blocks so they can be combined into
-  hyperblocks for scheduling. CompCert has basic-block creation at the Location
-  Transfer Language (\ltl), but Vericert's flow has already branched off at
-  \rtl. Hence, we define a new intermediate language called \rtlblock, which can
-  be thought of as a CFG whose nodes are basic blocks. In order to support
-  hyperblocks further along our compilation flow, each instruction is paired
-  with a predicate. An instruction is only executed if its predicate evaluates
-  to true.
-\item We compile from \rtl{} to \rtlblock{} using a \gls{translation validation}
-  approach. That is, an unverified algorithm is responsible for gathering
-  instructions into basic blocks, then a verified validator confirms the
-  equivalence of the \rtl{} and \rtlblock{} representations.  This is similar to
-  CompCert's basic-block creation for \ltl{}, but ours is simpler because it is
-  not necessary to track variables that may have moved to the stack.
-\item We then perform
-  if-conversion~\cite{allen83_conver_contr_depen_data_depen}. This is a
-  transformation that merges basic blocks from two sides of a fork in the CFG
-  into a single, larger basic block (now called a hyperblock) that uses
-  predication to control which instructions are executed. If-conversion is
-  helpful because larger blocks can give the scheduler more opportunities to
-  find parallelism.
-  %Our implementation of if-conversion is programmed and
-  %verified in Coq.
-  CompCert already has an if-conversion pass~\cite{absint19_compc}, but it can
-  only handle simple cases such as replacing \texttt{if(p)\{x=a;\}else\{x=b;\}}
-  with \texttt{x=p?a:b}, whereas our implementation can handle arbitrary forks
-  in the CFG.  If-conversion can be applied selectively, using heuristics to
-  judge which basic blocks should be combined. Having proved if-conversion
-  correct wherever it is applied, these heuristics can be adjusted with no
-  impact on the correctness proof.
-%  ======
-%Figure XXX: show the four BBs in the CFG for
-%
-%if(b) { c; } else { d; } e;
-%
-%then show the one BB in the CFG for
-%
-%b => c;
-%!b => c;
-%e;
-%======
-\item We then perform scheduling on each hyperblock in turn. The scheduler takes
-  the list of predicated instructions and produces a list of groups of
-  instructions such that all the instructions in the same group can be safely
-  executed in parallel. Actually, our scheduler produces a list of groups of
-  \emph{lists of} instructions. The idea behind this three-level representation,
-  which we call \rtlpar, is that each inner list is a sequence of instructions
-  that can be chained together, then each group contains instruction chains that
-  can be executed in parallel. In this way, we support \emph{operation
-    chaining}, a long-established optimisation in hardware
-  design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.
-\item The scheduler itself is written in unverified OCaml, and works similarly
-  to those in existing HLS tools~\cite[]{canis13_l}: it takes a set of
-  scheduling constraints that capture the clock period, available hardware
-  resources, and dependencies between operations, encodes them all as a system
-  of difference constraints (SDC)~\cite[]{cong06_sdc}, and then hands them off
-  to a linear program solver.
+We then perform if-conversion~\cite{allen83_conver_contr_depen_data_depen}. This
+is a transformation that merges basic blocks from two sides of a fork in the CFG
+into a single, larger basic block (now called a hyperblock) that uses
+predication to control which instructions are executed. If-conversion is helpful
+because larger blocks can give the scheduler more opportunities to find
+parallelism.  CompCert already has an if-conversion pass~\cite{absint19_compc},
+but it can only handle simple cases such as replacing
+\texttt{if(p)\{x=a;\}else\{x=b;\}} with \texttt{x=p?a:b}, whereas our
+implementation can handle arbitrary forks in the CFG.  If-conversion can be
+applied selectively, using heuristics to judge which basic blocks should be
+combined. Having proved if-conversion correct wherever it is applied, these
+heuristics can be adjusted with no impact on the correctness proof.
 
-\item The CFG is then encoded as a finite state machine (FSM) in a Verilog-like
-  language called Hardware Transfer Language (\htl). This process is largely
-  inherited from Vericert, but where Vericert produces FSMs that perform just
-  one assignment per state, we produce FSM states with a sequence of
-  assignments.
+We then perform scheduling on each hyperblock in turn. The scheduler takes the
+list of predicated instructions and produces a list of groups of instructions
+such that all the instructions in the same group can be safely executed in
+parallel. Actually, our scheduler produces a list of groups of \emph{lists of}
+instructions. The idea behind this three-level representation, which we call
+\rtlpar, is that each inner list is a sequence of instructions that can be
+chained together, then each group contains instruction chains that can be
+executed in parallel. In this way, we support \emph{operation chaining}, a
+long-established optimisation in hardware
+design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.
 
-\item To ensure that these assignments are actually performed in parallel, we
-  have a final pass that performs \emph{forward
-    substitution}~\cite[p.~109]{hopwood78_decom} to turn the sequence of Verilog
-  blocking assignments into a sequence of non-blocking assignments. For example:
-\begin{center}
-\begin{tikzpicture}
-\node (initial) {\begin{minipage}{0.3\linewidth}
+\begin{figure}
+  \centering
+\begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}, bb/.style={align=left, draw=white, fill=black!5},font=\strut\sffamily]
+\node[bb,minimum height=5.5cm] (initial) {\begin{minipage}{3.6cm}
 \begin{rtllisting}
-a = b * c;
-d = a + d;
+5: if(r1 == r2)
+     goto 4
+   else goto 3;
+4: r4 := 4;
+   goto 1;
+3: r3 := 3;
+   goto 2;
+2: r6 := r3 * r5;
+   goto 1;
+1: r7 := r4 + r5;
 \end{rtllisting}
 \end{minipage}};
-\node[right=3cm of initial] (scheduled) {
-  \begin{minipage}{0.3\linewidth}
+\node[right=5mm of initial,bb,minimum height=5.5cm] (scheduled) {
+  \begin{minipage}{4.6cm}
 \begin{rtllisting}
-a <= b * c;
-d <= (b * c) + d;
+5: {
+  p1 := r1 == r2;
+  p1 => r4 := 4;
+  p1 => r6 := r4 + r5;
+  !p1 => r3 := 3;
+  !p1 => r5 := r3;
+  !p1 => r6 := r4 + r5;
+}
+~~
+~~
 \end{rtllisting}
   \end{minipage}
 };
-\draw[-{Latex[length=3mm]}] (initial) -- node [below] {forward substitution}
-($(scheduled.west)-(0.5,0)$);
+\node[right=5mm of scheduled,bb,minimum height=5.5cm] (scheduledagain) {
+  \begin{minipage}{4.1cm}
+\begin{rtllisting}
+5: {
+  [ (
+    p1 := r1 == r2;
+    p1 => r4 := 4;
+    !p1 => r3 := 3;
+    !p1 => r5 := r3;
+    p1 || !p1 =>
+      r6 := r4 + r5;
+  ) ]
+}
+\end{rtllisting}
+  \end{minipage}
+};
+\path (initial) -- node[yshift=4cm,pass] (ifconvlabel) {if-conversion} (scheduled);
+\path (scheduled) -- node[yshift=4cm,pass] (schedulelabel) {scheduling} (scheduledagain);
+\draw[ed] (initial) |- (ifconvlabel) -| ([xshift=-2.5mm]scheduled.north);
+\draw[ed] ([xshift=2.5mm]scheduled.north) |- (schedulelabel) -| (scheduledagain);
+% \draw[-{Latex[length=3mm]}] (initial.east) ++(0.5,0) -- node [below] {if-conversion}
+% ($(scheduled.west)-(0.5,0)$);
 \end{tikzpicture}
-\end{center}
+\caption{Example of an if-conversion transformation performed in Vericert,
+  followed by a scheduling operation, after which the final node in the CFG can
+  be shared.}
+  \label{fig:itv:if-conv-transformation}
+\end{figure}
 
-The two versions are semantically equivalent, but we find that the second, in
-which both right-hand sides must be evaluated before either assignment is
-performed, makes the downstream logic synthesis tools more likely to produce the
-hardware we intend (which, in this particular example, involves exploiting a
-fused multiply--accumulator unit if available).
-
-% ======
-% Figure YYY: show how to schedule a little program made up of additions and
-% multiplications.
-% ======
-\end{enumerate}
-
-\noindent
 What remains is to ensure the correctness of each schedule produced in step
 \blacknum{6}. Following previous work on verified scheduling by
 \textcite{tristan08_formal_verif_trans_valid} and
@@ -421,14 +356,13 @@ hyperblocks, and \rtlpar{} maps from states to parallel hyperblocks.
      & & |   & \hl{$\guardtype$ \texttt{\small =>} $\mono{E}(\cfinstrtype)$} & \rlabel{block exit}
   \\
   \llabel{control-flow instructions} & $\cfinstr \in \cfinstrtype$ & ::= & \mono{if} $(\regtype \mathbin{\condoptype} \regtype)$ $\locationtype$ $\locationtype$ & \rlabel{conditional} \\
-      & & |   & \mono{goto} $\locationtype$ & \rlabel{goto node} \\
-      & & |   & \ldots \\
-%      & & |   & \mono{call} $\mathit{sig}$ $f$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (function call)\\
-%      & & |   & \mono{tailcall} $\mathit{sig}$ $f$ $\vec{\regtype}$ & (tailcall) \\
-%      & & |   & \mono{builtin} $f_{\mathit{ext}}$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (builtin function) \\
-%      & & |   & \mono{jumptable} $\regtype$ $\vec{\locationtype}$ & (jumptable) \\
-%      & & |   & \mono{return} $\optiontype{\regtype}$ & (function return) \\
-%      % & |   & \mono{RBpred\_{cf}} $P$ $i_{\mathit{cf}_{1}}$
+      & & |   & \hl{\texttt{goto} $\locationtype$} & \rlabel{goto node} \\
+      & & |   & \mono{call} $\mathit{sig}$ $f$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (function call)\\
+      & & |   & \mono{tailcall} $\mathit{sig}$ $f$ $\vec{\regtype}$ & (tailcall) \\
+      & & |   & \mono{builtin} $f_{\mathit{ext}}$ $\vec{\regtype}$ $\regtype$ $\locationtype$ & (builtin function) \\
+      & & |   & \mono{jumptable} $\regtype$ $\vec{\locationtype}$ & (jumptable) \\
+      & & |   & \mono{return} $\optiontype{\regtype}$ & (function return) \\
+      % & |   & \mono{RBpred\_{cf}} $P$ $i_{\mathit{cf}_{1}}$
       % $i_{\mathit{cf}_{2}}$ \\
       & \llap{$\rtlbb \in \rtlblock{}$} & ::= & $\instr\ \texttt{list}$ \\
       & \llap{$\rtlpb \in \rtlpar{}$} & ::= & $\instr\ \texttt{list}\ \texttt{list}\ \texttt{list}$
@@ -518,11 +452,11 @@ although \rtlpar{} blocks contain lists of instruction chains that have been
 identified by the scheduler as being suitable for parallel execution, our
 semantics nonetheless executes them sequentially. This is because although the
 scheduler identifies where parallelism can be profitably extracted, the program
-does not actually become parallel until the final `forward substitution' pass,
-where Verilog blocking assignments become non-blocking assignments. Hence, to
-avoid unnecessary complexity, we keep the semantics sequential at the \rtlpar{}
-stage. (A parallel \rtlpar{} semantics may allow more optimisations to be
-validated, but we save that for future work.)
+does not actually become parallel until the final \enquote{forward substitution}
+pass, where Verilog blocking assignments become nonblocking assignments. Hence,
+to avoid unnecessary complexity, we keep the semantics sequential at the
+\rtlpar{} stage. (A parallel \rtlpar{} semantics may allow more optimisations to
+be validated, but we save that for future work.)
 
 \newcommand\cons{\mathbin{::}}
 
@@ -639,44 +573,50 @@ To simplify both the implementation of the if-converter and its correctness
 proof, it is split up into three distinct
 transformations:%, as shown in \cref{fig:if-conversion-details}:
 
-% \begin{figure}
-%   \centering
-%   \begin{tikzpicture}[>=Latex,shorten >=1pt,node distance=1cm and 1cm,%
-%     transf/.style={very
-%       thick,draw,fill=Orchid!40,font={\sffamily\bfseries},align=center},%
-%     exttransf/.style={very
-%       thick,draw,fill=Coral!40,font={\sffamily\bfseries},align=center},%
-%     conn/.style={very thick,->}]
-%     % JW: I switched to the same tikz styles that we used in figure 1, for consistency.
-%     \node[pass] (cond elim) {Condition \\ Elimination};
-%     \node[pass,below right=of cond elim] (block inlining) {Block \\ Inlining};
-%     \node[extpass,right=of block inlining] (external decision) {External \\
-%       Decision \\ Procedure};
-%     \node[pass,above right=of block inlining] (dead block) {Dead Block \\
-%       Elimination};
-%     \draw[ed] (cond elim) -- (block inlining);
-%     \draw[ed] (block inlining) -- (dead block);
-%     \draw[ed] (block inlining) to [looseness=7,loop,out=110,in=70] (block
-%     inlining);
-%     \draw[ed] ($(cond elim.south west)-(5mm,5mm)$) -- (cond elim);
-%     \draw[ed] (dead block) -- ($(dead block.south east)+(5mm,-5mm)$);
-%     \draw[ed] (block inlining) to [out=5,in=175] (external decision);
-%     \draw[ed] (external decision) to [out=185,in=-5] (block inlining);
-%   \end{tikzpicture}
-%   \caption{Details of the if-conversion pass, showing the three different stages
-%     of the transformation.}%
-%   \label{fig:if-conversion-details}
-% \end{figure}
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=Latex,shorten >=1pt,node distance=1cm and 1cm,%
+    transf/.style={very
+      thick,draw,fill=Orchid!40,font={\sffamily\bfseries},align=center},%
+    exttransf/.style={very
+      thick,draw,fill=Coral!40,font={\sffamily\bfseries},align=center},%
+    conn/.style={very thick,->},font=\strut\sffamily]
+    % JW: I switched to the same tikz styles that we used in figure 1, for
+    % consistency.
+    \node[ir] (first rtlblock) {\rtlblock{}};
+    \node[pass,right=of first rtlblock] (cond elim) {condition \\ elimination};
+    \node[ir,right=of cond elim] (second rtlblock) {\rtlblock{}};
+    \draw[ed] (second rtlblock) to [out=305,in=235,looseness=40,loop] (second rtlblock);
+    \node[pass,below=of second rtlblock] (block inlining) {block \\ inlining};
+    \node[extpass,right=of block inlining] (external decision) {external \\
+      decision \\ procedure};
+    \node[pass,right=of second rtlblock] (dead block) {dead block \\
+      elimination};
+    \node[ir,right=of dead block] (third rtlblock) {\rtlblock{}};
+    \draw[ed] (first rtlblock) -- (cond elim) -- (second rtlblock);
+    \draw[ed] (second rtlblock) -- (dead block) -- (third rtlblock);
+    \draw[ed] (block inlining) to [out=5,in=175] (external decision);
+    \draw[ed] (external decision) to [out=185,in=-5] (block inlining);
 
-\begin{figure*}
+    \begin{pgfonlayer}{background}
+      \node[bgbox,fill=bgbox5,minimum width=\linewidth,fit={(first rtlblock)(cond elim)(dead block)(third
+        rtlblock)(external decision)}] {};
+    \end{pgfonlayer}
+  \end{tikzpicture}
+  \caption{Details of the if-conversion pass, showing the three different stages
+    of the transformation.}%
+  \label{fig:if-conversion-details}
+\end{figure}
+
+\begin{figure}
   \lstset{basicstyle=\footnotesize\ttfamily}
     \centering
     \begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}, bb/.style={align=left, draw=white, fill=black!5}]
       \node[bb,draw] (b1)
       {\rtlinline+p1 := r10 == r11+\\\rtlinline+p1 => E(goto 2)+\\\rtlinline+!p1 => E(goto 3)+};
-      \node[bb,below=27mm of b1.north, xshift=-10mm, draw] (b2) {\rtlinline+r1 := 4+ \\\rtlinline+E(goto 4)+};
-      \node[bb,below=27mm of b1.north, xshift=10mm, draw] (b3) {\rtlinline+r1 := 3+\\\rtlinline+E(goto 4)+};
-      \node[bb,below=42mm of b1.north, draw] (b4)
+      \node[bb,below=27mm of b1.north, xshift=-12mm, draw] (b2) {\rtlinline+r1 := 4+ \\\rtlinline+E(goto 4)+};
+      \node[bb,below=27mm of b1.north, xshift=12mm, draw] (b3) {\rtlinline+r1 := 3+\\\rtlinline+E(goto 4)+};
+      \node[bb,below=50mm of b1.north, draw] (b4)
       {\rtlinline+r3 := r1 * r4+\\\rtlinline+E(goto 10)+};
       \node[label] at (b1.north west) {$1$};
       \node[label] at (b2.north west) {$2$};
@@ -688,32 +628,34 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
       \draw[->] (b3) -- (b4);
       \draw[->] (b2) -- (b4);
 
-      \draw[-{Latex[length=3mm]}] ([xshift=7mm] b1.south east) to node[align=center, auto]{inline \diaglabel{$4$} \\ into \diaglabel{$3$}} +(10mm,0mm);
-
       \node[bb,right=25mm of b1, draw] (c1)
-      {\rtlinline{p1 := r10 == r11}\\\rtlinline{p1 => E(goto 2)}\\\rtlinline{!p1 => E(goto 3)}};
-      \node[bb,below=27mm of c1.north, xshift=-10mm, draw] (c2) {\rtlinline{r1 := 4}\\\rtlinline{E(goto 4)}};
-      \node[bb,below=25mm of c1.north, xshift=12mm, draw] (c3)
-      {\rtlinline{r1 := 3}\\\rtlinline{r3 := r1 * r4}\\\rtlinline{E(goto 10)}};
-      \node[bb,below=42mm of c1.north, draw] (c4)
-      {\rtlinline{r3 := r1 * r4}\\\rtlinline{E(goto 10)}};
-      \node[label] at (c1.north west) {$1^\prime$};
-      \node[label] at (c2.north west) {$2^\prime$};
-      \node[label] at (c3.north west) {$3^\prime$};
+      {\rtlinline{p1 := r10 == r11}\\\rtlinline{p1 => E(goto 2)}\\
+        \rtlinline{!p1 => E(goto 3)}};
+      \path (b1.north) to
+      node[pass,above,yshift=5mm](inlineintolabela){inline \diaglabel{$4$} \\ into \diaglabel{$3$}}
+      (c1.north); \node[bb,below=27mm of c1.north, xshift=-12mm, draw] (c2)
+      {\rtlinline{r1 := 4}\\\rtlinline{E(goto 4)}}; \node[bb,below=25mm of
+      c1.north, xshift=14mm, draw] (c3) {\rtlinline{r1 := 3}\\
+      \rtlinline{r3 := r1 * r4}\\\rtlinline{E(goto 10)}};
+    \node[bb,below=50mm of c1.north,
+      draw] (c4) {\rtlinline{r3 := r1 * r4}\\\rtlinline{E(goto 10)}};
+      \node[label] at (c1.north west) {$1^\prime$}; \node[label] at (c2.north
+      west) {$2^\prime$}; \node[label] at (c3.north west) {$3^\prime$};
       \node[label] at (c4.north west) {$4^\prime$};
 
       \draw[->] (c1) -- node[auto, swap, inner sep=0] {\rtlinline{p1}} (c2);
       \draw[->] (c1) -- node[auto, inner sep=0] {\rtlinline{!p1}} (c3);
       \draw[->] (c2) -- (c4);
 
-      \draw[-{Latex[length=3mm]}] ([xshift=7mm] c1.south east) to node[align=center, auto]{inline \diaglabel{$3^\prime$} \\ into \diaglabel{$1^\prime$}} +(10mm,0mm);
-
       \node[bb, right=53mm of c1.north, anchor=north, draw] (d1)
       {\rtlinline{p1 := r10 == r11}\\\rtlinline{p1 => E(goto 2)}\\\rtlinline{!p1 => r1 := 3}\\\rtlinline{!p1 => r3 := r1 * r4}\\\rtlinline{!p1 => E(goto 10)}};
-      \node[bb,below=27mm of d1.north,xshift=-10mm,draw] (d2) {\rtlinline{r1 := 4}\\\rtlinline{E(goto 4)}};
-      \node[bb,below=25mm of d1.north, xshift=12mm, draw] (d3)
+      \path (c1.north) to
+      node[pass,above,yshift=5mm](inlineintolabelb){inline \diaglabel{$3^\prime$} \\ into \diaglabel{$1^\prime$}}
+      (d1.north);
+      \node[bb,below=35mm of d1.north,xshift=-12mm,draw] (d2) {\rtlinline{r1 := 4}\\\rtlinline{E(goto 4)}};
+      \node[bb,below=32mm of d1.north, xshift=14mm, draw] (d3)
       {\rtlinline{r1 := 3}\\\rtlinline{r3 := r1 * r4}\\\rtlinline{E(goto 10)}};
-      \node[bb,below=42mm of d1.north,draw] (d4)
+      \node[bb,below=52mm of d1.north,draw] (d4)
       {\rtlinline{r3 := r1 * r4}\\\rtlinline{E(goto 10)}};
 
       \draw[->] (d1) -- node[auto,swap,inner sep=0] {\rtlinline{p1}} (d2);
@@ -722,11 +664,13 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
       \node[label] at (d2.north west) {$2^{\prime\prime}$};
       \node[label] at (d3.north west) {$3^{\prime\prime}$};
       \node[label] at (d4.north west) {$4^{\prime\prime}$};
+      \draw[ed] (b1.north) |- (inlineintolabela) -| ([xshift=-3mm] c1.north);
+      \draw[ed] ([xshift=3mm] c1.north) |- (inlineintolabelb) -| (d1.north);
     \end{tikzpicture}
 
   \caption{An example showing two iterations of the block-inlining pass.}%
   \label{fig:if-conversion-example}
-\end{figure*}
+\end{figure}
 
 \begin{enumerate}
 \item\textbf{Condition Elimination}~~~First, every conditional instruction in

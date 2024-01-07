@@ -103,13 +103,13 @@ suitable for us because they lack formal semantics.
     \draw[ed] (rtl) -- (rtlpass) -- ++(1cm,0) |- (nativecode);
     \draw[very thick] (opts) to [out=310,in=20] (rtl);
     \draw[edr] (rtl) to [out=90,in=220] (opts);
-    \node[pass,below=2.3cm of compcertc] (findbb) {find\\basic blocks};
+    \node[pass,below=2.3cm of compcertc,xshift=1cm] (findbb) {find\\basic blocks};
     \node[ir,right=of findbb] (rtlblock) {\rtlblock{}};
-    \draw[ed] (rtlblock) to [out=220,in=320,loop,looseness=7] (rtlblock);
+    \draw[ed] (rtlblock) to [out=300,in=240,loop,looseness=10] (rtlblock);
     \node[pass,right=of rtlblock] (schedule) {schedule};
     \node[pass,below=of rtlblock] (ifconv) {if-conversion};
     \node[ir,right=of schedule] (rtlpar) {\rtlpar{}};
-    \node[pass,below=of findbb,yshift=-2cm] (hyperblock destruction) {hyperblock\\destruction};
+    \node[pass,below=of findbb,yshift=-2cm,xshift=-1cm] (hyperblock destruction) {hyperblock\\destruction};
     \node[ir,right=of hyperblock destruction] (rtlsubpar) {\rtlsubpar{}};
     \node[pass,right=of rtlsubpar] (htl generation) {\htl{} \\
       generation};
@@ -132,7 +132,7 @@ suitable for us because they lack formal semantics.
       {Hardware Generation\\\Cref{sec:hardware-generation}}
       (hardwaregenbox.south west);
       \path (schedulebox.north west) --
-      node[font=\sffamily\small,align=center,rotate=90,yshift=5mm] (schedule label)
+      node[font=\sffamily\small,align=center,rotate=90,yshift=14.5mm] (schedule label)
       {Hyperblock Scheduling\\\Cref{sec:hyperblock-scheduling}}
       (schedulebox.south west);
 
@@ -156,6 +156,15 @@ suitable for us because they lack formal semantics.
     \draw[ed] (htl) -- (bram insertion) -- (htlmem);
     \draw[ed] (htlmem) -- (forward substitution) -- (htlsubst);
     \draw[ed] (htlsubst) -- (verilog generation) -- (verilog);
+
+    \node[blacknum] at (findbb.north west) {1};
+    \node[blacknum] at (ifconv.north west) {2};
+    \node[blacknum] at (schedule.north west) {3};
+    \node[blacknum] at (hyperblock destruction.north west) {4};
+    \node[blacknum] at (htl generation.north west) {5};
+    \node[blacknum] at (bram insertion.north west) {6};
+    \node[blacknum] at (forward substitution.north west) {7};
+    \node[blacknum] at (verilog generation.north west) {8};
   \end{tikzpicture}
   \caption{\vericert{} as a Verilog back end to \compcert{}.}%
   \label{fig:rtlbranch}
@@ -189,27 +198,62 @@ translation to hardware and mainly assists the static analysis passes.  One
 difference between LLVM \gls{IR} and \rtl{} is that \rtl{} includes operations
 that are specific to the chosen target architecture; we chose to target the
 x86\_32 back end because it generally produces relatively dense \rtl{} thanks to
-the availability of complex addressing modes.
+the availability of complex addressing modes.  The translation from \rtl{} is
+then performed as follows.
 
-From the \rtl{} representation, Vericert first generates a hyperblock
-representation called \rtlblock{} by first generating basic blocks and then
-performing general if-conversion to combine blocks.  The hyperblock is
-represented as a basic block of predicated instructions with an exit instruction
-to leave the basic block prematurely.  This hyperblock is then scheduled and
-transformed into \rtlpar{}, which places each instruction into a specific state.
-The scheduling process is described in detail in
-\cref{sec:hyperblock-scheduling}.
-
-Next, the hyperblocks are destroyed again to explicitly place instructions into
-individual states.  Next, \htl{} is generated, which is a language that models
-an \gls{FSMD}.  A few low-level and hardware specific optimisations are
-performed at this level, including \gls{BRAM} insertion, which generates a
-proper memory interface for any interaction with the stack, and forward
-substitution, which ensures that the writes to registers are parallelised by
-transforming blocking assignment into nonblocking assignment.  Finally,
-syntactic Verilog is generated from \htl{}, which consists of translating the
-\gls{FSMD} into a case statement and implementing the memory interface in
-Verilog.
+\begin{enumerate}[label=\protect\blacknum{\arabic*}]
+\item Basic block generation creates basic blocks from the pure \rtl{}
+  \gls{CFG}.
+\item If-conversion combine basic blocks into a single hyperblock based on
+  heuristics on the \gls{CFG} layout.  The hyperblock is represented as a basic
+  block of predicated instructions with an exit instruction to leave the basic
+  block prematurely.
+\item The scheduler itself is written in unverified OCaml, and works similarly
+  to those in existing HLS tools~\cite[]{canis13_l}: it takes a set of
+  scheduling constraints that capture the clock period, available hardware
+  resources, and dependencies between operations, encodes them all as a system
+  of difference constraints (SDC)~\cite[]{cong06_sdc}, and then hands them off
+  to a linear program solver.
+\item Next, the hyperblocks are destroyed again to explicitly place instructions
+  into individual states.
+\item \htl{} is generated, which is a language that models an \gls{FSMD}.
+\item \gls{BRAM} insertion, which generates a proper memory interface for any
+  interaction with the stack.
+\item To ensure that these assignments are actually performed in parallel, we
+  have a final pass that performs \emph{forward
+    substitution}~\cite[p.~109]{hopwood78_decom} to turn the sequence of Verilog
+  blocking assignments into a sequence of nonblocking assignments. For example:
+%
+\begin{center}
+\begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}, bb/.style={align=left, draw=white, fill=black!5},font=\strut\sffamily]
+\node[bb,inner sep=3mm] (initial) {\begin{minipage}{1.7cm}
+\begin{minted}{systemverilog}
+a = b * c;
+d = a + d;
+\end{minted}
+\end{minipage}};
+\node[right=5cm of initial,bb,inner sep=3mm] (scheduled) {%
+  \begin{minipage}{3cm}
+\begin{minted}{systemverilog}
+a <= b * c;
+d <= (b * c) + d;
+\end{minted}
+  \end{minipage}%
+};
+\draw[ed] (initial) -- node [pass] {forward\\substitution}
+(scheduled);
+\end{tikzpicture}
+\end{center}
+%
+The two versions are semantically equivalent, but we find that the second, in
+which both right-hand sides must be evaluated before either assignment is
+performed, makes the downstream logic synthesis tools more likely to produce the
+hardware we intend (which, in this particular example, involves exploiting a
+fused multiply--accumulator unit if available).
+\item Finally, syntactic Verilog is generated from \htl{}, which consists of
+  translating the \gls{FSMD} into a case statement and implementing the memory
+  interface in Verilog.
+\end{enumerate}
 
 \section{Translating C to Verilog by Example}%
 \label{sec:itv:translating-c-to-verilog}

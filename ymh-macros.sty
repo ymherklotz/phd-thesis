@@ -136,16 +136,9 @@
 \newcommand\case[2]{#2 &\text{if}~#1}
 \newcommand\casesingle[2]{#2}
 
-\tikzset{
-blacknum/.style={
-  circle, draw=none,
-  fill=black, inner sep=0pt,
-  outer sep=0pt, minimum size=0.9em, text=white, font=\scriptsize\sffamily\bfseries}
-}
-
 \newcommand\blacknum[1]{%
 \begin{tikzpicture}[baseline=-0.3em]%
-\node[blacknum](a){#1};%
+\node[blacknum]{#1};%
 \end{tikzpicture}%
 }
 
@@ -622,6 +615,7 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \definecolor{bgbox2}{HTML}{cbd5e8}
 \definecolor{bgbox3}{HTML}{fdcdac}
 \definecolor{bgbox4}{HTML}{d5e3b3}
+\definecolor{bgbox5}{HTML}{c2b5e3}
 \definecolor{ircolor}{HTML}{e78ac3}
 
 \tikzset{
@@ -632,6 +626,15 @@ diagonal fill/.style 2 args={fill=#2, path picture={
   bgbox/.style={draw=none},
   ed/.style={->, very thick, >=stealth},
   edr/.style={<-, very thick, >=stealth},
+blacknumlarge/.style={
+  circle, draw=none,
+  fill=black, inner sep=1pt,
+  outer sep=0pt, minimum size=0.9em, text=white,
+  font=\scriptsize\sffamily\bfseries},
+blacknum/.style={
+  circle, draw=none,
+  fill=black, inner sep=0pt,
+  outer sep=0pt, minimum size=0.9em, text=white, font=\scriptsize\sffamily\bfseries},
 }
 
 %\newcommand\JW[2][]{\st{#1} \textcolor{red}{#2}}
