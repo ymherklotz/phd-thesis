@@ -212,10 +212,10 @@
 \newcommand\final[1]{#1^{\mathrm{f}}}
 \newcommand\base[1]{#1^0}
 %\newcommand\some[1]{\left\lfloor #1 \right\rceil}
-\newcommand\some[1]{\mono{Some}(#1)}
-\newcommand\cnone{\mono{None}}
-\newcommand\ccok[1]{\mono{OK}(#1)}
-\newcommand\ccerror{\mono{Error}}
+\newcommand\some[1]{\yhkeyword{Some}(#1)}
+\newcommand\cnone{\yhkeyword{None}}
+\newcommand\ccok[1]{\yhkeyword{OK}(#1)}
+\newcommand\ccerror{\yhkeyword{Error}}
 \newcommand\optiontype[1]{#1^{?}}
 \newcommand{\curly}{\mathrel{\leadsto}}
 
@@ -367,15 +367,19 @@
 }
 
 \newcommand\syniteformulans[3]{%
-  ( #1 \rightarrow #2) \land (\neg #1 \rightarrow #3)
+  \left( #1 \rightarrow #2\right) \land \left(\neg #1 \rightarrow #3\right)
 }
 \newcommand\syniteformula[3]{%
   \syniteformulans{\ #1\ }{\ #2\ }{\ #3}%
 }
 \newcommand\syniteformulaaligned[3]{%
-  \begin{aligned}[t]
-  &(#1 \rightarrow #2)\\ &{} \land (\neg #1 \rightarrow #3)
+  \begin{aligned}
+  &\left(#1 \rightarrow #2\right)\\ &{} \land \left(\neg #1 \rightarrow #3\right)
   \end{aligned}
+}
+
+\newcommand\syniteformulanslk[3]{%
+  \left( #1 \predimp #2\right) \land \left(\neg #1 \predimp #3\right)
 }
 
 \NewDocumentCommand{\set}{o m}{%
@@ -555,6 +559,7 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
 
 \crefname{lemma}{lemma}{lemmas}
 \Crefname{lemma}{Lemma}{Lemmas}
@@ -616,6 +621,7 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \definecolor{bgbox3}{HTML}{fdcdac}
 \definecolor{bgbox4}{HTML}{d5e3b3}
 \definecolor{bgbox5}{HTML}{c2b5e3}
+\definecolor{bgbox6}{HTML}{b5e3d9}
 \definecolor{ircolor}{HTML}{e78ac3}
 
 \tikzset{
@@ -634,7 +640,9 @@ blacknumlarge/.style={
 blacknum/.style={
   circle, draw=none,
   fill=black, inner sep=0pt,
-  outer sep=0pt, minimum size=0.9em, text=white, font=\scriptsize\sffamily\bfseries},
+  outer sep=0pt, minimum size=0.9em, text=white,
+  font=\scriptsize\sffamily\bfseries},
+bb/.style={align=left, draw=white, fill=black!5},
 }
 
 %\newcommand\JW[2][]{\st{#1} \textcolor{red}{#2}}
@@ -828,7 +836,7 @@ blacknum/.style={
 
 \newcommand{\reachable}[2]{#1 \looparrowright #2}
 
-\newenvironment{chapsummary}{\begin{quote}\itshape\singlespacing}{\end{quote}}
+\newenvironment{chapsummary}{\begin{quote}\itshape\singlespacing}{\end{quote}\vspace{\baselineskip}}
 
 %\newcommand{\quote}{``#1''}
 

@@ -5,17 +5,158 @@
   This chapter describes the main architecture of the HLS tool, and the way in
   which the Verilog back end was added to \compcert{}.  This chapter also covers
   an example of converting a simple C program into hardware, expressed in the
-  Verilog language.
+  Verilog language.  \Cref{sec:itv:unreliability-hls} is based on a short paper
+  coauthored with Zewei Du, Nadesh Ramanathan, and John
+  Wickerson~\cite{herklotz21_esrhlst}.  The rest of the chapter, together with
+  \cref{sec:trusted-computing-base}, is based on a paper coauthored with James
+  D. Pollard, Nadesh Ramanathan, and John Wickerson~\cite{herklotz21_fvhls}.
 \end{chapsummary}
 
-\noindent Our solution to the verification problem in \gls{HLS} is Vericert, a
-formally verified \gls{HLS} tool.  First, we will describe the main design
-decisions behind Vericert in \cref{sec:itv:main-design-decisions} and we will
-then give an example of a translation from C code into Verilog through Vericert
-in \cref{sec:itv:translating-c-to-verilog}.
+\section{Unreliability of High-Level Synthesis}%
+\label{sec:itv:unreliability-hls}
 
-\section{Main Design Decisions}%
+Are \gls{HLS} tools reliable? Questions have been raised about the reliability
+of HLS before; for example, Andrew Canis, co-creator of the LegUp HLS tool,
+wrote that \textquote[{\textcite[Section 3.4.6]{canis15_legup}}]{high-level
+  synthesis research and development is inherently prone to introducing bugs or
+  regressions in the final circuit functionality}.  In this section, we
+investigate whether there is substance to this concern by conducting an
+empirical evaluation of the reliability of several widely used HLS tools.
+
+The approach we take is \emph{fuzzing}.  This is an automated testing method in
+which randomly generated programs are given to compilers to test their
+robustness~\cite{chen13_tcf, sun16_tucbgl, liang18_f, zhang19_fubsmc,
+  yang11_findin_under_bugs_c_compil, lidbury15_many_core_compil_fuzzin}.  The
+generated programs are typically large and rather complex, and they often
+combine language features in ways that are legal but counter-intuitive; hence
+they can be effective at exercising corner cases missed by human-designed test
+suites.  Fuzzing has been used extensively to test conventional compilers; for
+example, \textcite{yang11_findin_under_bugs_c_compil} used it to reveal more
+than three hundred bugs in GCC and LLVM, and tested CompCert as well, only
+finding bugs in the trusted parts of the code.
+
+\begin{example}[A miscompilation bug in Vivado HLS]
+\label{ex:vivado_miscomp}
+Figure~\ref{fig:vivado_bug1} shows a program that produces the wrong result
+during RTL simulation in Xilinx Vivado HLS v2018.3, v2019.1 and
+v2019.2.\footnote{This program, like all the others in this paper, includes a
+  \texttt{main} function, which means that it compiles straightforwardly with
+  GCC. To compile it with an HLS tool, we rename \texttt{main} to
+  \texttt{result}, synthesise that function, and then add a new \texttt{main}
+  function as a testbench that calls \texttt{result}.} The program repeatedly
+shifts a large integer value \texttt{x} right by the values stored in array
+\texttt{arr}.  Vivado HLS returns \texttt{0x006535FF}, but the result returned
+by GCC (and subsequently confirmed manually to be the correct one) is
+\texttt{0x046535FF}. The bug was initially revealed by a randomly generated
+program of around 113 lines, which we were able to reduce to the minimal example
+shown in the figure.  We reported this issue to Xilinx, who confirmed it to be a
+bug.
+\end{example}
+
+\begin{figure}
+\centering
+\begin{minipage}{6cm}
+\begin{minted}{c}
+unsigned int x = 0x1194D7FF;
+int arr[6] = {1, 1, 1, 1, 1, 1};
+
+int main() {
+  for (int i = 0; i < 2; i++)
+    x = x >> arr[i];
+  return x;
+}
+\end{minted}
+\end{minipage}
+\caption[Miscompilation bug in Xilinx Vivado HLS v2018.3, v2019.1 and
+v2019.2. The generated RTL returns \texttt{0x006535FF} but the correct result is
+\texttt{0x046535FF}.]{Miscompilation bug in Xilinx Vivado HLS. The generated RTL
+  returns \texttt{0x006535FF} but the correct result is \texttt{0x046535FF}.}%
+\label{fig:vivado_bug1}
+\end{figure}
+
+\def\totaltestcases{6700}
+\def\totaltestcasefailures{1191}
+\def\numuniquebugs{8}
+\def\vivadotestcases{3645}
+
+We wrote a fuzzer that used Csmith to randomly generate C code and modified it
+to make it suitable for HLS tools.  For example, pointers had to be removed
+because some cases, like pointers of other pointers, are explicitly not
+supported by Vivado HLS.  We tested the following \gls{HLS} tools: Intel i++
+18.1, LegUp 4.0, Bambu 0.9.7 and Xilinx Vivado HLS v2018.3, v2019.1 and v2019.2.
+\Cref{fig:existing_tools} shows an Euler diagram of our results.  We see that
+918 (13.7\%), 167 (2.5\%), 83 (1.2\%) and 26 (0.4\%) test-cases fail in Bambu,
+LegUp, Vivado HLS and Intel i++ respectively.  The bugs we reported to the Bambu
+developers were fixed during our testing campaign, so we also tested the
+development branch of Bambu (0.9.7-dev) with the bug fixes, and found only 17
+(0.25\%) failing test-cases remained.  Although i++ has a low failure rate, it
+has the highest time-out rate (540 test-cases) due to its remarkably long
+compilation time. No other tool had more than 20 time-outs.  Note that the
+absolute numbers here do not necessarily correspond to the number of bugs in the
+tools, because a single bug in a language feature that appears frequently in our
+test suite could cause many failures.  Moreover, we are reluctant to draw
+conclusions about the relative reliability of each tool by comparing the number
+of failures, because these numbers are so sensitive to the parameters of the
+randomly generated test suite we used. In other words, we can confirm the
+\emph{presence} of bugs, but cannot deduce the \emph{number} of them (nor their
+importance).
+
+In total, we found at least \numuniquebugs{} unique bugs across all the tools,
+including both crashes and miscompilations.  Conventional compilers have become
+quite resilient to fuzzing over the last decade, so recent work on fuzzing
+compilers has had to employ increasingly imaginative techniques to keep finding
+new bugs~\cite{even-mendoza20_ce}.  In contrast, we have found that HLS tools
+can be made to exhibit bugs even using the relatively basic fuzzing techniques.
+This motivates the need for a verified \gls{HLS} tool.
+
+\definecolor{intel}{HTML}{66c2a5}
+\definecolor{vivado}{HTML}{fc8d62}
+\definecolor{legup}{HTML}{8da0cb}
+\definecolor{bambu}{HTML}{e78ac3}
+\definecolor{bambudev}{HTML}{bf8be8}
+\definecolor{timeout}{HTML}{ef4c4c}
+\begin{figure}
+  \centering
+    \begin{tikzpicture}[scale=0.9,yscale=0.9,font=\sffamily]
+      \draw[very thick] (-7.2,7.0) rectangle (8.5,0);
+      \fill[vivado,fill opacity=0.5] (0.9,4.4) ellipse (3.3 and 1.5);
+      \fill[intel,fill opacity=0.5] (-4.5,4.8) ellipse (2.0 and 1.3);
+      \fill[bambu,fill opacity=0.5] (2,3) ellipse (3 and 1.5);
+      \fill[bambudev,fill opacity=0.5] (5,3.3) ellipse (1.3 and 0.8);
+      \fill[legup,fill opacity=0.5] (-2.5,3) ellipse (3.75 and 1.5);
+      \draw[white, thick] (0.9,4.4) ellipse (3.3 and 1.5);
+      \draw[white, thick] (-4.5,4.8) ellipse (2.0 and 1.3);
+      \draw[white, thick] (2,3) ellipse (3 and 1.5);
+      \draw[white, thick] (5,3.3) ellipse (1.3 and 0.8);
+      \draw[white, thick] (-2.5,3) ellipse (3.75 and 1.5);
+      \node[align=center, anchor=south west] at (-0.5,6) {\textcolor{vivado}{\textbf{Xilinx Vivado HLS v2019.1}}};
+      \node[anchor=south west] at (-6.4,6) {\textcolor{intel}{\textbf{Intel i++ 18.1}}};
+      \node at (-3,0.8) {\textcolor{legup}{\textbf{LegUp 4.0}}};
+      \node at (2.3,1.1) {\textcolor{bambu}{\textbf{Bambu 0.9.7}}};
+      \node[align=center] at (6.5,1.7) {\textcolor{bambudev}{\textbf{Bambu}} \\ \textcolor{bambudev}{\textbf{0.9.7-dev}}};
+      \node at (-3.5,2.5) {\small 159};
+      \node at (-5,5) {\small 26};
+      \node at (-4,3.9) {\small 1};
+      \node at (-1.5,3.8) {\small 4};
+      \node at (0,2.5) {\small 3};
+      \node at (2.5,2.3) {\small 902};
+      \node at (2.5,3.8) {\small 9};
+      \node at (0,5) {\small 70};
+      \node at (4.5,3.3) {\small 4};
+      \node at (5.5,3.3) {\small 13};
+      \node at (-6,0.7) {5509};
+    \end{tikzpicture}
+\caption{The number of failures per tool out of \totaltestcases{} test-cases. Overlapping regions mean that the same test-cases failed in multiple tools.}\label{fig:existing_tools}
+\end{figure}
+
+\section{Main Design Decisions of Vericert}%
 \label{sec:itv:main-design-decisions}
+
+Our solution to the verification problem in \gls{HLS} is Vericert, a formally
+verified \gls{HLS} tool.  First, we will describe the main design decisions
+behind Vericert in \cref{sec:itv:main-design-decisions} and we will then give an
+example of a translation from C code into Verilog through Vericert in
+\cref{sec:itv:translating-c-to-verilog}.
 
 \paragraph{Choice of source language}
 

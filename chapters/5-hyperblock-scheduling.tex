@@ -1,6 +1,6 @@
 \graphicspath{{./figures/5-hyperblock-scheduling/}}
 
-\chapter{Hyperblock Scheduling}%
+\chapter{Verified Hyperblock Scheduling}%
 \label{sec:hyperblock-scheduling}
 
 \begin{chapsummary}
@@ -53,10 +53,10 @@ two special cases called \emph{superblock scheduling}~\cite{hwu93_super} and
 been developed, both of which impose restrictions on the form of traces in order
 to obtain tractable algorithms. Superblocks generalise basic blocks by allowing
 early exits, while hyperblocks are basic blocks of \emph{predicated}
-instructions. Since hyperblocks are more general than superblocks, and since
-predicated execution is easy to implement efficiently in custom hardware,
-hyperblock scheduling is a natural fit for HLS. Indeed, the use of hyperblock
-scheduling in HLS was first proposed over two decades
+instructions with early exits. Since hyperblocks are more general than
+superblocks, and since predicated execution is easy to implement efficiently in
+custom hardware, hyperblock scheduling is a natural fit for HLS. Indeed, the use
+of hyperblock scheduling in HLS was first proposed over two decades
 ago~\cite{budiu02_compil_applic_specif_hardw,
   callahan98_instr_level_paral_recon_comput}, and is nowadays used by popular
 HLS tools such as AMD Vitis HLS~\cite{amd23_vitis_forum},
@@ -71,9 +71,7 @@ and Bambu~\cite[line~304]{ferrandi14_panda_bambu}.
 % which is from FPL 1998. Evidence that Vitis uses hyperblock scheduling
 % \cite{}}.
 
-\subsubsection*{Contributions}
-
-In this paper, we present:
+In this chapter, we present:
 
 \begin{itemize}
 \item \textbf{the first verified implementation of hyperblock scheduling}, which
@@ -97,8 +95,9 @@ In this paper, we present:
 \section{Overview}
 \label{sec:hs:overview}
 
-\Cref{fig:compcert_interm} shows the main components of our hyperblock scheduler
-and how they fit into the wider Vericert and CompCert projects.
+\Cref{fig:compcert_interm} shows the main components of our hyperblock
+scheduler.  First we find the basic blocks in \rtl{} and form \rtlblock{}, which
+structures the basic blocks as lists of instructions.
 
 \begin{figure}
 \hypersetup{hidelinks}
@@ -136,26 +135,37 @@ and how they fit into the wider Vericert and CompCert projects.
 We then perform if-conversion~\cite{allen83_conver_contr_depen_data_depen}. This
 is a transformation that merges basic blocks from two sides of a fork in the CFG
 into a single, larger basic block (now called a hyperblock) that uses
-predication to control which instructions are executed. If-conversion is helpful
-because larger blocks can give the scheduler more opportunities to find
-parallelism.  CompCert already has an if-conversion pass~\cite{absint19_compc},
-but it can only handle simple cases such as replacing
-\texttt{if(p)\{x=a;\}else\{x=b;\}} with \texttt{x=p?a:b}, whereas our
-implementation can handle arbitrary forks in the CFG.  If-conversion can be
-applied selectively, using heuristics to judge which basic blocks should be
-combined. Having proved if-conversion correct wherever it is applied, these
+predication to control which instructions are executed.  If-conversion is
+helpful because larger blocks can give the scheduler more opportunities to find
+parallelism.  \Cref{fig:itv:if-conv-sched-transformation} gives an example of
+multiple \rtl{} basic blocks being merged into a single hyperblock, where the
+if-statement is turned into an assignment.  Note that basic block \texttt{1} was
+duplicated with two different predicate conditions, because it was if-converted
+twice, once per branch of the if-statement.  CompCert already has an
+if-conversion pass~\cite{absint19_compc}, but it can only handle simple cases
+such as replacing \texttt{if(p)\{x=a;\}else\{x=b;\}} with \texttt{x=p?a:b},
+whereas our implementation can handle arbitrary forks in the CFG.  If-conversion
+can be applied selectively, using heuristics to judge which basic blocks should
+be combined. Having proved if-conversion correct wherever it is applied, these
 heuristics can be adjusted with no impact on the correctness proof.
 
-We then perform scheduling on each hyperblock in turn. The scheduler takes the
-list of predicated instructions and produces a list of groups of instructions
-such that all the instructions in the same group can be safely executed in
-parallel. Actually, our scheduler produces a list of groups of \emph{lists of}
-instructions. The idea behind this three-level representation, which we call
+Next the hyperblocks are scheduling in turn. The scheduler takes the list of
+predicated instructions and produces a list of groups of instructions such that
+all the instructions in the same group can be safely executed in parallel.
+Actually, our scheduler produces a list of groups of \emph{lists of}
+instructions.  The idea behind this three-level representation, which we call
 \rtlpar, is that each inner list is a sequence of instructions that can be
 chained together, then each group contains instruction chains that can be
 executed in parallel. In this way, we support \emph{operation chaining}, a
 long-established optimisation in hardware
-design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.
+design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.  This is shown
+in the third hyperblock in \cref{fig:itv:if-conv-sched-transformation}, where
+all instructions are actually chained, so are placed in the inner list, because
+the overall estimated latency is less than half a clock period.  Note here that
+the scheduler can share the duplicated instruction in the original basic block
+\texttt{1}, and it could furthermore remove the predicate from the instruction
+completely as it is executed unconditionally.  It can therefore rectify the
+duplication that is inserted by the if-conversion transformation.
 
 \begin{figure}
   \centering
@@ -216,12 +226,11 @@ design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.
 \caption{Example of an if-conversion transformation performed in Vericert,
   followed by a scheduling operation, after which the final node in the CFG can
   be shared.}
-  \label{fig:itv:if-conv-transformation}
+  \label{fig:itv:if-conv-sched-transformation}
 \end{figure}
 
-What remains is to ensure the correctness of each schedule produced in step
-\blacknum{6}. Following previous work on verified scheduling by
-\textcite{tristan08_formal_verif_trans_valid} and
+What remains is to ensure the correctness of each schedule. Following previous
+work on verified scheduling by \textcite{tristan08_formal_verif_trans_valid} and
 \textcite{six22_formal_verif_super_sched}, we use translation validation, but
 dealing with hyperblocks brings additional complexity, as explained below.
 
@@ -325,15 +334,11 @@ reasoning about reordering of instructions in a predicate-aware fashion.
 \label{sec:hs:rtlblockdef}
 
 Our work introduces two new intermediate languages: \rtlblock{} and \rtlpar{},
-which implement the sequential and parallel semantics %\YH{I wanted to remove
-% parallel semantics everywhere, because we do not actually have parallel
-% semantics, so instead I wanted to replace it by ``scheduled hyperblock''.}
-of
-hyperblocks respectively.  They are based on CompCert's \rtl{}, but instead of
-mapping from states to instructions, \rtlblock{} maps from states to
-hyperblocks, and \rtlpar{} maps from states to parallel hyperblocks.
+which implement the sequential and scheduled semantics of hyperblocks
+respectively.  They are based on CompCert's \rtl{}, but instead of mapping from
+states to instructions, \rtlblock{} maps from states to hyperblocks, and
+\rtlpar{} maps from states to parallel hyperblocks.
 
-%\YH{TODO: Fix control-flow instruction syntax.}
 \begin{figure}
 \centering
 \begin{tabular}{rr@{~}r@{~}l@{\hspace*{2mm}}l}
@@ -370,23 +375,15 @@ hyperblocks, and \rtlpar{} maps from states to parallel hyperblocks.
 \caption{Syntax of \rtlblock{} and \rtlpar{}, with our hyperblock additions \hl{highlighted}.}
 \label{fig:instructions}
 \end{figure}
-% \rtlblock{} instructions are split into two types of instructions, standard
-% instructions and control-flow instructions.
+
 Hyperblocks are made up of instructions as defined in \cref{fig:instructions},
 where $\vec{\cdot}$ denotes a list and $\optiontype{\cdot}$ denotes an optional
-parameter. %$\exprop$ and $\condop$ are standard
-% \compcert{} arithmetic and conditional operations, $\reg$ is a register,
-% $\addr$ contains address information and the type of memory access being
-% performed, $\predvar$ is a
-% predicate, %$\mathit{sig}$ is a type signature, $f$ is a function name, $f_{\mathit{ext}}$ is an external function name, and $\location$ denotes the next node in the CFG to jump to.
-Most instructions are similar to their \rtl{} counterparts, except each
-instruction is now guarded by an optional predicate. One additional instruction
-is for setting a predicate ($\predvar$) equal to an evaluated condition
-($\reg_1\mathbin{\condop}\reg_2$).
-% When this instruction is introduced during if-conversion,
-% $\reg_1\mathbin{\condop}\reg_2$ is the if-statement's condition.
-The other new instruction is \mono{E}, which takes a control-flow instruction
-($\cfinstr$) and allows for early exit from the hyperblock.
+parameter.  Most instructions are similar to their \rtl{} counterparts, except
+each instruction is now guarded by an optional predicate. One additional
+instruction is for setting a predicate ($\predvar$) equal to an evaluated
+condition ($\reg_1\mathbin{\condop}\reg_2$).  The other new instruction is
+\mono{E}, which takes a control-flow instruction ($\cfinstr$) and allows for
+early exit from the hyperblock.
 
 % \mono{RBsetpred} is a standard instruction that sets a predicate variable
 % ($p$) equal to an evaluated condition ($c$).  This instruction is introduced
@@ -599,7 +596,7 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
     \draw[ed] (external decision) to [out=185,in=-5] (block inlining);
 
     \begin{pgfonlayer}{background}
-      \node[bgbox,fill=bgbox5,minimum width=\linewidth,fit={(first rtlblock)(cond elim)(dead block)(third
+      \node[bgbox,fill=bgbox5!70,minimum width=\linewidth,fit={(first rtlblock)(cond elim)(dead block)(third
         rtlblock)(external decision)}] {};
     \end{pgfonlayer}
   \end{tikzpicture}
@@ -611,7 +608,7 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
 \begin{figure}
   \lstset{basicstyle=\footnotesize\ttfamily}
     \centering
-    \begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}, bb/.style={align=left, draw=white, fill=black!5}]
+    \begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}]
       \node[bb,draw] (b1)
       {\rtlinline+p1 := r10 == r11+\\\rtlinline+p1 => E(goto 2)+\\\rtlinline+!p1 => E(goto 3)+};
       \node[bb,below=27mm of b1.north, xshift=-12mm, draw] (b2) {\rtlinline+r1 := 4+ \\\rtlinline+E(goto 4)+};
@@ -677,13 +674,13 @@ transformations:%, as shown in \cref{fig:if-conversion-details}:
   the block is replaced by two predicated \mono{goto} instructions. For example:
 \begin{center}
 \begin{tikzpicture}
-\node (initial) {\begin{minipage}{0.3\linewidth}
+\node[bb] (initial) {\begin{minipage}{2.9cm}
 \begin{rtllisting}
 E(if c n1 n2);
 \end{rtllisting}
 \end{minipage}};
-\node[right=4.5cm of initial] (scheduled) {
-  \begin{minipage}{0.3\linewidth}
+\node[right=5.5cm of initial,bb] (scheduled) {
+  \begin{minipage}{3.4cm}
 \begin{rtllisting}
 p := c;
 p => E(goto n1);
@@ -691,8 +688,9 @@ p => E(goto n1);
 \end{rtllisting}
   \end{minipage}
 };
-\draw[-{Latex[length=3mm]}] (initial) -- node [below] {condition elimination}
-($(scheduled.west)-(0.5,0)$);
+\path (initial.east) ++(0.5,0) -- node[pass,font=\strut\sffamily] (condelim) {condition\\elimination}
+([xshift=-0.5cm] scheduled.west);
+\draw[ed] (initial) -- (condelim) -- (scheduled);
 \end{tikzpicture}
 \end{center}
 
@@ -1108,15 +1106,15 @@ precisely in \cref{sec:algorithm-symbolic-execution}.
 \begin{figure}
 \centering
 \begin{tikzpicture}
-\node (initial) {\begin{minipage}{0.4\linewidth}
+\node[bb] (initial) {\begin{minipage}{5.4cm}
 \begin{rtllisting}
 ~\seI{}~ p1 => p2 := r2 == 0;
 ~\seII{}~ p1 & p2 => r1 := r2 + 2;
 ~\seIII{}~ !p1 => r2 := 1;
 \end{rtllisting}
 \end{minipage}};
-\node[right=2cm of initial] (scheduled) {
-  \begin{minipage}{0.4\linewidth}
+\node[right=3.5cm of initial,bb] (scheduled) {
+  \begin{minipage}{5.4cm}
 \begin{rtllisting}
 ~\seIII{}~ !p1 => r2 := 1;
 ~\seI{}~ p1 => p2 := r2 == 0;
@@ -1124,7 +1122,9 @@ precisely in \cref{sec:algorithm-symbolic-execution}.
 \end{rtllisting}
   \end{minipage}
 };
-  \draw[-{Latex[length=3mm]}] (initial) -- node [below] {scheduling} ($(scheduled.west)-(0.5,0)$);
+\path (initial) -- node[pass,font=\strut\sffamily] (sched) {scheduling}
+(scheduled);
+\draw[ed] (initial) -- (sched) -- (scheduled);
 \end{tikzpicture}
 \caption{An example schedule. It is valid to move \protect\seIII{} before
   \protect\seI{} and \protect\seII{} because despite the appearance of data
@@ -1193,9 +1193,9 @@ $\synite{\neg\avar{p1}}{1 \aeq 0}{\avar{r2} \aeq 0}$. On our worked example
 
 Note that we treat register expressions and predicate expressions slightly
 differently. For register expressions, we combine all the if-expressions into a
-single multi-way conditional, which we write using ``cases'' notation. We call
-these expressions \emph{value summaries} after \textcite{sen15_multis}, who used
-the same data structure for a different purpose (namely, making symbolic
+single multi-way conditional, which we write using \enquote{cases} notation. We
+call these expressions \emph{value summaries} after \textcite{sen15_multis}, who
+used the same data structure for a different purpose (namely, making symbolic
 execution more efficient).
 
 For predicate expressions, we do not need value summaries, because all of the
@@ -1219,14 +1219,14 @@ following:
 
 \begin{equation}
 \label{eq:sat1}
-(\syniteformulans{\satvar{\avarsmall{p1}}}{\satvar{\avarsmall{r2} \aeq 0}}{\satvar{\avarsmall{p2}}}) \leftrightarrow \satY
+\left(\syniteformulans{\satvar{\avarsmall{p1}}}{\satvar{\avarsmall{r2} \aeq 0}}{\satvar{\avarsmall{p2}}}\right) \leftrightarrow \satY
 \end{equation}
 
 \noindent where $\satY$ abbreviates
-$(\syniteformulans{\satvar{\avarsmall{p1}}}{(\syniteformulans{\neg\satvar{\avarsmall{p1}}}{\satvar{1
-      \aeq 0}}{\satvar{\avarsmall{r2} \aeq 0}})}{\satvar{\avarsmall{p2}}})$.  In
-the encoding, each SAT variable $x_e$ encodes the truth value of the expression
-$e$ in the formula.
+$\left(\syniteformulans{\satvar{\avarsmall{p1}}}{\left(\syniteformulans{\neg\satvar{\avarsmall{p1}}}{\satvar{1
+          \aeq 0}}{\satvar{\avarsmall{r2} \aeq
+          0}}\right)}{\satvar{\avarsmall{p2}}}\right)$.  In the encoding, each
+SAT variable $x_e$ encodes the truth value of the expression $e$ in the formula.
 
 We can also generate SAT queries to check the equivalence of the register
 expressions. This involves issuing multiple queries to the SAT solver: if an
@@ -1242,27 +1242,27 @@ following three SAT queries:
     \lfalse &\leftrightarrow \satvar{\avarsmall{p1}} \wedge \satY \wedge
            \neg\satvar{\avarsmall{p1}}
 \\
-    (\satvar{\avarsmall{p1}} \wedge
-    (\syniteformulans{\satvar{\avarsmall{p1}}}{\satvar{\avarsmall{r2} \aeq 0}}{\satvar{\avarsmall{p2}}}))
-         &\leftrightarrow (\satvar{\avarsmall{p1}} \wedge \satY
-           \wedge \satvar{\avarsmall{p1}})
+    \left(\satvar{\avarsmall{p1}} \wedge
+    \left(\syniteformulans{\satvar{\avarsmall{p1}}}{\satvar{\avarsmall{r2} \aeq 0}}{\satvar{\avarsmall{p2}}}\right)\right)
+         &\leftrightarrow \left(\satvar{\avarsmall{p1}} \wedge \satY
+           \wedge \satvar{\avarsmall{p1}}\right)
 \\
-\neg(\satvar{\avarsmall{p1}} \wedge
-    ((\syniteformulans{\satvar{\avarsmall{p1}}}{\satvar{\avarsmall{r2} \aeq 0}}{\satvar{\avarsmall{p2}}})))
-         &\leftrightarrow \neg(\satvar{\avarsmall{p1}} \wedge \satY)
+\neg\left(\satvar{\avarsmall{p1}} \wedge
+    \left(\left(\syniteformulans{\satvar{\avarsmall{p1}}}{\satvar{\avarsmall{r2} \aeq 0}}{\satvar{\avarsmall{p2}}}\right)\right)\right)
+         &\leftrightarrow \neg\left(\satvar{\avarsmall{p1}} \wedge \satY\right)
 \end{aligned}
 \end{equation}
 
 \begin{table}
 \centering
-\captionabove{Second attempt: using value summaries}
+\captionabove{Second attempt: using value summaries.}
 \label{tab:symbex2}
   \begin{tabular}{r|l|l}
     \toprule
     & \textbf{Pre-scheduling symbolic state} & \textbf{Post-scheduling symbolic state} \\ \midrule
     $\text{\rtlinline|r1|}$ & $\begin{cases}
-    \avar{r2} + 2,&\text{if } \avar{p1} \land \syniteformulans{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}}\\
-    \avar{r1},&\text{if } \neg(\avar{p1} \land \syniteformulans{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}})\\
+    \avar{r2} + 2,&\text{if } \avar{p1} \land \left(\syniteformulaaligned{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}}\right)\\
+    \avar{r1},&\text{if } \neg\left(\avar{p1} \land \left(\syniteformulaaligned{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}}\right)\right)\\
   \end{cases}$
                        & $\begin{cases}
     1 \aadd 2,&\text{if } \avar{p1} \land \formY \land \neg\avar{p1}\\
@@ -1279,7 +1279,7 @@ following three SAT queries:
     \\ \midrule
     $\text{\rtlinline|p2|}$ & $\syniteformulans{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}}$ & $\formY$\\
     \bottomrule
-    \multicolumn{3}{r}{\vphantom{\Huge A} where $\formY$ abbreviates $\syniteformulans{\avar{p1}}{(\syniteformulans{\neg\avar{p1}}{1 \aeq 0}{\avar{r2} \aeq 0})}{\avar{p2}}$}
+    \multicolumn{3}{r}{\vphantom{\Huge A} where $\formY$ abbreviates $\syniteformulans{\avar{p1}}{\left(\syniteformulans{\neg\avar{p1}}{1 \aeq 0}{\avar{r2} \aeq 0}\right)}{\avar{p2}}$}
   \end{tabular}
 \end{table}
 
@@ -1406,8 +1406,9 @@ because:
                                                  \avar{r2},&\text{if } \afvar{p1}\\
                                                \end{cases}$
     \\ \midrule
-    $\text{\rtlinline|p2|}$ & $\syniteformulans{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}}$ & $\syniteformulaaligned{\avar{p1}}{(\syniteformulans{\neg\avar{p1}}{1 \aeq 0}{\avar{r2} \aeq 0})}{\avar{p2}}$\\
+    $\text{\rtlinline|p2|}$ & $\syniteformulans{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}}$ & $\formY$\\
     \bottomrule
+    \multicolumn{3}{r}{\vphantom{\Huge A} where $\formY$ abbreviates $\syniteformulans{\avar{p1}}{\left(\syniteformulans{\neg\avar{p1}}{1 \aeq 0}{\avar{r2} \aeq 0}\right)}{\avar{p2}}$}
   \end{tabular}
 \end{table}
 
@@ -1433,21 +1434,22 @@ due to \textcite{tristan08_formal_verif_trans_valid}.
 
 \begin{center}
 \begin{tikzpicture}
-\node (initial) {\begin{minipage}{0.3\linewidth}
+\node[bb] (initial) {\begin{minipage}{2.7cm}
 \begin{rtllisting}
 r3 := r2 + 4;
 \end{rtllisting}
 \end{minipage}};
-\node[right=2cm of initial] (scheduled) {
-  \begin{minipage}{0.3\linewidth}
+\node[right=5cm of initial,bb] (scheduled) {
+  \begin{minipage}{2.7cm}
 \begin{rtllisting}
 r3 := 5 / r1;
 r3 := r2 + 4;
 \end{rtllisting}
   \end{minipage}
 };
-\draw[-{Latex[length=3mm]}] (initial) -- node [below] {scheduling}
-($(scheduled.west)-(0.5,0)$);
+\path (initial.east) -- node [pass,font=\strut\sffamily] (sched) {scheduling}
+(scheduled.west);
+\draw[ed] (initial) -- (sched) -- (scheduled);
 \end{tikzpicture}
 \end{center}
 
@@ -1507,28 +1509,29 @@ hyperblocks, it needs extending to handle predicated instructions. The obvious
 way to do this is to generate the encountered expressions for each predicated
 instruction in the same way that we perform symbolic execution, which is
 essentially to treat \rtlinline{p => r := e} as if it is the non-predicated
-instruction \rtlinline{r := p?e:r}.  However, this approach leads to too many
-unnecessary constraints being imposed on the scheduler, leaving it unable to
-reorder some instructions that have only benign WAW dependencies. To see this,
-consider the following example.
+instruction \rtlinline{r := p ? e : r}.  However, this approach leads to too
+many unnecessary constraints being imposed on the scheduler, leaving it unable
+to reorder some instructions that have only benign WAW dependencies. To see
+this, consider the following example.
 \begin{center}
 \begin{tikzpicture}
-\node (initial) {\begin{minipage}{0.3\linewidth}
+\node[bb] (initial) {\begin{minipage}{3cm}
 \begin{rtllisting}
 p1 => r1 := 1;
 !p1 => r1 := 2;
 \end{rtllisting}
 \end{minipage}};
-\node[right=2cm of initial] (scheduled) {
-  \begin{minipage}{0.3\linewidth}
+\node[right=5cm of initial,bb] (scheduled) {
+  \begin{minipage}{3cm}
 \begin{rtllisting}
 !p1 => r1 := 2;
 p1 => r1 := 1;
 \end{rtllisting}
   \end{minipage}
 };
-\draw[-{Latex[length=3mm]}] (initial) -- node [below] {scheduling}
-($(scheduled.west)-(0.5,0)$);
+\path (initial.east) -- node [pass,font=\strut\sffamily] (sched) {scheduling}
+(scheduled.west);
+\draw[ed] (initial) -- (sched) -- (scheduled);
 \end{tikzpicture}
 \end{center}
 When performing symbolic execution on
@@ -1550,14 +1553,14 @@ these two pairs
 are not equivalent, so this (correct) schedule cannot be validated.
 
 Instead, for the purposes of calculating encountered expressions, our approach
-is to treat \rtlinline{p => r := e} as the instruction%
-\rtlinline{r := p?e:}$\bullet$, where $\bullet$ is a dummy expression
+is to treat \rtlinline{p => r := e} as the instruction %
+\rtlinline{r := p ? e : }$\bullet$, where $\bullet$ is a dummy expression
 representing the absence of an assignment. Now the set of encountered
 expressions is
 $\{\synite{\afvar{p1}}{1}{\bullet}, \synite{\neg\afvar{p1}}{2}{\bullet}\}$
 %$\set{\set{(\afvar{p1}, 1),
 %    (\neg\afvar{p1}, \bullet)}, \set{(\neg\afvar{p1}, 2), (\afvar{p1}, \bullet)}}$
-both pre- and post-scheduling, so validation can be completed.
+for both pre- and post-scheduling, so validation can be completed.
 
 %This approach is borrowed from the concept of \emph{constraints} by
 %\textcite[]{tristan08_formal_verif_trans_valid}.  Constraints are a set of
@@ -1688,9 +1691,9 @@ predicate, and an expression $\forestmem{\symbstate}$ for the contents of memory
 (again as a value summary).  We also need symbolic execution to track how
 control exits the block (to make sure that it does so in the same way after
 scheduling), so $\forestexit{\symbstate}$ stores a value summary that evaluates
-to the instruction that is executed to exit the block (or to `None' if the block
-hasn't finished yet). Finally, $\constraints{\symbstate}$ tracks the set of
-encountered expressions, as motivated in
+to the instruction that is executed to exit the block (or to \enquote{None} if
+the block hasn't finished yet). Finally, $\constraints{\symbstate}$ tracks the
+set of encountered expressions, as motivated in
 \cref{sec:handling-discarded-expressions}.
 
 % \JW{Actually, I wonder
@@ -2061,8 +2064,8 @@ validation approach:
 
   \begin{equation*}
     \begin{aligned}
-      \mathtt{scheduleAndVerify}~\rtlbb \defeq {}&\letin{\rtlpb =
-                                           \mathtt{schedule}~\rtlbb}\\
+      \yhfunction{scheduleAndVerify}~\rtlbb \defeq {}&\letin{\rtlpb =
+                                           \yhfunction{schedule}~\rtlbb}\\
                                          &\synite{\symbolic{\rtlbb}
                                            \gtrsim \symbolic\rtlpb}{\ccok{\rtlpb}}{\ccerror}
     \end{aligned}
@@ -2075,18 +2078,19 @@ In order to prove our validator correct, we need to prove that whenever our
 validator deems $\symbolic{\rtlpb}$ to be a symbolic refinement of
 $\symbolic{\rtlbb}$, there is indeed a forward simulation from $\rtlbb$ to
 $\rtlpb$; that is:
-  \begin{equation}
-    \symbolic{\rtlbb} \gtrsim \symbolic{\rtlpb} \implies \rtlbb \curly \rtlpb
-  \end{equation}
-
-  The natural way to prove $\rtlbb \curly \rtlpb$ is to follow
-  \textcite{tristan08_formal_verif_trans_valid} by constructing the chain
-  $\rtlbb \curly \symbolic{\rtlbb} \curly \symbolic{\rtlpb} \curly \rtlpb$. In
-  order to do this, we need to be able to talk about forward simulations that
-  involve not just programs ($\rtlbb$ and $\rtlpb$) but also symbolic states
-  ($\symbolic{\rtlbb}$ and $\symbolic{\rtlpb}$). Thus we need a semantics not
-  just for blocks (cf. \cref{fig:semantics-of-rtlblock-and-rtlpar}) but also for
-  symbolic states.
+%
+\begin{equation}
+  \symbolic{\rtlbb} \gtrsim \symbolic{\rtlpb} \implies \rtlbb \curly \rtlpb.
+\end{equation}
+%
+The natural way to prove $\rtlbb \curly \rtlpb$ is to follow
+\textcite{tristan08_formal_verif_trans_valid} by constructing the chain
+$\rtlbb \curly \symbolic{\rtlbb} \curly \symbolic{\rtlpb} \curly \rtlpb$. In
+order to do this, we need to be able to talk about forward simulations that
+involve not just programs ($\rtlbb$ and $\rtlpb$) but also symbolic states
+($\symbolic{\rtlbb}$ and $\symbolic{\rtlpb}$). Thus we need a semantics not just
+for blocks (cf. \cref{fig:semantics-of-rtlblock-and-rtlpar}) but also for
+symbolic states.
 
 \subsection{A semantics for symbolic states}
 
@@ -2462,31 +2466,39 @@ both symbolic states, or one of each.
   \end{equation*}
 \end{definition}
 
-% The correctness of the scheduler can then be stated in terms of the results of
-% the equivalence check.
-% We want to prove that given an input block $\rtlbb$, and
-% given the scheduled block $\rtlpb$, that $\rtlbb \curly \rtlpb$ when their respective symbolic
-% states are equivalent, i.e. $\compare{}{\symbolic{\rtlbb}}{\symbolic{\rtlpb}}$.  We can
-% split up this work into three main sections, first we show that symbolic
-% execution is sound and complete with respect to the semantics given to the
-% symbolic block and the input programs.  Next, we need to show that the
-% equivalence check of two symbolic states is correct, and therefore implies
-% equivalent behaviour of the symbolic states.
-It remains to construct the chain
-$\rtlbb \curly \symbolic{\rtlbb} \curly \symbolic{\rtlpb} \curly \rtlpb$. The
-three steps of that chain are captured by the following three lemmas.
+First, we show that the forward simulation is transitive.
+
+\begin{lemma}[Transitivity of the forward simulation]\label{thm:transitivity}
+  \begin{equation}
+    \label{eq:1}
+    \forall\ A\ B\ C\ldotp\ \ A \curly B \mathrel{\land} B \curly C \implies A \curly C
+  \end{equation}
+\end{lemma}
+
+The correctness of the scheduler can then be stated in terms of the results of
+the equivalence check.  We want to prove that given an input block $\rtlbb$, and
+given the scheduled block $\rtlpb$, that $\rtlbb \curly \rtlpb$ when their
+respective symbolic states are equivalent,
+i.e. $\compare{}{\symbolic{\rtlbb}}{\symbolic{\rtlpb}}$.  We can split up this
+work into three main steps, first we show that symbolic execution is sound and
+complete with respect to the semantics given to the symbolic block and the input
+programs.  Next, we need to show that the equivalence check of two symbolic
+states is correct, and therefore implies equivalent behaviour of the symbolic
+states.
 
 % \subsubsection{Completeness and Soundness of Symbolic Execution}
 
-% First, we need to show that symbolic execution is sound and complete, meaning
-% that a behaviour is a valid behaviour of the input program if and only if it is
-% also a valid behaviour of the symbolic state.  Both directions are needed,
-% because we need to show that any behaviour of the `before' hyperblock $\rtlbb$ is a
-% behaviour its symbolic state $\symbolic{\rtlbb}$, but also that once we have a
-% behaviour of the symbolic state $\symbolic{\rtlpb}$ associated with the scheduled
-% hyperblock $\rtlpb$, that this will also be the behaviour of $\rtlpb$ itself.  The former
-% is a soundness property, whereas the latter is a completeness property.  In this
-% section we will first give a quick sketch of the proofs.
+First, we need to show that symbolic execution is sound and complete, meaning
+that a behaviour is a valid behaviour of the input program if and only if it is
+also a valid behaviour of the symbolic state.  Both directions are needed,
+because we need to show that any behaviour of the pre-scheduling hyperblock
+$\rtlbb$ is a behaviour its symbolic state $\symbolic{\rtlbb}$, but also that
+once we have a behaviour of the symbolic state $\symbolic{\rtlpb}$ associated
+with the scheduled hyperblock $\rtlpb$, that this will also be the behaviour of
+$\rtlpb$ itself.  The former is a soundness property, whereas the latter is a
+completeness property.  It remains to construct the chain
+$\rtlbb \curly \symbolic{\rtlbb} \curly \symbolic{\rtlpb} \curly \rtlpb$. The
+three steps of that chain are captured by the following three lemmas.
 
 \begin{lemma}[Soundness of symbolic execution]\label{thm:soundness}
   For every execution of a block $\rtlbb$, there exists an equivalent execution
@@ -2496,11 +2508,11 @@ three steps of that chain are captured by the following three lemmas.
 %    \forall\rtlbb \ldotp \rtlbb \curly \symbolic{\rtlbb}
 %\]
 
-%   \begin{proof}[Proof Sketch]
-%     By induction on the execution semantics of $\rtlbb$. % By proving the
-%     % correctness of a single update to the symbolic state produced by
-%     % $\update(i_n, (q, \symbstate))$.
-%   \end{proof}
+  \begin{proof}[Proof Sketch]
+    By induction on the execution semantics of $\rtlbb$. % By proving the
+    % correctness of a single update to the symbolic state produced by
+    % $\update(i_n, (q, \symbstate))$.
+  \end{proof}
 \end{lemma}
 
 \begin{lemma}[Symbolic refinement implies behavioural
@@ -2561,20 +2573,11 @@ three steps of that chain are captured by the following three lemmas.
   \end{proof}
 \end{lemma}
 
-
-
 Finally, we can show the correctness of the verified scheduling implementation.
 % which comes down to showing that the validation of the original hyperblock, and
 % the scheduled hyperblock, implies that the scheduled hyperblock will behave the
 % same as the original block.  The forward simulation is transitive, which is used
 % to split up the proof to be able to reuse the lemmas above.
-
-% \begin{lemma}[Transitivity of the forward simulation]\label{thm:transitivity}
-%   \begin{equation}
-%     \label{eq:1}
-%     \forall\ A\ B\ C\ldotp\ \ A \curly B \land B \curly C \implies A \curly C
-%   \end{equation}
-% \end{lemma}
 
 \begin{theorem}[Scheduler Correctness]\label{thm:scheduler-correctness}
   Whenever $\symbolic{\rtlpb}$ is a symbolic refinement of $\symbolic{\rtlbb}$,
@@ -2683,7 +2686,6 @@ We found that only once we were able to formulate lemmas like these did the
 proof become feasible. Without them, it involved a number of special cases that
 was simply unworkable.
 
-
 % The main challenge in this proof is reasoning about the $\update$ function
 % efficiently, as it needs to manipulate value summaries by converting
 % instructions into value summaries and combining them to produce the updated
@@ -2785,6 +2787,79 @@ was simply unworkable.
 \label{sec:hs:efficient-smt-solver-validation}
 
 \begin{figure}
+  \centering
+  \begin{tikzpicture}[font=\strut\sffamily]
+    \node[ir] (predexpr) {predicate\\expression};
+    \node[pass,right=of predexpr] (hashing) {expression\\hashing};
+    \node[ir,right=of hashing] (threeval) {3-valued\\predicate};
+    \node[pass,right=of threeval] (atomisation) {atomisation};
+    \node[ir,below=of predexpr] (arraysmt) {array-based\\SMT formula};
+    \node[pass,below=of arraysmt,dashed] (smtsolver) {SMT solver \\ veriT};
+    \node[ir,right=of smtsolver] (witness) {proof witness};
+    \node[pass,right=of arraysmt] (coqchecker) {SMTCoq checker};
+    \node[ir,right=of coqchecker] (holds) {yes/no};
+    \draw[ed] (predexpr) -- (hashing) -- (threeval);
+    \draw[ed] (threeval) -- (atomisation) -- ([yshift=-7mm]atomisation.south) -|
+    (arraysmt);
+    \draw[ed] (arraysmt) -- (smtsolver) -- (witness);
+    \draw[ed] (arraysmt) -- (coqchecker) -- (holds);
+    \draw[very thick] (witness) -- (witness.north |- coqchecker.south);
+
+    \begin{pgfonlayer}{background}
+      \node[fit={(predexpr)(atomisation)(arraysmt)},bgbox,fill=bgbox6,inner sep=5mm]{};
+    \end{pgfonlayer}
+  \end{tikzpicture}
+  \caption{Validation of predicate expressions using 3-valued logic.  An
+    external SMT solver is used to generate a proof witness, which is then given
+    to a formally verified proof witness checker by SMTCoq.  The result is then
+    \enquote{yes} if the formula always holds, and \enquote{no} otherwise.}%
+  \label{fig:hs:validated-three-valued-logic}
+\end{figure}
+
+This section describes the implementation and proof of the validated 3-valued
+logic solver using an external proof-generating SMT solver.  The goal of this
+validator is to be able to prove the equivalence of predicate expressions, which
+as noted in \cref{sec:hs:verifying-scheduling} requires 3-valued logic.
+\Cref{fig:hs:validated-three-valued-logic} shows the steps performed by the
+equivalence checker, assuming that the predicate expression that is given as
+input is encoding the equivalence.
+
+We might therefore want to prove the equivalence for the predicate expression
+from the example in \cref{sec:hs:verifying-scheduling}.
+%
+\begin{equation*}
+  \syniteformulans{\avar{p1}}{\avar{r2} \aeq 0}{\avar{p2}} \leftrightarrow \formY,
+\end{equation*}
+%
+where $\formY$ abbreviates
+$\syniteformulans{\avar{p1}}{\left(\syniteformulans{\neg\avar{p1}}{1 \aeq
+      0}{\avar{r2} \aeq 0}\right)}{\avar{p2}}$.  First, this predicate
+expression is hashed so that it is only composed of variables, and produces a
+proper 3-valued predicate.  In this case, all the atoms of the formula could be
+hashed and only referred to as variables, for example $c_1 \mapsto \avar{p1}$,
+$c_2 \mapsto \avar{r2} \aeq 0$ and $c_3 \mapsto \avar{p2}$.  The same is done to
+$\formY$ producing the hashed formula $h(\formY)$.  We are then left with the
+following formula:
+%
+\begin{equation*}
+  \syniteformulanslk{c_1}{c_2}{c_3} \leftrightarrow_{\text{\L{}}} h(\formY).
+\end{equation*}
+%
+This is a pure 3-valued logic formula using \L{}ukasiewicz three-valued logic
+semantics~\cite{borowski70_swj} described in \cref{fig:evalpred}.  This
+interpretation of 3-valued logic is chosen because it allows for tautologies in
+the logic.  The standard interpretation of 3-valued logic where implication is
+defined in terms of $\predand$ and $\predor$, every expressable formula will
+evaluate to $\boolundef$ if all the variables are set to $\boolundef$ because
+$\boolundef \rightarrow \boolundef \equiv \boolundef$.  \L{}ukasiewicz
+three-valued logic, on the other hand, has the following behaviour for
+implication $\boolundef \rightarrow \boolundef \equiv \bvrai$, meaning there may
+be formulas that are tautologies and are always true.  This allows us to express
+the equivalence between two formulas and prove that if the negation of that
+statement is unsatisfiable, that the original statement always needs to hold,
+meaning the expressions are equivalent.
+
+\begin{figure}
 \begin{mathpar}
 \inferrule[]{ }{\evalpred{\rs}{\predtrue}{\bvrai}}
 \and
@@ -2793,8 +2868,12 @@ was simply unworkable.
 \inferrule[]{ }{\evalpred{\rs}{\predundef}{\boolundef}}
 \and
 \inferrule[]
-          {\evalcond{\rs}{\varcond}{\varbool}}
-          {\evalpred{\rs}{\predatompos{\varcond}}{\varbool}}
+          { }
+          {\evalpred{\rs}{\predatompos{\varcond}}{\at{\rs}{\varcond}}}
+\and
+\inferrule[]
+          { }
+          {\evalpred{\rs}{\predatomneg{\varcond}}{1-\at{\rs}{\varcond}}}
 \and
 \inferrule[]
           {\evalpred{\rs}{\varpred_1}{\varbool_1} \\
@@ -2804,30 +2883,67 @@ was simply unworkable.
               \varbool_2}}
 \and
 \inferrule[]
-          {\evalcond{\rs}{\varcond}{\varbool}}
-          {\evalpred{\rs}{\predatomneg{\varcond}}{1-\varbool}}
+          {\evalpred{\rs}{\varpred_1}{\varbool_1} \\
+           \evalpred{\rs}{\varpred_2}{\varbool_2}
+          }
+          {\evalpred{\rs}{\varpred_1 \predand \varpred_2}{\varbool_1 \booland
+              \varbool_2}}
 \and
 \inferrule[]
           {\evalpred{\rs}{\varpred_1}{\varbool_1} \\
            \evalpred{\rs}{\varpred_2}{\varbool_2}
           }
-          {\evalpred{\rs}{\varpred_1 \predand \varpred_2}{\varbool_1 \booland \varbool_2}}
+          {\evalpred{\rs}{\varpred_1 \predimp \varpred_2}{1 \booland
+              (1 - \varbool_1 + \varbool_2)}}
 \end{mathpar}
-\caption{Evaluation of GSA predicates.}
+\caption{Evaluation of three-valued logic predicates, where $\rs$ is a valuation
+  from predicate variables $c$ to $\set{\bvrai,\bfalse,\boolundef}$.}%
 \label{fig:evalpred}
 \end{figure}
 
-\YH{TODO: Fill in this Section.  This could probably be a chapter as well.}
+The final steps of the validation are therefore to translate the 3-valued logic
+equation into a form that is accepted by SMTCoq.  SMTCoq uses an efficient and
+compact array structure to represent the formula, which is split into three main
+parts, the array for the atoms of the formula, the array for the formula itself,
+and finally the array containing the formula itself, called the roots.  The
+formula $\syniteformulanslk{c_1}{c_2}{c_3}$ would give the following SMT formula
+using the theory of linear arithmetic:
+%
+\begin{equation*}
+  (1 \booland (1 - c_1 + c_2)) \booland (1 \booland (1 - (1 - c_1) + c_3)),
+\end{equation*}
+%
+When translated to the array representation, it would give the following formula
+in SMTCoq:
+%
+\begin{equation*}
+  \begin{array}{ll}
+    \text{atoms: } & a = [\top; \bot; 1; c_1; c_2; c_3]\\
+    \text{formulas: } & f = [a[2]; a[3]; a[4]; f[0] - f[1]; f[3] + f[2]; f[0]
+                        \booland f[4]\\
+                     & \qquad\neg
+                       f[1]; a[5]; f[0] - f[6]; f[8] + f[7]; f[0] \booland f[9]; f[5] \land f[10]]\\
+    \text{roots: } & r = [f[9]].
+  \end{array}
+\end{equation*}
+
+\YH{TODO: Double check the layout of these formulas.}
+
+The original SMT formula can then be passed to an SMT solver to check for
+unsatisfiability.  This is done using veriT, which is well supported by SMTCoq.
+The witness, together with the array representation of the formula are then read
+by the SMTCoq proof checker, which then emits \enquote{yes} or \enquote{no}
+depending on if checking the witness succeeded, in which case the formula that
+was checked was unsatisfiable.
 
 \section{Summary}
 
 We have presented the first verified implementations of general if-conversion
 and hyperblock scheduling, and incorporated them into the Vericert verified HLS
-tool. The practical value of this work is that it extends verified HLS from the
-prototype of \textcite{herklotz21_fvhls} into an
-increasingly practical tool. On the more conceptual side, our work may prove
-useful to those implementing other optimisation passes in a verified compiler
-using solver-powered validation.
+tool. The practical value of this work is that it makes verified \gls{HLS}
+practical by validating an industry standard scheduling algorithm. On the more
+conceptual side, our work may prove useful to those implementing other
+optimisation passes in a verified compiler using solver-powered validation.
 
 There are opportunities for further performance improvements by tweaking the
 if\?conversion heuristics and the implementation of the scheduler. Both of these

@@ -1195,16 +1195,16 @@ simulation, where it is proven that, given a valid input configuration, that
 applying a translation or optimisation rule will result in a valid DFG with the
 same behaviour as the input.
 
-There has also been work on proving the translation from Occam to
+There has also been work on proving the translation from occam to
 gates~\cite{page91_compil_occam} correct using algebraic
 proofs~\cite{jifeng93_towar}.  This translation resembles dynamic scheduling as
 tokens are used to start the next operations.  To take advantage of the parallel
-nature of hardware, Occam has explicit concurrency using the PAR constructs with
-channels to share state.  Handel-C, a version of Occam with many more features
+nature of hardware, occam has explicit concurrency using the PAR constructs with
+channels to share state.  Handel-C, a version of occam with many more features
 such as memory and pointers, and is described further in
 \cref{sec:bg:mechaniced-handel-c-to-netlist-translation} as there is mechanised
 translation from Handel-C into a netlist.  One thing to note about these
-translations from Occam and Handel-C into netlists is that they are essentially
+translations from occam and Handel-C into netlists is that they are essentially
 timed languages in SEQ blocks.  This is because every assignment takes one cycle
 to complete and expressions are assumed to finish evaluation within that cycle.
 No automatic scheduling is performed by the translation, and the designer has
@@ -1240,10 +1240,10 @@ lower-level netlist representation of the hardware design.
 
 \textcite{perna12_mechan_wire_wise_verif_handel_c_synth} developed a
 mechanically verified Handel-C to netlist translation written in HOL.  The
-translation is based on previous work describing translation from Occam to gates
+translation is based on previous work describing translation from occam to gates
 by \textcite{page91_compil_occam}, which was proven correct by
 \textcite{jifeng93_towar} using algebraic proofs.  As Handel-C is an extension
-of Occam with C-like operations, the translation from Handel-C to gates can
+of occam with C-like operations, the translation from Handel-C to gates can
 proceed in a similar way.
 
 \citeauthor{perna12_mechan_wire_wise_verif_handel_c_synth} mechanise the

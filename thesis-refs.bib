@@ -256,6 +256,13 @@ and Rosu, Grigore",
 	year = {2005}
 }
 
+@book{borowski70_swj,
+	author = {L. Borowski},
+	year = {1970},
+	title = {Selected Works of J. Łukasiewicz},
+	publisher = {Nort Holland}
+}
+
 @inproceedings{bourgeat20_essen_blues,
 	abstract = {The Bluespec hardware-description language presents a significantly higher-level view than hardware engineers are used to, exposing a simpler concurrency model that promotes formal proof, without compromising on performance of compiled circuits. Unfortunately, the cost model of Bluespec has been unclear, with performance details depending on a mix of user hints and opaque static analysis of potential concurrency conflicts within a design. In this paper we present Koika, a derivative of Bluespec that preserves its desirable properties and yet gives direct control over the scheduling decisions that determine performance. Koika has a novel and deterministic operational semantics that uses dynamic analysis to avoid concurrency anomalies. Our implementation includes Coq definitions of syntax, semantics, key metatheorems, and a verified compiler to circuits. We argue that most of the extra circuitry required for dynamic analysis can be eliminated by compile-time BSV-style static analysis.},
 	author = {Bourgeat, Thomas and Pit-Claudel, Clément and Chlipala, Adam and Arvind},
@@ -487,6 +494,15 @@ and Philippou, Anna",
 	year = {2020}
 }
 
+@inproceedings{chen13_tcf,
+	title = {Taming Compiler Fuzzers},
+	author = {Chen, Yang and Groce, Alex and Zhang, Chaoqiang and Wong, Weng-Keen and Fern, Xiaoli and Eide, Eric and Regehr, John},
+	booktitle = {Proceedings of the 34th ACM SIGPLAN conference on Programming language design and implementation},
+	pages = {197--208},
+	year = {2013},
+	doi = {10.1145/2491956.2462173}
+}
+
 @article{chouksey19_trans_valid_code_motion_trans_invol_loops,
 	author = {Chouksey, R. and Karfa, C. and Bhaduri, P.},
 	doi = {10.1109/TCAD.2018.2846654},
@@ -595,6 +611,15 @@ and Philippou, Anna",
 	school = {Yale University}
 }
 
+@inproceedings{even-mendoza20_ce,
+	author = {Karine Even-Mendoza and Cristian Cadar and Alastair Donaldson},
+	title = {Closer to the Edge: Testing Compilers More Thoroughly by Being Less Conservative About Undefined Behaviour},
+	booktitle = {IEEE/ACM International Conference on Automated Software Engineering, New Ideas and Emerging Results Track (ASE-NIER 2020)},
+	year = {2020},
+	month = {09},
+	location = {undefined}
+}
+
 @misc{ferrandi14_panda_bambu,
 	author = {Ferrandi, Fabrizio},
 	title = {PandA-Bambu release notes},
@@ -684,25 +709,6 @@ and Philippou, Anna",
 	urldate = {2023-11-14},
 	year = {2023},
 	note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes}
-}
-
-@article{gourdin23_fvopbs,
-	author = {Gourdin, L\'{e}o and Bonneau, Benjamin and Boulm\'{e}, Sylvain and Monniaux, David and B\'{e}rard, Alexandre},
-	title = {Formally Verifying Optimizations with Block Simulations},
-	year = {2023},
-	issue_date = {October 2023},
-	publisher = {Association for Computing Machinery},
-	address = {New York, NY, USA},
-	volume = {7},
-	number = {OOPSLA2},
-	url = {https://doi.org/10.1145/3622799},
-	doi = {10.1145/3622799},
-	abstract = {CompCert (ACM Software System Award 2021) is the first industrial-strength compiler with a mechanically checked proof of correctness. Yet, CompCert remains a moderately optimizing C compiler. Indeed, some optimizations of “gcc ‍-O1” such as Lazy Code Motion (LCM) or Strength Reduction (SR) were still missing: developing these efficient optimizations together with their formal proofs remained a challenge. Cyril Six et al. have developed efficient formally verified translation validators for certifying the results of superblock schedulers and peephole optimizations. We revisit and generalize their approach into a framework (integrated into CompCert) able to validate many more optimizations: an enhanced superblock scheduler, but also Dead Code Elimination (DCE), Constant Propagation (CP), and more noticeably, LCM and SR. In contrast to other approaches to translation validation, we co-design our untrusted optimizations and their validators. Our optimizations provide hints, in the forms of invariants or CFG morphisms, that help keep the formally verified validators both simple and efficient. Such designs seem applicable beyond CompCert.},
-	journal = {Proc. ACM Program. Lang.},
-	month = {oct},
-	articleno = {224},
-	numpages = {30},
-	keywords = {Formal verification of compiler optimizations, the Coq proof assistant, Symbolic execution, Translation validation}
 }
 
 @inproceedings{greaves08_kiwi,
@@ -1291,6 +1297,18 @@ and Voronkov, Andrei",
 	HAL_VERSION = {v1}
 }
 
+@article{liang18_f,
+	title = {Fuzzing: State of the art},
+	author = {Liang, Hongliang and Pei, Xiaoxiao and Jia, Xiaodong and Shen, Wuwei and Zhang, Jian},
+	journal = {IEEE Transactions on Reliability},
+	volume = {67},
+	number = {3},
+	pages = {1199--1218},
+	year = {2018},
+	publisher = {IEEE},
+	doi = {10.1109/TR.2018.2834476}
+}
+
 @inproceedings{lidbury15_many_core_compil_fuzzin,
 	author = {Lidbury, Christopher and Lascu, Andrei and Chong, Nathan and Donaldson, Alastair F.},
 	location = {Portland, OR, USA},
@@ -1382,20 +1400,6 @@ and Voronkov, Andrei",
 	year = {2010}
 }
 
-@InProceedings{monniaux22_tcbcvc,
-	doi = {10.1007/978-3-030-99336-8_8},
-	author = {Monniaux, David and Boulm{\'e}, Sylvain},
-	editor = "Sergey, Ilya",
-	title = "The Trusted Computing Base of the CompCert Verified Compiler",
-	booktitle = "Programming Languages and Systems",
-	year = "2022",
-	publisher = "Springer International Publishing",
-	address = "Cham",
-	pages = "204--233",
-	abstract = "CompCert is the first realistic formally verified compiler: it provides a machine-checked mathematical proof that the code it generates matches the source code. Yet, there could be loopholes in this approach. We comprehensively analyze aspects of CompCert where errors could lead to incorrect code being generated. Possible issues range from the modeling of the source and the target languages to some techniques used to call external algorithms from within the compiler.",
-	isbn = "978-3-030-99336-8"
-}
-
 @InProceedings{moura08_z,
 	keywords = {SMT},
 	author = {de Moura, Leonardo and Bj{\o}rner, Nikolaj},
@@ -1481,7 +1485,7 @@ and Rehof, Jakob",
 	organization = {Citeseer},
 	booktitle = {FPGAs, Oxford Workshop on Field Programmable Logic and Applications},
 	pages = {271--283},
-	title = {Compiling Occam into field-programmable gate arrays},
+	title = {Compiling occam into field-programmable gate arrays},
 	volume = {15},
 	year = {1991}
 }
@@ -1711,12 +1715,13 @@ and Rehof, Jakob",
 	year = {2022}
 }
 
-@Software{six23_c,
-	urldate = {2023-12-30},
-	url = {https://gricad-gitlab.univ-grenoble-alpes.fr/certicompil/compcert-kvx},
-	year = {2023},
-	title = {CompCertKVX},
-	author = {Six, Cyril and Gourdin, Léo and Boulmé, Sylvain and Monniaux, David}
+@inproceedings{sun16_tucbgl,
+	title = {Toward Understanding Compiler Bugs in {GCC} and {LLVM}},
+	author = {Sun, Chengnian and Le, Vu and Zhang, Qirun and Su, Zhendong},
+	booktitle = {Proceedings of the 25th International Symposium on Software Testing and Analysis},
+	pages = {294--305},
+	year = {2016},
+	doi = {10.1145/2931037.2931074}
 }
 
 @Software{synopsys23_v,
@@ -1828,15 +1833,6 @@ and Rehof, Jakob",
 	address = {San Francisco, CA}
 }
 
-@Book{west10_cvd,
-	date = {2010-03-01},
-	edition = {4},
-	publisher = {Pearson},
-	isbn = {9780321547743},
-	title = {CMOS VLSI Design: A Circuits and Systems Perspective},
-	author = {West, Neil H. E. and Harris, David Money}
-}
-
 @inproceedings{yang11_findin_under_bugs_c_compil,
 	author = {Yang, Xuejun and Chen, Yang and Eide, Eric and Regehr, John},
 	location = {San Jose, California, USA},
@@ -1862,6 +1858,15 @@ and Rehof, Jakob",
 	pages = {211--218},
 	title = {SDC-based modulo scheduling for pipeline synthesis},
 	year = {2013}
+}
+
+@inproceedings{zhang19_fubsmc,
+	title = {Finding and Understanding Bugs in Software Model Checkers},
+	author = {Zhang, Chengyu and Su, Ting and Yan, Yichen and Zhang, Fuyuan and Pu, Geguang and Su, Zhendong},
+	booktitle = {Proceedings of the 2019 27th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+	pages = {763--773},
+	year = {2019},
+	doi = {10.1145/3338906.3338932}
 }
 
 @inproceedings{zhao12_formal_llvm_inter_repres_verif_progr_trans,
