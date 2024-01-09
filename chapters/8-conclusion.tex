@@ -1,71 +1,183 @@
 \chapter{Conclusion}%
 \label{sec:conclusion}
 
+\section{Coq mechanisation}
+
+\begin{table}
+  \centering
+  \captionabove{Statistics about the numbers of lines of code in the proof and
+    implementation of \vericert{}, counted using \texttt{coqwc}.}%
+  \label{tab:proof_statistics}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    & \textbf{OCaml} & \textbf{Spec} & \textbf{Proofs} & \textbf{Total}\\
+    \midrule
+    % ../common/DecEq.v ../common/Errormonad.v ../common/Optionmonad.v
+    % ../common/Statemonad.v ../common/Monad.v ../common/NonEmpty.v
+    % ../common/Vericertlib.v Array.v HashTree.v AssocMap.v
+    {Data structures and libraries}       & --- & 1099 &  771 &  1870 \\
+    % ../common/IntegerExtra.v ../common/ZExtra.v ValueInt.v
+    {Integers and values}                 & --- &  393 &  520 &   913 \\
+    % Gible.v GiblePar.v GibleSeq.v
+    {\rtlblock{} and \rtlpar{} semantics} &  --- & 748 &  286 &  1034 \\
+    % DeadBlocks.v DeadBlocksproof.v CondElim.v CondElimproof.v IfConversion.v
+    % IfConversionproof.v GibleSeqgen.v GibleSeqgenproof.v
+    {Hyperblock generation}               &  --- & 1716 & 1820 &  3536 \\
+    % Schedule.ml Abstr.v AbstrSemIdent.v GiblePargen.v GiblePargenproof.v
+    % GiblePargenproofBackward.v GiblePargenproofCommon.v
+    % GiblePargenproofEquiv.v GiblePargenproofEvaluable.v
+    % GiblePargenproofForward.v Sat.v
+    {Hyperblock scheduling}               & 1083 & 3939 & 5597 & 10619 \\
+    % Common.v Coqlib.v Errors.v HashTree.v Maps.v Predicate.v Smtpredicate.v
+    {3-valued logic validator}            & 1276 & 4054 & 5040 & 10370 \\
+    % DHTL.v
+    {\htl{} semantics}                    &  --- &  249 &   31 &   280 \\
+    % DHTLgen.v DHTLgenproof.v DHTLgenproof0.v GibleSubPargen.v GibleSubPar.v
+    % GibleSubPargenproof.v
+    {\htl{} generation}                   &  --- & 2248 & 2996 &  5244 \\
+    % DMemorygen.v ClockMemory.v ClockMemoryproof.v
+    {BRAM generation}                     &  --- & 1867 & 2890 &  4757 \\
+    % ClockRegisters.v ClockRegistersproof.v
+    {forward substitution}                &  --- &  481 &  425 &  906 \\
+    % Verilog.v
+    {Verilog semantics}                   &  --- &  628 &  124 &  752 \\
+    % Veriloggen.v Veriloggenproof.v
+    {Verilog generation}                  &  --- &  261 &  283 &  544 \\
+    % Compiler.v Print*.ml
+    {Top-level driver, pretty printers}   & 1404 &  273 &  223 & 1900 \\
+    \midrule
+    \textbf{Total}                        & 3763 & 17956 & 21006 & 42725 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The lines of code for the implementation and proof of \vericert{} can be found
+in \cref{tab:proof_statistics}.  Overall, it took about 3 person-years to build
+\vericert{} -- about 6 person-months on implementation and 30 person-months on
+proofs.  The largest proofs were by far the scheduling proof and the 3-valued
+logic validator.  The scheduling proof was difficult, and different attempts
+with different proof styles were needed to complete it.  The main difficulty was
+minimising the need for the 3-valued validator, as initially it seemed like it
+may not be needed at all.  In the end, it was needed to prove the equivalence of
+predicates in the absence of structural equality.  This lead to the proof of the
+3-valued logic validator.  Even though it looks like a very large proof, it was
+mainly quite straight-forward and purely technical, taking roughly 1.5 months to
+complete.  The next hardest proof was the correctness proof for the \htl{}
+generation, which required equivalence proofs between all integer operations
+supported by \compcert{} and those supported in hardware.  A large percentage of
+the proof is dedicated to the load and store instruction translation.  These
+were tedious to prove correct because of the substantial difference between the
+memory models used, and the need to prove properties such as stores outside of
+the allocated memory being undefined, so that a finite array could be used. In
+addition to that, since pointers in \htl{} and Verilog are represented as
+integers, instead of as a separate \enquote{pointer} type like in the
+\compcert{} semantics, one had to show that the integer arithmetic was correct
+with respect to the pointer arithmetic in CompCert.  Many new theorems had to be
+proven about them in \vericert{} to prove the conversion from pointer to
+integer.  Moreover, the second-largest proof in the back end describing the
+correct \gls{BRAM} generation includes many proofs about the extensional
+equality of array operations, such as merging arrays with different assignments.
+As the negative edge implies that two merges take place every clock cycle, the
+proofs about the equality of the contents in memory and in the merged arrays
+quickly become tedious, as arrays are merged twice in a clock cycle.
+
 \section{Limitations and Future Work}
 
 There are various limitations in \vericert{} compared to other HLS tools due to
 the fact that our main focus was on formally verifying the translation from
-\rtl{} to Verilog. In this section, we outline the current limitations of our
+\rtl{} to Verilog.  In this section, we outline the current limitations of our
 tool and suggest how they can be overcome in future work, first describing
 limitations to the generated hardware, and then describing the limitations on
 the software input that \vericert{} accepts.
 
-%\NR{You have very different types of limitations. I wonder if grouped them into software and hardware limitations respectively might simplify this section. Just a suggestion.}
-
 \subsection{Limitations to the generated hardware}
 
-%This section describes the current limitations and possible improvements that could be made to the generated hardware.
+\subsubsection{Lack of support for external \glsfmtshort{IPcore}}
 
-\paragraph{Lack of instruction-level parallelism}
+\glspl{IPcore} and other external hardware cores are often used by \gls{HLS}
+tools to implement specific operations efficiently.  One example would be the
+implementation of a division core, which can be designed as a fully pipelined
+hardware design, executing different stages of an operation in parallel.  This
+is in contrast to using the default division operation that generates the
+division circuit in a single clock cycle.  This means that the otherwise
+long-running division operation can be performed over multiple, shorter, cycles,
+leaving the overall maximum frequency of the design unchanged.  In \htl{},
+\glspl{IPcore} could be represented in a similar fashion to load and store
+instructions, by using wires to communicate with an abstract computation block
+modelled in \htl{} and could later be replaced by a hardware implementation.
 
-%\JW{I'm hesitant about this paragraph. Yes, we have to write something about how future-proof Vericert is, as this is required by the reviewers and promised in our list of changes. But I worry that if we place too much emphasis on how straightforward it will be to add scheduling, then we'll make it harder for ourselves to publish a paper about adding scheduling (``But you said in your OOPSLA 2021 paper that this was all straightforward'' etc.) In what follows, I've tried to strike a balance -- see what you think.}\YH{Yeah I think I like the paragraph and the balance in it, I think it still explains that existing passes should not have to change.  I think reviewer 2 wanted a detailed explanation of this, but I do agree that it should not be needed in this paper.}
-The main limitation of \vericert{} is that it does not perform instruction scheduling, which means that instructions cannot be gathered into the same state and executed in parallel.
-%This limitation is present by design so that the focus could be made on the initial proof of correctness of the translation of instructions with a sequential schedule.
-However, each language in \vericert{} was designed with scheduling in mind, so
-that these should not have to change fundamentally when that is implemented in
-the future.  For instance, our HTL language already allows arbitrary Verilog to
-appear in each state of the FSMD; currently, each state just contains a single
-Verilog assignment, but when scheduling is added, it will contain a list of
-assignments that can all be executed in parallel. We expect to follow the lead
-of \textcite{tristan08_formal_verif_trans_valid} and
-\textcite{six20_certif_effic_instr_sched}, who have previously added scheduling
-support to CompCert in a VLIW context, by invoking an external (unverified)
-scheduling tool and then using translation validation to verify that each
-generated schedule is correct (as opposed to verifying the scheduling tool
-itself).
-%The translation from 3ACPar to HTL would not change conceptually, except for the fact that multiple instructions can now be translated into the same state.
-%This means that the proof of translation from 3AC to HTL can also be adapted with minimal changes to the top-level of the proofs.
-%The bulk of the proofs proving the translation of single instructions would stay intact.
+Furthermore, support for \glspl{IPcore} with a specific interface, such as a
+simple ready/finished interface, could be implemented in general, so that
+hardware that follows this pattern could be directly integrated into Vericert.
+Integrating a new core would only require a proof of correctness of the
+specification and the Verilog implementation, as well as an equivalence with the
+operation that it should be replacing.  This would allow for a more general
+implementation of the memory interface, for example, making it possible to
+implement both loads and stores in the usual positive edge of the clock, as well
+as making it possible to pipeline these loads and stores.
 
-%However, the design of the intermediate languages in \vericert{} take this optimisation into account and are designed to support scheduling in the future.
+\subsubsection{Lack of Loop Pipelining}
 
-%\NRIt is best to explain why we didn't focus on scheduling with a positive/future work spin. For example, ``It was more intuitive to handle one instruction per cycle at the initial stage of our project as we want to focus our efforts on correctness, which has been the main weakness of HLS, rather than performance. However, we were very much aware during the design stage that in order for our compiler to be able to perform better, supporting of scheduling was inevitable. Hence, we intentionally left room for support of scheduling. In essence, instead of supporting one instruction per cycle, we must be able to support a list of instructions per cycle. To do so, we envision extensions to our work in several ways.'' We might not even need to specify the details of how. You can keep the tricks in your sleeves for the next publication. \YH{Well one of the only things the reviewers wanted us to add was a realistic implementation of scheduling, so I think we need to at least keep that.}.
+Another critical \gls{HLS} optimisation that is often integrated with the
+instruction scheduling optimisation is loop pipelining, also known as modulo
+scheduling.  This is an important optimisation for \gls{HLS}, making it possible
+to execute different parts of different loop iterations in parallel.  The ideal
+scenario is that the whole function can eventually be pipelined so that it can
+accept a stream of inputs every clock cycle.  This type of hardware design is
+currently not possible with Vericert.  However, there is work on proving
+software loop pipelining correct in
+CompCert~\cite{tristan10_simpl_verif_valid_softw_pipel}, which could be adapted
+and extended to support generating hardware pipelines, by using predicated
+execution~\cite{rau92_code_gener_schem_sched_loops} and a rotating register
+file~\cite{rau92_regis_alloc_softw_pipel_loops} to remove the need for a
+prologue and epilogue in the pipelined loop.
 
-%To simplify the proof of the scheduling algorithm, and to minimise the changes necessary for the current translation from 3AC to HTL, a new language must be introduced, called 3ACPar, which would be equivalent to 3AC but instead of consisting of a map from program counter to instruction, it would consist of a map from program counter to list of instructions, which can all be executed in parallel.  A new proof for the scheduling algorithm would have to be written for the translation from 3AC to 3ACPar, for which a verified translation validation approach might be appropriate, however, the translation form 3ACPar to HTL would not change conceptually, except for the fact that multiple instructions can now be translated into the same state.  This small difference means that most of the proof can be reused without any changes, as the translation of instructions was the main body of the proof and did not change.
+\subsubsection{Limitations with I/O}
 
-\paragraph{Lack of pipelined division}
-Pipelined operators can execute different stages of an operation in parallel, and thus perform several long-running operations simultaneously while sharing the same hardware.
-The introduction of pipelined operators to \vericert{}, especially for division, would alleviate the slow clock speed observed in the \polybench{} benchmarks when divisions were included (\cref{fig:polybench-div}). In HTL, pipelined operations could be represented in a similar fashion to load and store instructions, by using wires to communicate with an abstract computation block modelled in HTL and later replaced by a hardware implementation.
-%\NR{Are you describing using IP blocks? If so, you can generalise it to any IP block rather than just division.}\YH{I think I prefer just focusing on pipelined division for now, as that's specifically the issue, so that people know we have a plan to resolve specifically that.}
-%JW I've chopped the following sentence because it felt like it was going into too much detail.
-%However, 3ACPar would have to be modified to also describe such instructions so that these can be placed optimally using the external scheduling algorithm.
+\vericert{} is currently limited in terms of I/O because the main function
+cannot accept any arguments if the Clight program is to be
+well-formed.\footnote{Technically, \vericert{} (and indeed, \compcert{}) can
+  compile main functions that have arbitrary arguments and will handle those
+  inputs appropriately, but the correctness theorem offers no guarantees about
+  such programs.} Moreover, external function calls that produce traces have not
+been implemented yet, but these could enable the C program to read and write
+values on a bus that is shared with various other components in the hardware
+design.
 
 \subsection{Limitations on the software input}
 
-%This section describes the limitations and possible improvements to the software input accepted by \vericert{}.
+\subsubsection{Lack of support for global variables}
 
-\paragraph{Limitations with I/O}
+In \compcert{}, each global variable is stored in its own memory.  A
+generalisation of our translation of the stack into a \gls{BRAM} block could
+therefore translate global variables in the same manner.  This would require a
+slight generalisation of pointers so that they store provenance information to
+ensure that each pointer accesses the right \gls{BRAM}. It would also be
+necessary to generalise the \gls{BRAM} interface so that it decodes the
+provenance information and indexes the correct array.
 
-\vericert{} is currently limited in terms of I/O because the main function cannot accept any arguments if the Clight program is to be well-formed.\footnote{Technically, \vericert{} (and indeed, \compcert{}) can compile main functions that have arbitrary arguments and will handle those inputs appropriately, but the correctness theorem offers no guarantees about such programs.} Moreover, external function calls that produce traces have not been implemented yet, but these could enable the C program to read and write values on a bus that is shared with various other components in the hardware design.
+\subsubsection{Other language restrictions}
 
-\paragraph{Lack of support for global variables}
-In \compcert{}, each global variable is stored in its own memory.  A generalisation of our translation of the stack into a \gls{BRAM} block could therefore translate global variables in the same manner.  This would require a slight generalisation of pointers so that they store provenance information to ensure that each pointer accesses the right \gls{BRAM}. It would also be necessary to generalise the \gls{BRAM} interface so that it decodes the provenance information and indexes the correct array.
-%\NR{Curiously, is memory analysis in your to-do list?}\YH{Well kind of, would be nice, but probably not sophisticated analysis.}
+C and Verilog handle signedness quite differently. By default, all operators and
+registers in Verilog (and \htl{}) are unsigned, so to force an operation to
+handle the bits as signed, both operators have to be forced to be
+signed. Moreover, Verilog implicitly resizes expressions to the largest needed
+size by default, which can affect the result of the computation.  This feature
+is not supported by the Verilog semantics we adopted, so to match the semantics
+to the behaviour of the simulator and synthesis tool, braces are placed around
+all expressions to inhibit implicit resizing.  Instead, explicit resizing is
+used in the semantics, and operations can only be performed on two registers
+that have the same size.
 
-\paragraph{Other language restrictions}
-C and Verilog handle signedness quite differently. By default, all operators and registers in Verilog (and HTL) are unsigned, so to force an operation to handle the bits as signed, both operators have to be forced to be signed. Moreover, Verilog implicitly resizes expressions to the largest needed size by default, which can affect the result of the computation.  This feature is not supported by the Verilog semantics we adopted, so to match the semantics to the behaviour of the simulator and synthesis tool, braces are placed around all expressions to inhibit implicit resizing.  Instead, explicit resizing is used in the semantics, and operations can only be performed on two registers that have the same size.
-
-Furthermore, equality checks between \emph{unsigned} variables are actually not supported, because this requires supporting the comparison of pointers, which should only be performed between pointers with the same provenance.  In \vericert{} there is currently no way to determine the provenance of a pointer, and it therefore cannot model the semantics of unsigned comparison in \compcert{}. This is not a severe restriction in practice however, because in the absence of dynamic allocation, equality comparison of pointers is rarely needed, and equality comparison of integers can still be performed by casting them both to signed integers.
+Furthermore, equality checks between \emph{unsigned} variables are actually not
+supported, because this requires supporting the comparison of pointers, which
+should only be performed between pointers with the same provenance.  In
+\vericert{} there is currently no way to determine the provenance of a pointer,
+and it therefore cannot model the semantics of unsigned comparison in
+\compcert{}. This is not a severe restriction in practice however, because in
+the absence of dynamic allocation, equality comparison of pointers is rarely
+needed, and equality comparison of integers can still be performed by casting
+them both to signed integers.
 
 Finally, the \texttt{mulhs} and \texttt{mulhu} instructions, which fetch the
 upper bits of a 32-bit multiplication, are not translated by \vericert{},
@@ -73,59 +185,51 @@ because 64-bit numbers are not supported. These instructions are only generated
 to optimise divisions by a constant that is not a power of two, so turning off
 constant propagation will allow these programs to pass without error.
 
-\subsection{Coq mechanisation}
+\subsection{The Future of Vericert}
 
-\begin{table}
-  \centering
-  \captionabove{Statistics about the numbers of lines of code in the proof and implementation of \vericert{}.}\label{tab:proof_statistics}
-  \begin{tabular}{lrrrrr}
-    \toprule
-    & \textbf{Coq code} & \multicolumn{1}{p{1cm}}{\raggedleft\textbf{OCaml code}} & \textbf{Spec} & \multicolumn{1}{p{2cm}}{\raggedleft\textbf{Theorems \& Proofs}} & \textbf{Total}\\
-    \midrule
-    {Data structures and libraries}     & 280  & --- & ---  & 500  & 780   \\
-    {Integers and values}               & 98   & --- & 15   & 968  & 1081  \\
-    {HTL semantics}                     & 50   & --- & 181  & 65   & 296   \\
-    {HTL generation}                    & 590  & --- & 66   & 3069 & 3725  \\
-    {\gls{BRAM} generation}                    & 253  & --- & ---  & 2793 & 3046  \\
-    {Verilog semantics}                 & 78   & --- & 431  & 235  & 744   \\
-    {Verilog generation}                & 104  & --- & ---  & 486  & 590   \\
-    {Top-level driver, pretty printers} & 318  & 775 & ---  & 189  & 1282  \\
-    \midrule
-    \textbf{Total}                      & 1721 & 775 & 693  & 8355 & 11544 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\subsubsection{Designing Correct Hardware}
 
-The lines of code for the implementation and proof of \vericert{} can be found
-in \cref{tab:proof_statistics}.  Overall, it took about 1.5 person-years to
-build \vericert{} -- about three person-months on implementation and 15
-person-months on proofs.  The largest proof is the correctness proof for the HTL
-generation, which required equivalence proofs between all integer operations
-supported by \compcert{} and those supported in hardware.  From the 3069 lines
-of proof code in the HTL generation, 1189 are for the correctness proof of just
-the load and store instructions.  These were tedious to prove correct because of
-the substantial difference between the memory models used, and the need to prove
-properties such as stores outside of the allocated memory being undefined, so
-that a finite array could be used. In addition to that, since pointers in HTL
-and Verilog are represented as integers, instead of as a separate
-\enquote{pointer} type like in the \compcert{} semantics, it was painful to
-reason about them.  Many new theorems had to be proven about them in \vericert{}
-to prove the conversion from pointer to integer.  Moreover, the second-largest
-proof of the correct \gls{BRAM} generation includes many proofs about the
-extensional equality of array operations, such as merging arrays with different
-assignments.  As the negative edge implies that two merges take place every
-clock cycle, the proofs about the equality of the contents in memory and in the
-merged arrays become more tedious too.
+It would be interesting to use the Vericert correctness theorem with the
+Verified Software Toolchain~\cite{appel11_verif_softw_toolc} to prove that the
+hardware implements the same specification as the software.  Specifications
+would become more interesting with more support for I/O, however, it could
+already be used to prove the correctness of the output of a Vericert design.
 
-Looking at the trusted computing base of \vericert{}, the Verilog semantics is
-431 lines of code.  This and the Clight semantics from \compcert{} are the only
-parts of the compiler that need to be trusted.  The Verilog semantics
-specification is therefore much smaller compared to the 1721 lines of the
-implementation that are written in Coq, which are the verified parts of the HLS
-tool, even when the Clight semantics are added.  In addition to that,
-understanding the semantics specification is simpler than trying to understand
-the translation algorithm. We conclude that the trusted base has been
-successfully reduced.
+In addition to that, it would be interesting to use a verified synthesis tool to
+build a complete workflow from software to hardware.  \textcite{lööw21_lutsig}
+already showed that a Vericert design with registers with a bit-width could be
+synthesised into \glspl{LUT} using Lutsig.  One could then imagine trying to
+prove that a specification that is proven to hold about the C code would also
+hold about the netlist.  The main issue is that this proof can not be performed
+in one theorem prover, as Lutsig is proven correct in HOL4.
+
+\subsubsection{Interaction With Software and Hardware}
+
+Another direction that could be explored is hardware/software co-design or the
+interaction of \gls{HLS} designs with externally defined hardware in a more
+modular fashion.  CompCertO~\cite{koenig21_compc} makes it possible to reason
+about the interaction of separate programs with different semantics through the
+C calling convention of CompCert.  It would be interesting to extend the
+Vericert Verilog semantics with a calling convention that could be used to
+interact and reason about the hardware at this level.  In this way, one could
+either verify heterogeneous systems, or verify and reason about the interaction
+of CompCert C designs destined to be synthesised into hardware with externally
+verified hardware designs.
+
+\section{Summary}
+
+In conclusion, the need for a correct high-level synthesis lead to the design of
+Vericert, a verified \gls{HLS} tool based on CompCert.  We showed that with the
+implementation of hyperblock scheduling, the performance of Vericert could
+approximate the performance of the unoptimised version of Bambu HLS, which is
+promising, while being around 3$\times$ slower than optimised Bambu HLS.  We
+hope that Vericert will enable \gls{HLS} to be used in spaces where the
+correctness of the hardware is paramount, for example for compiling
+cryptographic algorithms from C, where performance might only be a secondary
+concern.  This should still allow for efficient application-specific
+accelerators, and together with a proof between the correctness of the netlist
+and the hardware design, a near end-to-end correctness theorem for the
+accelerator.
 
 %%% Local Variables:
 %%% mode: latex

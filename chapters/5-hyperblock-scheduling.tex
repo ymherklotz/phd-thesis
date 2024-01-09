@@ -2822,7 +2822,10 @@ validator is to be able to prove the equivalence of predicate expressions, which
 as noted in \cref{sec:hs:verifying-scheduling} requires 3-valued logic.
 \Cref{fig:hs:validated-three-valued-logic} shows the steps performed by the
 equivalence checker, assuming that the predicate expression that is given as
-input is encoding the equivalence.
+input is encoding the equivalence.  We use an SMT solver to generate a proof
+witness for the formula, which can be checked by
+SMTCoq~\cite{armand11_modul_integ_sat_smt_solver,ekici17_smtcoq}, a formally
+verified SMT proof checker for Coq.
 
 We might therefore want to prove the equivalence for the predicate expression
 from the example in \cref{sec:hs:verifying-scheduling}.
@@ -2905,36 +2908,53 @@ The final steps of the validation are therefore to translate the 3-valued logic
 equation into a form that is accepted by SMTCoq.  SMTCoq uses an efficient and
 compact array structure to represent the formula, which is split into three main
 parts, the array for the atoms of the formula, the array for the formula itself,
-and finally the array containing the formula itself, called the roots.  The
-formula $\syniteformulanslk{c_1}{c_2}{c_3}$ would give the following SMT formula
-using the theory of linear arithmetic:
+and finally the array containing the formula itself, called the roots.  Let us
+try to prove that the following formula always holds:
+$\syniteformulanslk{c_1}{\predtrue}{\predtrue}$.  The first conceptual step is
+to translate this 3-valued formula into an SMT formula that implements
+\L{}ukasiewicz three-valued logic using linear arithmetic, following the rules
+from \cref{fig:evalpred}.  This would give the following SMT formula, where all
+the variables are constrained to be between $\bfalse$ and $\bvrai$, i.e.
+$\forall n\ldotp \bfalse \leq c_n \leq \bvrai$.  The constraint has been left
+out from the formulation below for simplicity, but would have to be added to the
+actual formulation.  Finally, we check that this formula does not equal 1,
+meaning if the SMT solver returns \texttt{unsat}, then the formula should always
+hold.
 %
 \begin{equation*}
-  (1 \booland (1 - c_1 + c_2)) \booland (1 \booland (1 - (1 - c_1) + c_3)),
+  (1 \booland (1 - c_1 + 1)) \booland (1 \booland (1 - (1 - c_1) + 1)) \neq 1.
 \end{equation*}
 %
 When translated to the array representation, it would give the following formula
-in SMTCoq:
+in SMTCoq, where we have the list of atoms $a$, which are made up of a boolean
+true ($\top$) and false ($\bot$), in addition to the two atoms that are needed
+to encode the formula above, namely $1$ and the variable $c_1$.  Then, the
+formula is constructed as a list of formulas that either reference elements
+earlier in the list or atoms, and encode the formula above.  Finally, the root
+contains a reference to the formula that should be checked by the SMT solver.
 %
 \begin{equation*}
   \begin{array}{ll}
-    \text{atoms: } & a = [\top; \bot; 1; c_1; c_2; c_3]\\
-    \text{formulas: } & f = [a[2]; a[3]; a[4]; f[0] - f[1]; f[3] + f[2]; f[0]
-                        \booland f[4]\\
-                     & \qquad\neg
-                       f[1]; a[5]; f[0] - f[6]; f[8] + f[7]; f[0] \booland f[9]; f[5] \land f[10]]\\
-    \text{roots: } & r = [f[9]].
+    \text{atoms: } & a = [\top; \bot; 1; c_1]\\
+    \text{formulas: } & f = [a[2]; a[3]; f[0] - f[1]; f[2] + f[0]; f[0]
+                        \booland f[3]; 1 - f[1];\\
+                   & \qquad f[0] - f[5]; f[6] + f[0]; f[0] \booland
+                     f[7]; f[4] \land f[8]; f[9] \neq f[0]]\\
+    \text{roots: } & r = [f[10]].
   \end{array}
 \end{equation*}
 
 \YH{TODO: Double check the layout of these formulas.}
 
 The original SMT formula can then be passed to an SMT solver to check for
-unsatisfiability.  This is done using veriT, which is well supported by SMTCoq.
-The witness, together with the array representation of the formula are then read
-by the SMTCoq proof checker, which then emits \enquote{yes} or \enquote{no}
-depending on if checking the witness succeeded, in which case the formula that
-was checked was unsatisfiable.
+unsatisfiability.  This is done using veriT~\cite{bouton09}, which is well
+supported by SMTCoq.  The witness, together with the array representation of the
+formula are then read by the SMTCoq proof checker, which then emits
+\enquote{yes} or \enquote{no} depending on if checking the witness succeeded, in
+which case the formula that was checked was unsatisfiable or not.  This result
+can be used to check the equivalence between two predicate expressions at run
+time and assume that if the check succeeds, that the predicate expressions can
+be assumed to be equivalent.
 
 \section{Summary}
 

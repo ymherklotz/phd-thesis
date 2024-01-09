@@ -1,9 +1,14 @@
 \chapter{Hardware Generation}%
 \label{sec:hardware-generation}
 
-Until now the representation of the program has still been in the form of a
-software program, with virtual, infinite registers, a program counter, as well
-as a rich but abstract memory model.  This representation needs to be
+\begin{chapsummary}
+  This chapter describes the final hardware generation step to go from
+  software-like semantics to hardware Verilog semantics.
+\end{chapsummary}
+
+\noindent Until now the representation of the program has still been in the form
+of a software program, with virtual, infinite registers, a program counter, as
+well as a rich but abstract memory model.  This representation needs to be
 transformed into a more suitable representation on which hardware specific
 transformations can applied, and which is closer to th structure of the final
 Verilog design.  The main transformation that takes place is converting a
@@ -66,19 +71,19 @@ specified.
 \draw[ed] (htlmem) -- (forward substitution) -- (htlsubst);
 \draw[ed] (htlsubst) -- (verilog generation) -- (verilog);
 
-\node[blacknumlarge] at (hyperblock destruction.north west)
-{\ref*{sec:hg:hyperblock-destruction}};
+\node[blacknumlarge] at (hyperblock destruction.north west) (bn)
+{\ref{sec:hg:hyperblock-destruction}};
 \node[blacknumlarge] at (htl generation.north west)
-{\ref*{sec:hg:htl-generation}};
+{\ref{sec:hg:htl-generation}};
 \node[blacknumlarge] at (bram insertion.north west)
-{\ref*{sec:hg:bram-insertion}};
+{\ref{sec:hg:bram-insertion}};
 \node[blacknumlarge] at (forward substitution.north west)
-{\ref*{sec:hg:register-forward-substitution}};
+{\ref{sec:hg:register-forward-substitution}};
 \node[blacknumlarge] at (verilog generation.north west)
-{\ref*{sec:hg:verilog-generation}};
+{\ref{sec:hg:verilog-generation}};
 
 \begin{pgfonlayer}{background}
-\node[bgbox, fill=bgbox4, fit=(rtlpar)(htlmem), inner sep=3mm,minimum width=\linewidth] {};
+\node[bgbox, fill=bgbox4, fit={(rtlpar)(htlmem)(bn)(forward substitution)}, inner sep=3mm,minimum width=\linewidth] {};
 \end{pgfonlayer}
 
  \end{tikzpicture}
@@ -115,9 +120,11 @@ cycles into their own locations in the control-flow graph.
     \node[label] at (initial block.north west) {\texttt{1}};
     \node[label] at (first transf block.north west) {\texttt{1}};
     \node[label] at (second transf block.north west) {\texttt{3}};
-    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
-      -- node [below, font=\footnotesize] {hyperblock destruction}
-      ($(initial block.east) + (4,0)$);
+    % \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+    %   -- node [below, font=\footnotesize] {hyperblock destruction}
+    %   ($(initial block.east) + (4,0)$);
+   \path (initial block) -- node[pass] (fs) {hyperblock\\destruction} ($(initial block.east) + (4,0)$);
+   \draw[ed] (initial block) -- (fs) -- ($(initial block.east) + (4,0)$);
   \end{tikzpicture}
   \caption{Hyperblock destruction transformation splitting up the hyperblock into
     multiple locations.}%
@@ -189,7 +196,8 @@ why it needs to be performed as part of the data path.
         \regtype;$ & \\
   & & & $\ \ \mathrm{ram} : \optiontype{\mathrm{\gls{BRAM}}};$ & \\
   & & & $\ \ \mathrm{order\_wf} : \mathrm{state} < \mathrm{finish} < \mathrm{return}
-        < \mathrm{stack} < \mathrm{reset} < \mathrm{clk};$ & \\
+        < \mathrm{stack}$ & \\
+  & & & $\qquad\qquad{}\land \mathrm{stack} < \mathrm{reset} < \mathrm{clk};$ & \\
   & & & $\ \ \mathrm{ram\_wf} : \forall r\ldotp \mathrm{ram} = \some{r} \implies
         \mathrm{clk} < r.\mathrm{raddr}; $ & \\
   & & & $\ \ \mathrm{params\_wf} : \forall r \in \mathrm{params}\ldotp
@@ -267,16 +275,18 @@ translation from \rtlsubpar{} to \htl{} is shown in
                                \rtlinline`[ [ p1 => r4 := r5      ]; `\\
                                \rtlinline`[ [ p2 => Stack[r6] = 3 ]; `\\
                                \rtlinline`  [ goto 2              ] ]`};
-    \node[bb, right=4cm of initial block] (transf block)
+    \node[bb, right=4.5cm of initial block] (transf block)
       {\veriloginline`r2 = r4 * r6;`\\
        \veriloginline`r8 = r3 ? r10 : r8;`\\
        \veriloginline`if (r5) stack[r12] = 32'd3;`\\
        \veriloginline`state = 32'd2;`};
-    \node[label] at (initial block.north west) {\texttt{1}};
-    \node[label] at (transf block.north west) {\texttt{1}};
-    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
-      -- node [below, font=\footnotesize] {\htl{} generation}
-      ($(initial block.east) + (3,0)$);
+    % \node[label] at (initial block.north west) {\texttt{1}};
+    % \node[label] at (transf block.north west) {\texttt{1}};
+    % \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+    %   -- node [below, font=\footnotesize] {\htl{} generation}
+    %   ($(initial block.east) + (3,0)$);
+   \path (initial block) -- node[pass] (fs) {\htl{} generation} (transf block);
+   \draw[ed] (initial block) -- (fs) -- (transf block);
   \end{tikzpicture}
   \caption{Simple translation from an \rtlsubpar{} block into an \htl{} block.}%
   \label{fig:hg:htl-generation}
@@ -412,16 +422,18 @@ assigned to the last \veriloginline`state` update.
                                \rtlinline`    p2 => goto 4;    `\\
                                \rtlinline`    goto 5;`\\
                                \rtlinline`    r1 <= r2 * r3 ] ]`};
-    \node[bb, right=4cm of initial block] (transf block)
+    \node[bb, right=4.5cm of initial block] (transf block)
       {\veriloginline`state =  r3       ? 32'd3 : state;`\\
        \veriloginline`state = ~r3 & r5  ? 32'd4 : state;`\\
        \veriloginline`state = ~r3 & ~r5 ? 32'd4 : state;`\\
        \veriloginline`r2    = ~r3 & ~r5 ? r4 * r6 : r2; `};
-    \node[label] at (initial block.north west) {\texttt{1}};
-    \node[label] at (transf block.north west) {\texttt{1}};
-    \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
-      -- node [below, font=\footnotesize] {\htl{} generation}
-      ($(initial block.east) + (3,0)$);
+    % \node[label] at (initial block.north west) {\texttt{1}};
+    % \node[label] at (transf block.north west) {\texttt{1}};
+    % \draw[->,very thick] ($(initial block.east) + (0.5,0)$)
+    %   -- node [below, font=\footnotesize] {\htl{} generation}
+    %   ($(initial block.east) + (3,0)$);
+         \path (initial block) -- node[pass] (fs) {\htl{} generation} (transf block);
+   \draw[ed] (initial block) -- (fs) -- (transf block);
   \end{tikzpicture}
   \caption{Simple translation from an \rtlsubpar{} block into an \htl{} block.}%
   \label{fig:hg:htl-generation}
@@ -650,83 +662,114 @@ The simplest way to implement loads and stores in \vericert{} would be to access
 the Verilog array directly from within the data path as is currently the case
 after the \htl{} generation. This would be correct, but when a Verilog array is
 accessed at several program points, the synthesis tool is unlikely to detect
-that it can be implemented as an \gls{BRAM}, and will resort to using lots of
-registers instead, ruining the circuit's area and performance.  This is because
-reads and writes to a \gls{BRAM} need to follow a certain pattern to be suitable
-to be replaced by \gls{BRAM} reads and writes.  For example, the synthesis tool
-will have to check that the array is only written to once per clock cycle, and
-is only read from once as well.  To avert this, we arrange that the data-path
-does not access memory directly, but simply sets the address it wishes to access
-and then toggles the \texttt{u\_en} flag. This activates the \gls{BRAM}
-interface (lines 9--15 of \cref{fig:accumulator_v}) on the next falling clock
-edge, which performs the requested load or store. By factoring all the memory
-accesses out into a separate interface, we ensure that the underlying array is
-only accessed from a single program point in the Verilog code, and thus ensure
-that the synthesis tool will correctly infer a \gls{BRAM}
-block.\footnote{Interestingly, the Verilog code shown for the \gls{BRAM}
-  interface must not be modified, because the synthesis tool will only generate
-  a \gls{BRAM} when the code matches a small set of specific patterns.}
+that it can be implemented as an \gls{BRAM}, and will resort to using registers
+instead, increasing the circuit's area and affecting performance.  This is
+because reads and writes to a \gls{BRAM} need to follow a certain pattern to be
+suitable to be replaced by \gls{BRAM} reads and writes.  For example, the
+synthesis tool will have to check that the array is only written to once per
+clock cycle, and is only read from once as well.  To avert this, we arrange that
+the data path does not access memory directly, but simply sets the address it
+wishes to access and then toggles the \texttt{u\_en} flag. This activates the
+\gls{BRAM} interface on the next falling clock edge, which performs the
+requested load or store. By factoring all the memory accesses out into a
+separate interface, we ensure that the underlying array is only accessed from a
+single program point in the Verilog code, and thus ensure that the synthesis
+tool will correctly infer a \gls{BRAM} block.\footnote{Interestingly, the
+  Verilog code shown for the \gls{BRAM} interface must not be modified, because
+  the synthesis tool will only generate a \gls{BRAM} when the code matches a
+  small set of specific patterns.}
 
 This transformation pass therefore translates direct accesses to the Verilog
-array in \htl{} and replaces them by signals that access the \gls{BRAM} interface in a
-separate always-block. The translation is performed by going through all the
-instructions and replacing each load and store expression in turn.  Stores can
-be replaced by the necessary wires to the \gls{BRAM} directly. Loads are a little more
-subtle: loads that use the \gls{BRAM} interface take two clock cycles where a direct
-load from an array takes only one, so this pass inserts an extra state after
-each load.  The scheduling algorithm described in
-\cref{sec:hs:scheduling-algorithm} can already take this into account as well,
-and can ensure that the next clock cycle after a load does not perform a load or
-a store, however, some additional proofs would have to be added to this
-transformation pass to check that this is actually the case, and that the load
-will proceed as expected.
+array in \htl{} and replaces them by signals that access the \gls{BRAM}
+interface in a separate always-block. The translation is performed by going
+through all the instructions and replacing each load and store expression in
+turn.  Stores can be replaced by the necessary wires to the \gls{BRAM}
+directly. Loads are a little more subtle: loads that use the \gls{BRAM}
+interface take two clock cycles where a direct load from an array takes only
+one, so this pass inserts an extra state after each load.  The scheduling
+algorithm described in \cref{sec:hs:scheduling-algorithm} can already take this
+into account as well, and can ensure that the next clock cycle after a load does
+not perform a load or a store, however, some additional proofs would have to be
+added to this transformation pass to check that this is actually the case, and
+that the load will proceed as expected.
 
 %\JW{I've called that negedge always-block the `\gls{BRAM} driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
-%Verilog arrays can be used in a variety of ways, however, these do not all produce optimal hardware designs.  If, for example, arrays in Verilog are accessed immediately in the data-path, then the synthesis tool is not be able to identify it as having the right properties for a \gls{BRAM}, and would instead implement the array using registers.  This is extremely expensive, and for large memories this can easily blow up the area usage of the FPGA, and because of the longer wires that are needed, it would also affect the performance of the circuit.  The synthesis tools therefore provide code snippets that they know how to transform into various constructs, including snippets that will generate proper RAMs in the final hardware.  This process is called memory inference.  The initial translation from 3AC to \htl{} converts loads and stores to direct accesses to the memory, as this preserves the same behaviour without having to insert more registers and logic.  We therefore have another pass from \htl{} to itself which performs the translation from this na\"ive use of arrays to a representation which always allows for memory inference.  This pass creates a separate always-block to perform the loads and stores to the memory, and adds the necessary data, address and enable signals to communicate with that always-block from other always-blocks.  This always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
+%Verilog arrays can be used in a variety of ways, however, these do not all
+%produce optimal hardware designs.  If, for example, arrays in Verilog are
+%accessed immediately in the data-path, then the synthesis tool is not be able
+%to identify it as having the right properties for a \gls{BRAM}, and would
+%instead implement the array using registers.  This is extremely expensive, and
+%for large memories this can easily blow up the area usage of the FPGA, and
+%because of the longer wires that are needed, it would also affect the
+%performance of the circuit.  The synthesis tools therefore provide code
+%snippets that they know how to transform into various constructs, including
+%snippets that will generate proper RAMs in the final hardware.  This process is
+%called memory inference.  The initial translation from 3AC to \htl{} converts
+%loads and stores to direct accesses to the memory, as this preserves the same
+%behaviour without having to insert more registers and logic.  We therefore have
+%another pass from \htl{} to itself which performs the translation from this
+%na\"ive use of arrays to a representation which always allows for memory
+%inference.  This pass creates a separate always-block to perform the loads and
+%stores to the memory, and adds the necessary data, address and enable signals
+%to communicate with that always-block from other always-blocks.  This
+%always-block is shown between lines 10-15 in Fig.~\ref{fig:accumulator_v}.
 
-There are two interesting parts to the inserted \gls{BRAM} interface.  Firstly, the
-memory updates are triggered on the negative (falling) edge of the clock, out of
-phase with the rest of the design which is triggered on the positive (rising)
-edge of the clock.  The advantage of this is that instead of loads and stores
-taking three clock cycles and two clock cycles respectively, they only take two
-clock cycles and one clock cycle instead, greatly improving their performance.
-Ideally, this translation would take advantage of the scheduler, which can
-already ensure that the clock cycle after a load remains free to wait for the
-data from the \gls{BRAM}, however, this would require additional checking by this
-transformation to double check that the read result is not used until it is
-ready.
-% \JW{Is this a standard `trick' in hardware design? If so it might be nice to
-% cite it.}\YH{Hmm, not really, because it has the downside of kind of halving
-% your available clock period. However, RAMs normally come in both forms on the
-% FPGA (Page 12, Fig. 2,
-% \url{https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/ug_ram_rom.pdf})}
-% JW: thanks!
-Using the negative edge of the clock is supported by synthesis tools and FPGAs,
-but in general it does reduces the time that's available for arithmetic
-operations in the positive edge of the clock, making it harder to schedule
-operations.
+\begin{figure}
+  \centering
+  \begin{minipage}{6cm}
+\begin{minted}{systemverilog}
+// BRAM interface
+(* ram_style = "block" *)
+logic [31:0] stack [1:0];
+always @(negedge clk)
+  if ({u_en != en}) begin
+    if (wr_en) stack[addr] <= d_in;
+    else d_out <= stack[addr];
+    en <= u_en;
+  end
+\end{minted}
+  \end{minipage}
+  \caption{Verilog implementation of the BRAM interface generated by Vericert.}
+  \label{fig:hg:bram-interface}
+\end{figure}
 
-Secondly, the logic in the enable signal of the \gls{BRAM} (\texttt{en != u\_en}) is
-also atypical in hardware designs.  Enable signals are normally manually
-controlled and inserted into the appropriate states, by using a check like the
-following in the \gls{BRAM}:\@ \texttt{en == 1}.  This means that the \gls{BRAM} only turns on
-when the enable signal is set.  However, to make the proof simpler and avoid
-reasoning about possible side effects introduced by the \gls{BRAM} being enabled but
-not used, a \gls{BRAM} which disables itself after every use would be ideal.  One
-method for implementing this would be to insert an extra state after each load
-or store that disables the \gls{BRAM}, but this extra state would eliminate the speed
-advantage of the negative-edge-triggered \gls{BRAM}. Another method would be to
-determine the next state after each load or store and disable the \gls{BRAM} in that
-state, but this could quickly become complicated, especially in the case where
-the next state also contains a memory operation, and hence the disable signal
-should not be added. The method we ultimately chose was to have the \gls{BRAM} become
-enabled not when the enable signal is high, but when it \emph{toggles} its
-value.  This can be arranged by keeping track of the old value of the enable
-signal in \texttt{en} and comparing it to the current value \texttt{u\_en} set
-by the data path.  When the values are different, the \gls{BRAM} gets enabled, and then
-\texttt{en} is set to the value of \texttt{u\_en}. This ensures that the \gls{BRAM}
-will always be disabled straight after it was used, without having to insert or
-modify any other states.
+There are two interesting parts to the inserted \gls{BRAM} interface, shown in
+\cref{fig:hg:bram-interface}.  Firstly, the memory updates are triggered on the
+negative (falling) edge of the clock, out of phase with the rest of the design
+which is triggered on the positive (rising) edge of the clock.  The advantage of
+this is that instead of loads and stores taking three clock cycles and two clock
+cycles respectively, they only take two clock cycles and one clock cycle
+instead, greatly improving their performance.  Ideally, this translation would
+take advantage of the scheduler, which can already ensure that the clock cycle
+after a load remains free to wait for the data from the \gls{BRAM}, however,
+this would require additional checking by this transformation to double check
+that the read result is not used until it is ready.  Using the negative edge of
+the clock is supported by synthesis tools and FPGAs, but in general it does
+reduces the time that's available for arithmetic operations in the positive edge
+of the clock, making it harder to schedule operations.
+
+Secondly, the logic in the enable signal of the \gls{BRAM} (\texttt{en !=
+  u\_en}) is also atypical in hardware designs.  Enable signals are normally
+manually controlled and inserted into the appropriate states, by using a check
+like the following in the \gls{BRAM}:\@ \texttt{en == 1}.  This means that the
+\gls{BRAM} only turns on when the enable signal is set.  However, to make the
+proof simpler and avoid reasoning about possible side effects introduced by the
+\gls{BRAM} being enabled but not used, a \gls{BRAM} which disables itself after
+every use would be ideal.  One method for implementing this would be to insert
+an extra state after each load or store that disables the \gls{BRAM}, but this
+extra state would eliminate the speed advantage of the negative-edge-triggered
+\gls{BRAM}. Another method would be to determine the next state after each load
+or store and disable the \gls{BRAM} in that state, but this could quickly become
+complicated, especially in the case where the next state also contains a memory
+operation, and hence the disable signal should not be added. The method we
+ultimately chose was to have the \gls{BRAM} become enabled not when the enable
+signal is high, but when it \emph{toggles} its value.  This can be arranged by
+keeping track of the old value of the enable signal in \texttt{en} and comparing
+it to the current value \texttt{u\_en} set by the data path.  When the values
+are different, the \gls{BRAM} gets enabled, and then \texttt{en} is set to the
+value of \texttt{u\_en}. This ensures that the \gls{BRAM} will always be
+disabled straight after it was used, without having to insert or modify any
+other states.
 
 %We can instead generate a second enable signal that is set by the user, and the original enable signal is then updated by the \gls{BRAM} to be equal to the value that the user set.  This means that the \gls{BRAM} should be enabled whenever the two signals are different, and disabled otherwise.
 
@@ -948,7 +991,7 @@ registers introduced by the \gls{BRAM}.
   inserting the \gls{BRAM} and wiring the load, store, and control signals.
 
   \begin{align*}
-    \forall h, h', B \in \texttt{Safe},\quad \yhfunction{tr\_ram\_ins}(h) = h' \land h \Downarrow B \implies h' \Downarrow B.
+    \forall h\ h'\ B \in \texttt{Safe}\ldotp\quad \yhfunction{tr\_ram\_ins}(h) = h' \land h \Downarrow B \implies h' \Downarrow B.
   \end{align*}
 \end{lemma}
 
@@ -1020,24 +1063,23 @@ reasons why this transformation is needed.
       \veriloginline`r8 = r2 + r10;`\\
       \veriloginline`state = r3 ? 32'd3 : state;`};
 
-    \node[bb, right=1cm of
+    \node[bb, right=4.5cm of
     initial block] (transf block)
     {\veriloginline`state <= 32'd2;`\\
      \veriloginline`r2 <= r4 * r6;`\\
      \veriloginline`r8 <= {r4 * r6} + r10;`\\
      \veriloginline`state <= r3 ? 32'd3 : 32'd2;`};
-    \node[label] at (initial
-    block.north west) {\texttt{1}};
-    \node[label] at (transf block.north west)
-    {\texttt{1}};
+    % \node[label] at (initial
+    % block.north west) {\texttt{1}};
+    % \node[label] at (transf block.north west)
+    % {\texttt{1}};
     %\draw[->,very thick] ($(initial block.east) + (0.5,0)$) --
     %node [below, font=\footnotesize] {forward substitution}
     %($(initial block.east) + (4,0)$);
+   \path (initial block) -- node[pass] (fs) {forward\\substitution} (transf block);
+   \draw[ed] (initial block) -- (fs) -- (transf block);
   \end{tikzpicture}
-  \caption{Simple forward substitution transformation together with the runtime
-    value of the blocking assignment association map ($\Gamma_{\mathrm r}$) and
-    the nonblocking assignment association map ($\Delta_{\mathrm r}$).\YH{TODO:
-      Need to find a better way to lay this out.}}%
+  \caption{Simple example of the forward substitution transformation.}%
   \label{fig:hg:forward-substitution-simple}
 \end{figure}
 
@@ -1049,82 +1091,113 @@ reasons why this transformation is needed.
     \node[bb] (initial block) {
       \mathstateln{1}\phantomsection\label{msln:1}\mathstate{\texttt{assume:} $\at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto \varnothing; \texttt{r2} \mapsto
           \varnothing; \texttt{r8} \mapsto \varnothing}$}\\[0.5em]
-      \mathstateln{2}\phantomsection\label{msln:2}\veriloginline`state = 32'd2;`\\[0.5em]
-      \mathstateln{3}\phantomsection\label{msln:3}\mathstate{$\interstate{1}{\asgnblockingbefore} = \at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto
-          \texttt{32'd2}}$}\\[0.5em]
-      \mathstateln{4}\phantomsection\label{msln:4}\mathstate{$\interstate{1}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
-      \mathstateln{5}\phantomsection\label{msln:5}\veriloginline`r2 = r4 * r6;`\\[0.5em]
+      \mathstateln{2}\phantomsection\label{msln:2}\label{msln:3}\label{msln:4}
+      \veriloginline`state = 32'd2; `\mathstate{$\interstate{1}{\asgnblockingbefore} = \at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto
+          \texttt{32'd2}}, \interstate{1}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+%      \mathstateln{3}\phantomsection\label{msln:3}\mathstate{$\interstate{1}{\asgnblockingbefore} = \at{\initialstate{\asgnblockingbefore}}{\texttt{state} \mapsto
+%          \texttt{32'd2}}$}\\[0.5em]
+%      \mathstateln{4}\phantomsection\label{msln:4}\mathstate{$\interstate{1}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      \mathstateln{3}\phantomsection\label{msln:5}\label{msln:6}\label{msln:7}
+      \veriloginline`r2 = r4 * r6; `\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}}, \interstate{2}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
       % {\tiny 6 $\quad$}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
       %     \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
       %     \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
       % {\tiny 7 $\quad$}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \interstate{1}{\asgnnonblockingbefore}$}\\[0.5em]
-      \mathstateln{6}\phantomsection\label{msln:6}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
-          \at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
-          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
-      \mathstateln{7}\phantomsection\label{msln:7}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
-      \mathstateln{8}\phantomsection\label{msln:8}\veriloginline`r8 = r2 + r10;`\\[0.5em]
+%      \mathstateln{6}\phantomsection\label{msln:6}\mathstate{$\interstate{2}{\asgnblockingbefore} = \at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2} \mapsto
+%          \at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+%          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}}$}\\[0.5em]
+%      \mathstateln{7}\phantomsection\label{msln:7}\mathstate{$\interstate{2}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+      \mathstateln{4}\phantomsection\label{msln:8}\label{msln:9}\label{msln:10}
+      \veriloginline`r8 = r2 + r10; `\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
+          (\at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}) \mathbin{\texttt{+}}
+          \at{\initialstate{\asgnblockingbefore}}{\texttt{r10}}}, \interstate{3}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
       % {\tiny 11 $\quad$}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
       %     \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}} \mathbin{\texttt{+}}
       %     \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
       % {\tiny 12 $\quad$}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \interstate{2}{\asgnnonblockingbefore}$}\\[0.5em]
-\mathstateln{9}\phantomsection\label{msln:9}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
-          (\at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
-          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}) \mathbin{\texttt{+}}
-          \at{\initialstate{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
-\mathstateln{10}\phantomsection\label{msln:10}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
-      \mathstateln{11}\phantomsection\label{msln:11}\veriloginline`state = r3 ? 32'd3 : state;`\\[0.5em]
+%\mathstateln{9}\phantomsection\label{msln:9}\mathstate{$\interstate{3}{\asgnblockingbefore} = \at{\interstate{2}{\asgnblockingbefore}}{\texttt{r8} \mapsto
+%          (\at{\initialstate{\asgnblockingbefore}}{\texttt{r4}} \mathbin{\texttt{*}}
+%          \at{\initialstate{\asgnblockingbefore}}{\texttt{r6}}) \mathbin{\texttt{+}}
+%          \at{\initialstate{\asgnblockingbefore}}{\texttt{r10}}}$}\\[0.5em]
+%\mathstateln{10}\phantomsection\label{msln:10}\mathstate{$\interstate{3}{\asgnnonblockingbefore} = \initialstate{\asgnnonblockingbefore}$}\\[0.5em]
+     \mathstateln{5}\phantomsection\label{msln:11}\label{msln:12}\label{msln:13}
+     \veriloginline`state = r3 ? 32'd3 : state; `\mathstate{$\interstate{4}{\asgnblockingbefore} =
+  \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
+    \mternary{\at{\initialstate{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}},
+  \interstate{4}{\asgnnonblockingbefore} =
+  \initialstate{\asgnnonblockingbefore}$}
 % {\tiny 16 $\quad$}\mathstate{$\interstate{4}{\asgnblockingbefore} =
 %   \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
 %     \mternary{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\at{\interstate{3}{\asgnblockingbefore}}{\texttt{state}}}}$}\\[0.5em]
 % {\tiny 17 $\quad$}\mathstate{$\interstate{4}{\asgnnonblockingbefore} = \interstate{3}{\asgnnonblockingbefore}$}\\[0.5em]
-\mathstateln{12}\phantomsection\label{msln:12}\mathstate{$\interstate{4}{\asgnblockingbefore} =
-  \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
-    \mternary{\at{\initialstate{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
-\mathstateln{13}\phantomsection\label{msln:13}\mathstate{$\interstate{4}{\asgnnonblockingbefore} =
-  \initialstate{\asgnnonblockingbefore}$}};
+% \mathstateln{12}\phantomsection\label{msln:12}\mathstate{$\interstate{4}{\asgnblockingbefore} =
+%   \at{\interstate{3}{\asgnblockingbefore}}{\texttt{state} \mapsto
+%     \mternary{\at{\initialstate{\asgnblockingbefore}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
+% \mathstateln{13}\phantomsection\label{msln:13}\mathstate{$\interstate{4}{\asgnnonblockingbefore} =
+%   \initialstate{\asgnnonblockingbefore}$}
+};
 
-    \node[bb, right=1cm of
+    \node[bb, below=1.5cm of
     initial block] (transf block)
-    {\veriloginline`state <= 32'd2;`\\[0.5em]
-     \mathstate{$\interstate{1}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
-     \mathstate{$\interstate{1}{\asgnnonblockingafter} = \at{\initialstate{\asgnnonblockingafter}}{\texttt{state} \mapsto \texttt{32'd2}}$}\\[0.5em]
-     \veriloginline`r2 <= r4 * r6;`\\[0.5em]
+    {\veriloginline`state <= 32'd2; `
+\mathstate{$\interstate{1}{\asgnblockingafter} =
+        \initialstate{\asgnblockingafter}, \interstate{1}{\asgnnonblockingafter} = \at{\initialstate{\asgnnonblockingafter}}{\texttt{state} \mapsto \texttt{32'd2}}$}\\[0.5em]
+     % \mathstate{$\interstate{1}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+     % \mathstate{$\interstate{1}{\asgnnonblockingafter} = \at{\initialstate{\asgnnonblockingafter}}{\texttt{state} \mapsto \texttt{32'd2}}$}\\[0.5em]
+      \veriloginline`r2 <= r4 * r6; `
+      \mathstate{$\interstate{2}{\asgnblockingafter} =
+        \initialstate{\asgnblockingafter}, \interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
      % \mathstate{$\interstate{2}{\asgnblockingafter} = \interstate{1}{\asgnblockingafter}$}\\[0.5em]
      % \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\interstate{1}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\interstate{1}{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
-     \mathstate{$\interstate{2}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
-     \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
-     \veriloginline`r8 <= {r4 * r6} + r10;`\\[0.5em]
+     % \mathstate{$\interstate{2}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+     % \mathstate{$\interstate{2}{\asgnnonblockingafter} = \at{\interstate{1}{\asgnnonblockingafter}}{\texttt{r2} \mapsto \at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}} \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}}$}\\[0.5em]
+     \veriloginline`r8 <= {r4 * r6} + r10; `
+     \mathstate{$\interstate{3}{\asgnblockingafter} =
+       \initialstate{\asgnblockingafter}, \interstate{3}{\asgnnonblockingafter}
+       = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
+         (\at{\initialstate{\asgnblockingafter}}{\texttt{r4}}
+         \mathbin{\texttt{*}}
+         \at{\initialstate{\asgnblockingafter}}{\texttt{r6}})
+         \mathbin{\texttt{+}}
+         \at{\initialstate{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
      % \mathstate{$\interstate{3}{\asgnblockingafter} = \interstate{2}{\asgnblockingafter}$}\\[0.5em]
      % \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
      %      (\at{\interstate{2}{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
      %      \at{\interstate{2}{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
      %      \at{\interstate{2}{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
-     \mathstate{$\interstate{3}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
-     \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
-          (\at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
-          \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
-          \at{\initialstate{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
-     \veriloginline`state <= r3 ? 32'd3 : 32'd2;`\\[0.5em]
+     % \mathstate{$\interstate{3}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+     % \mathstate{$\interstate{3}{\asgnnonblockingafter} = \at{\interstate{2}{\asgnnonblockingafter}}{\texttt{r8} \mapsto
+     %      (\at{\initialstate{\asgnblockingafter}}{\texttt{r4}} \mathbin{\texttt{*}}
+     %      \at{\initialstate{\asgnblockingafter}}{\texttt{r6}}) \mathbin{\texttt{+}}
+     %      \at{\initialstate{\asgnblockingafter}}{\texttt{r10}}}$}\\[0.5em]
+     \veriloginline`state <= r3 ? 32'd3 : 32'd2; `\mathstate{$\interstate{4}{\asgnblockingafter} = \initialstate{\asgnblockingafter},\interstate{4}{\asgnnonblockingafter} =
+  \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
+    \mternary{\at{\initialstate{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}
 %      \mathstate{$\interstate{4}{\asgnblockingafter} = \interstate{3}{\asgnblockingafter}$}\\[0.5em]
 % \mathstate{$\interstate{4}{\asgnnonblockingafter} =
 %   \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
 %     \mternary{\at{\interstate{3}{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}\\[0.5em]
-     \mathstate{$\interstate{4}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
-\mathstate{$\interstate{4}{\asgnnonblockingafter} =
-  \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
-    \mternary{\at{\initialstate{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}};
-    \node[label] at (initial
-    block.north west) {\texttt{1}};
-    \node[label] at (transf block.north west)
-    {\texttt{1}};
+%      \mathstate{$\interstate{4}{\asgnblockingafter} = \initialstate{\asgnblockingafter}$}\\[0.5em]
+% \mathstate{$\interstate{4}{\asgnnonblockingafter} =
+%   \at{\interstate{3}{\asgnnonblockingafter}}{\texttt{state} \mapsto
+%     \mternary{\at{\initialstate{\asgnblockingafter}}{\texttt{r3}}}{\texttt{32'd3}}{\texttt{32'd2}}}$}
+};
+    % \node[label] at (initial
+    % block.north west) {\texttt{1}};
+    % \node[label] at (transf block.north west)
+    % {\texttt{1}};
     %\draw[->,very thick] ($(initial block.east) + (0.5,0)$) --
     %node [below, font=\footnotesize] {forward substitution}
     %($(initial block.east) + (4,0)$);
+   \path (initial block) -- node[pass] (fs) {forward substitution} (transf block);
+   \draw[ed] (initial block) -- (fs) -- (transf block);
   \end{tikzpicture}
   \caption{Simple forward substitution transformation together with the runtime
     value of the blocking assignment association map ($\Gamma_{\mathrm r}$) and
-    the nonblocking assignment association map ($\Delta_{\mathrm r}$).\YH{TODO:
-      Need to find a better way to lay this out.}}%
+    the nonblocking assignment association map ($\Delta_{\mathrm r}$).}%
   \label{fig:hg:forward-substitution}
 \end{figure}
 
@@ -1189,7 +1262,7 @@ statements in \cref{def:substitute-statements}.
 
 It might seem restrictive to only support sequential composition of statements
 and blocking assignment, but those are the only constructs that are generated by
-the HTL generation.  Supporting additional statements would not require a
+the \htl{} generation.  Supporting additional statements would not require a
 significant change to the transformation.  Even adding support for nonblocking
 assignment in the input statement should be safe, as long as the expressions are
 correctly substituted, and are \emph{not} added to the expression substitution
@@ -1337,28 +1410,84 @@ transformations that take place are:
 
 \begin{enumerate}
 \item Converting the mapping from states to Verilog statements into a case
-  statement.
+  statement, with reset logic to reset the state.
 \item Instantiating the \gls{BRAM} specification as a Verilog always block.
 \end{enumerate}
 
 \begin{figure}
   \centering
-\begin{minted}{systemverilog}
-always @(negedge clk) begin
-  if ({u_en != en}) begin
-    if (wr_en) begin
-      stack[addr] <= d_in;
-    end else begin
-      d_out <= stack[addr];
-    end
-    en <= u_en;
-  end else begin
-  end
-end
+  \begin{subfigure}{0.45\linewidth}
+\begin{minted}[fontsize=\footnotesize]{systemverilog}
+main() {
+  8: {
+    state <= 32'd18;
+    u_en <= ( ~ u_en);
+    wr_en <= 32'd0;
+    addr <= {{{reg_6 + 32'd0}
+              + {reg_2 * 32'd4}}
+             / 32'd4};
+  }
+}
 \end{minted}
+    \caption{Original \htl{} representation of the design, with the starting
+      state set to 8.}%
+    \label{fig:hg:ram-instantiation:htl}
+  \end{subfigure}\hfill%
+  \begin{subfigure}{0.5\linewidth}
+\begin{minted}[fontsize=\footnotesize]{systemverilog}
+module main(reset, clk, finish, return_val);
+  // Register declarations
+  // ...
+
+  // BRAM interface
+  (* ram_style = "block" *)
+  logic [31:0] stack [1:0];
+  always @(negedge clk)
+    if ({u_en != en}) begin
+      if (wr_en) stack[addr] <= d_in;
+      else d_out <= stack[addr];
+      en <= u_en;
+    end
+
+  // Finite-state machine with data path
+  always @(posedge clk)
+    if ({reset == 32'd1}) state <= 32'd8;
+    else
+      case (state)
+        32'd8: begin
+          state <= 32'd18;
+          u_en <= ( ~ u_en);
+          wr_en <= 32'd0;
+          addr <= {{{reg_6 + 32'd0}
+                    + {reg_2 * 32'd4}}
+                   / 32'd4};
+        end
+        default:;
+      endcase
+endmodule
+\end{minted}
+    \caption{Translated Verilog design with the explicit reset and the explicit
+      memory instantiation.}%
+    \label{fig:hg:ram-instantiation:verilog}
+  \end{subfigure}
   \caption{Instantiation of \gls{BRAM} specification with Verilog implementation.}%
   \label{fig:hg:ram-instantiation}
 \end{figure}
+
+This translation is shown in \cref{fig:hg:ram-instantiation}, where the \htl{}
+design shown in \cref{fig:hg:ram-instantiation:htl} is translated to the Verilog
+shown in \cref{fig:hg:ram-instantiation:verilog}.  The main state machine is
+then turned into a single always block with an explicit \texttt{reset}, setting
+the state to the starting state present in \htl{}.  If the \texttt{reset} is not
+set, then there is a case statement that implements the state machine from
+\htl{}, where each state has the same Verilog statements as the corresponding
+state in \htl{}.
+
+In addition to that, the implicit memory that is part of the \htl{} semantics is
+made explicit by a separate always block implementing the memory interface.
+This interface follows a standard \gls{BRAM} memory template, and can therefore
+be detected by the synthesis tool and will become a proper memory in the
+synthesised netlist.
 
 \subsection{Forward simulation from \htl{} to Verilog}%
 \label{sec:proof:htl_verilog}
@@ -1375,7 +1504,7 @@ is quite different to that of the case-statement to which it is converted.
   \yhconstant{OK} constructor here.)
   {\normalfont
     \begin{align*}
-      \forall h, V, B \in \texttt{Safe},\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
+      \forall h\ V\ B \in \texttt{Safe}\ldotp\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
     \end{align*}}
 \end{lemma}
 
@@ -1399,6 +1528,19 @@ is quite different to that of the case-statement to which it is converted.
   % other case we can just apply the inductive hypothesis and remove the current
   % case from the case statement, as it did not match.
 \end{proof}
+
+\section{Summary}
+
+This chapter described the translation from the scheduled code, which was still
+represented in a language with software semantics, down to Verilog with faithful
+hardware semantics.  On the way, some hardware specific optimisations and
+transformations had to be performed.  First, any direct assignments to the
+memory had to be translated to a more standard interaction with memory, using
+read and write ports of a \gls{BRAM}.  Next, any blocking assignment had to be
+turned into nonblocking assignment to parallelise the Verilog design, helping
+improve synthesis results in some cases.  Finally, proper Verilog had to be
+generated, implementing the implicit behaviour present in \htl{} as explicit
+behaviour in Verilog.
 
 %\subsection{Coq Mechanisation}
 

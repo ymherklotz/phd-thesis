@@ -89,6 +89,20 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	year = 2023
 }
 
+@inproceedings{appel11_verif_softw_toolc,
+	doi = {10.1007/978-3-642-19718-5_1},
+	abstract = {The software toolchain includes static analyzers to check assertions about programs; optimizing compilers to translate programs to machine language; operating systems and libraries to supply context for programs. Our Verified Software Toolchain verifies with machine-checked proofs that the assertions claimed at the top of the toolchain really hold in the machine-language program, running in the operating-system context, on a weakly-consistent-shared-memory machine.},
+	author = {Appel, Andrew W.},
+	editor = {Barthe, Gilles},
+	location = {Berlin, Heidelberg},
+	publisher = {Springer Berlin Heidelberg},
+	booktitle = {Programming Languages and Systems},
+	isbn = {978-3-642-19718-5},
+	pages = {1--17},
+	title = {Verified Software Toolchain},
+	year = {2011}
+}
+
 @inproceedings{armand11_modul_integ_sat_smt_solver,
 	doi = {10.1007/978-3-642-25379-9_12},
 	abstract = {We present a way to enjoy the power of SAT and SMT provers in Coq without compromising soundness. This requires these provers to return not only a yes/no answer, but also a proof witness that can be independently rechecked. We present such a checker, written and fully certified in Coq. It is conceived in a modular way, in order to tame the proofs' complexity and to be extendable. It can currently check witnesses from the SAT solver ZChaff and from the SMT solver veriT. Experiments highlight the efficiency of this checker. On top of it, new reflexive Coq tactics have been built that can decide a subset of Coq's logic by calling external provers and carefully checking their answers.},
@@ -593,6 +607,22 @@ and Philippou, Anna",
 	url = {https://www.usenix.org/conference/usenixsecurity19/presentation/dessouky},
 	publisher = {USENIX Association},
 	month = aug
+}
+
+@InProceedings{ekici17_smtcoq,
+	keywords = {SAT, coq},
+	doi = {10.1007/978-3-319-63390-9_7},
+	author = {Ekici, Burak and Mebsout, Alain and Tinelli, Cesare and Keller, Chantal and Katz, Guy and Reynolds, Andrew and Barrett, Clark},
+	editor = "Majumdar, Rupak
+and Kun{\v{c}}ak, Viktor",
+	title = "SMTCoq: A Plug-In for Integrating SMT Solvers into Coq",
+	booktitle = "Computer Aided Verification",
+	year = "2017",
+	publisher = "Springer International Publishing",
+	address = "Cham",
+	pages = "126--133",
+	abstract = "This paper describes SMTCoq, a plug-in for the integration of external solvers into the Coq proof assistant. Based on a checker for generic first-order proof certificates fully implemented and proved correct in Coq, SMTCoq offers facilities to check answers from external SAT and SMT solvers and to increase Coq's automation using such solvers, all in a safe way. The current version supports proof certificates produced by the SAT solver ZChaff, for propositional logic, and the SMT solvers veriT and CVC4, for the quantifier-free fragment of the combined theory of fixed-size bit vectors, functional arrays with extensionality, linear integer arithmetic, and uninterpreted function symbols.",
+	isbn = "978-3-319-63390-9"
 }
 
 @thesis{ellis08_csicgfu,
@@ -1127,6 +1157,22 @@ and Philippou, Anna",
 	year = {2004}
 }
 
+@inproceedings{koenig21_compc,
+	abstract = {Since the introduction of CompCert, researchers have been refining its language semantics and correctness theorem, and used them as components in software verification efforts. Meanwhile, artifacts ranging from CPU designs to network protocols have been successfully verified, and there is interest in making them interoperable to tackle end-to-end verification at an even larger scale. Recent work shows that a synthesis of game semantics, refinement-based methods, and abstraction layers has the potential to serve as a common theory of certified components. Integrating certified compilers to such a theory is a critical goal. However, none of the existing variants of CompCert meets the requirements we have identified for this task. CompCertO extends the correctness theorem of CompCert to characterize compiled program components directly in terms of their interaction with each other. Through a careful and compositional treatment of calling conventions, this is achieved with minimal effort.},
+	author = {Koenig, Jérémie and Shao, Zhong},
+	location = {Virtual, Canada},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/3453483.3454097},
+	booktitle = {Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
+	doi = {10.1145/3453483.3454097},
+	isbn = {9781450383912},
+	keywords = {Compositional Compiler Correctness,Simulation Convention,Language Interface,Game Semantics},
+	pages = {1095--1109},
+	series = {PLDI 2021},
+	title = {CompCertO: Compiling Certified Open C Components},
+	year = {2021}
+}
+
 @inproceedings{koeplinger18_s,
 	author = {Koeplinger, David and Feldman, Matthew and Prabhakar, Raghu and Zhang, Yaqi and Hadjis, Stefan and Fiszel, Ruben and Zhao, Tian and Nardi, Luigi and Pedram, Ardavan and Kozyrakis, Christos and Olukotun, Kunle},
 	publisher = {ACM},
@@ -1589,6 +1635,35 @@ and Rehof, Jakob",
 	year = {2020}
 }
 
+@inproceedings{rau92_code_gener_schem_sched_loops,
+	author = {Rau, B. Ramakrishna and Schlansker, Michael S. and Tirumalai, P. P.},
+	location = {Portland, Oregon, USA},
+	publisher = {IEEE Computer Society Press},
+	booktitle = {Proceedings of the 25th Annual International Symposium on Microarchitecture},
+	isbn = {0818631759},
+	keywords = {modulo scheduling,code motion,loop scheduling,software pipelining,rotating registers},
+	pages = {158--169},
+	series = {MICRO 25},
+	title = {Code Generation Schema for modulo Scheduled Loops},
+	year = {1992}
+}
+
+@inproceedings{rau92_regis_alloc_softw_pipel_loops,
+	abstract = {Software pipelining is an important instruction scheduling technique for efficiently overlapping successive iterations of loops and executing them in parallel. This paper studies the task of register allocation for software pipelined loops, both with and without hardware features that are specifically aimed at supporting software pipelines. Register allocation for software pipelines presents certain novel problems leading to unconventional solutions, especially in the presence of hardware support. This paper formulates these novel problems and presents a number of alternative solution strategies. These alternatives are comprehensively tested against over one thousand loops to determine the best register allocation strategy, both with and without the hardware support for software pipelining.},
+	author = {Rau, B. R. and Lee, M. and Tirumalai, P. P. and Schlansker, M. S.},
+	location = {San Francisco, California, USA},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/143095.143141},
+	booktitle = {Proceedings of the ACM SIGPLAN 1992 Conference on Programming Language Design and Implementation},
+	doi = {10.1145/143095.143141},
+	isbn = {0897914759},
+	keywords = {software pipelining,loop scheduling,register allocation,rotating registers,compiler optimisation},
+	pages = {283--299},
+	series = {PLDI '92},
+	title = {Register Allocation for Software Pipelined Loops},
+	year = {1992}
+}
+
 @article{rau96_iterat_modul_sched,
 	doi = {10.1007/BF03356742},
 	abstract = {Modulo scheduling is a framework within which algorithms for software pipelining innermost loops may be defined. The framework specifies a set of constraints that must be met in order to achieve a legal modulo schedule. A wide variety of algorithms and heuristics can be defined within this framework. Little work has been done to evaluate and compare alternative algorithms and heuristics for modulo scheduling from the viewpoints of schedule quality as well as computational complexity. This, along with a vague and unfounded perception that modulo scheduling is computationally expensive as well as difficult to implement, have inhibited its incorporation into product compilers. This paper presents iterative modulo scheduling, a practical algorithm that is capable of dealing with realistic machine models. The paper also characterizes the algorithm in terms of the quality of the generated schedules as well the computational expense incurred.},
@@ -1780,6 +1855,21 @@ and Rehof, Jakob",
 	series = {POPL '08},
 	title = {Formal Verification of Translation Validators: A Case Study on Instruction Scheduling Optimizations},
 	year = {2008}
+}
+
+@inproceedings{tristan10_simpl_verif_valid_softw_pipel,
+	author = {Tristan, Jean-Baptiste and Leroy, Xavier},
+	location = {Madrid, Spain},
+	publisher = {Association for Computing Machinery},
+	url = {https://doi.org/10.1145/1706299.1706311},
+	booktitle = {Proceedings of the 37th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+	doi = {10.1145/1706299.1706311},
+	isbn = {9781605584799},
+	keywords = {symbolic execution,coq,verification,translation validation,loop scheduling,compiler optimisation,software pipelining},
+	pages = {83--92},
+	series = {POPL '10},
+	title = {A Simple, Verified Validator for Software Pipelining},
+	year = {2010}
 }
 
 @inproceedings{tu95_effic_build_placin_gatin_funct,

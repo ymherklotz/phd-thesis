@@ -38,7 +38,7 @@ finding bugs in the trusted parts of the code.
 \begin{example}[A miscompilation bug in Vivado HLS]
 \label{ex:vivado_miscomp}
 Figure~\ref{fig:vivado_bug1} shows a program that produces the wrong result
-during RTL simulation in Xilinx Vivado HLS v2018.3, v2019.1 and
+during hardware simulation in Xilinx Vivado HLS v2018.3, v2019.1 and
 v2019.2.\footnote{This program, like all the others in this paper, includes a
   \texttt{main} function, which means that it compiles straightforwardly with
   GCC. To compile it with an HLS tool, we rename \texttt{main} to
@@ -68,9 +68,10 @@ int main() {
 \end{minted}
 \end{minipage}
 \caption[Miscompilation bug in Xilinx Vivado HLS v2018.3, v2019.1 and
-v2019.2. The generated RTL returns \texttt{0x006535FF} but the correct result is
-\texttt{0x046535FF}.]{Miscompilation bug in Xilinx Vivado HLS. The generated RTL
-  returns \texttt{0x006535FF} but the correct result is \texttt{0x046535FF}.}%
+v2019.2. The generated hardware returns \texttt{0x006535FF} but the correct
+result is \texttt{0x046535FF}.]{Miscompilation bug in Xilinx Vivado HLS. The
+  generated hardware returns \texttt{0x006535FF} but the correct result is
+  \texttt{0x046535FF}.}%
 \label{fig:vivado_bug1}
 \end{figure}
 
