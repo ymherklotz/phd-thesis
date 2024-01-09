@@ -1,29 +1,37 @@
 \addchap{Abstract}
 
-Latency, throughput, and energy efficiency are become increasingly important,
-leading to more custom hardware accelerators being designed for numerous
-applications instead of using less efficient general processors.  Alas,
-designing these accelerators can be a tedious and error-prone process,
-especially when using \glspl{HDL} such as Verilog or VHDL which operate at the
-register transfer level where the hardware needs to be described manually.  As
-the complexity of these hardware designs increases, designing hardware at this
-level becomes less productive and checking that the hardware designs behave as
-expected becomes increasingly difficult.  An attractive alternative is
-\emph{\gls{HLS}}, where hardware designs are automatically compiled from
-software written in a high-level language like C.  This way, hardware design can
-benefit from mature software development tools while working on the general
-functionality of the hardware design, and then use a modern \gls{HLS} tools such
-as \legup{}~\cite{canis13_l}, Vitis HLS~\cite{amd23_vitis_high_synth}, Intel
-i++~\cite{intel20_hsc}, Stratus HLS~\cite{roane23_autom_hw_sw_co_desig} and
-Bambu HLS~\cite{pilato13_bambu} to produce the hardware design at the register
-transfer level.  These \gls{HLS} tools promise designs with comparable
-performance and energy-efficiency to those hand-written in an
-\gls{HDL}~\cite{homsirikamol14_can, gauthier20_high_level_synth,
-  pelcat16_desig_hdl}.  This reduces the time needed to design new hardware
-accelerators and as the design is performed at a higher level, this should also
-make the process less error-prone.
+Latency, throughput, and energy efficiency are becoming increasingly important,
+leading to custom hardware accelerators being designed for numerous applications
+instead of using less efficient general processors.  Alas, designing these
+accelerators can be a tedious and error-prone process, especially when using
+\glspl{HDL} such as Verilog or VHDL, which operate at the register transfer
+level where the hardware needs to be described manually.
+
+An attractive alternative is \emph{\gls{HLS}}, where hardware designs are
+automatically compiled from software written in a high-level language like C.
+This way, hardware design can benefit from mature software development tools
+while working on the general functionality of the hardware design, while promise
+designs with comparable performance and energy-efficiency to those hand-written
+in an \gls{HDL}.  This reduces the time needed to design new accelerators, but
+it should also make the process less error-prone, as one can reason about the
+behaviour of the hardware at a higher level.  Unfortunately, \gls{HLS} tools
+have been found to be unreliable, for example, Vivado HLS produces incorrect
+designs in up to 1.2\% of randomly generated C programs.  This undermines
+testing that was performed at the higher level of abstraction.
+
+We propose a formally verified \gls{HLS} tool called Vericert, which extends
+CompCert, an existing formally verified C compiler, with a hardware back end.
+Vericert branches off from the CompCert middle end and first parallelises the
+instructions by scheduling hyperblocks, large regions of code without loops.
+Scheduling places instructions into clock cycles, producing a finite-state
+machine.  This state machine is then refined and transformed into a subset of
+Verilog, which can subsequently be synthesised to a netlist.  Compared to a
+state-of-the-art \gls{HLS} tool called Bambu, Vericert produces designs that are
+around $1.6\times$ slower than Bambu with some optimisations turned off, and
+$3.6\times$ slower than Bambu with the default optimisations turned on.
 
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "thesis"
+%%% TeX-engine: luatex
 %%% End:

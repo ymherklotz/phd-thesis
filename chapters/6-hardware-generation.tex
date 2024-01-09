@@ -444,7 +444,9 @@ instructions will have to be gated by the same negated control-flow predicate,
 but do not themselves modify the value of the negated control-flow predicate for
 any following instructions.
 
-\YH{TODO: Describe return instruction translation.}
+Finally, \texttt{return} instructions are translated to an assignment of 1 to
+the \htl{} finish register, signalling that the hardware has finished computing,
+and the result that should be returned is assigned to the return register.
 
 \subsubsection{Translating the top-level function}
 
@@ -490,11 +492,10 @@ There is quite a large mismatch between the \htl{} semantics and the
 As \htl{} is quite far removed from \rtlsubpar{}, this first translation is the
 most involved and therefore requires a larger proof, because the translation
 from \rtlsubpar{} instructions to Verilog statements needs to be proven correct
-in this step.  In addition to that, the semantics of \htl{} are also quite
-different to the \rtlsubpar{} semantics. Instead of defining small-step
-semantics for each construct in Verilog, the semantics are defined over one
-clock cycle and mirror the semantics defined for Verilog.  \Cref{lemma:htl}
-shows the result that needs to be proven in this subsection.
+in this step. Instead of defining small-step semantics for each construct in
+Verilog, the semantics are defined over one clock cycle and mirror the semantics
+defined for Verilog.  \Cref{lemma:htl} shows the result that needs to be proven
+in this subsection.
 
 \begin{lemma}[Forward simulation from \rtlsubpar{} to \htl{}]\label{lemma:htl}
   Writing \texttt{tr\_htl} for the translation from \rtlsubpar{} to \htl{}, we
@@ -687,11 +688,11 @@ turn.  Stores can be replaced by the necessary wires to the \gls{BRAM}
 directly. Loads are a little more subtle: loads that use the \gls{BRAM}
 interface take two clock cycles where a direct load from an array takes only
 one, so this pass inserts an extra state after each load.  The scheduling
-algorithm described in \cref{sec:hs:scheduling-algorithm} can already take this
-into account as well, and can ensure that the next clock cycle after a load does
-not perform a load or a store, however, some additional proofs would have to be
-added to this transformation pass to check that this is actually the case, and
-that the load will proceed as expected.
+algorithm described in \cref{sec:hs:implementing-scheduling} can already take
+this into account as well, and can ensure that the next clock cycle after a load
+does not perform a load or a store, however, some additional proofs would have
+to be added to this transformation pass to check that this is actually the case,
+and that the load will proceed as expected.
 
 %\JW{I've called that negedge always-block the `\gls{BRAM} driver' in my proposed text above -- that feels like quite a nice a word for it to my mind -- what do you think?}\YH{Yes I quite like it!}
 %Verilog arrays can be used in a variety of ways, however, these do not all
@@ -1278,11 +1279,8 @@ The main sub-proof that is needed to prove the forward simulation correct is
 that the execution of statements in each state results in equivalent
 \emph{merged} association maps from the blocking and nonblocking assignments.
 In \cref{fig:hg:forward-substitution} this corresponds to showing that
-$\interstate{4}{\asgnblockingbefore} \verilogmerge \Delta^{\mathrm I}_{\mathrm r} =
-{\Gamma'}^{\mathrm I}_{\mathrm r} \verilogmerge {\Delta'}^4_{\mathrm r}$. \YH{TODO:
-  Need to fix the naming scheme as currently one cannot distinguish between the
-  runtime maps before and after substitution.}
-
+$\interstate{4}{\asgnblockingbefore} \verilogmerge \Delta^{0}_{\mathrm r} =
+{\Gamma'}^{0}_{\mathrm r} \verilogmerge {\Delta'}^4_{\mathrm r}$.
 \YH{TODO: Technically it shouldn't be equality but equivalence.}
 
 \begin{lemma}[Equivalence of statement substitution]%
@@ -1336,13 +1334,13 @@ i.e. $\at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}}$, which is the case.
   expression $e$, then the value in the current association map
   $\Gamma_{\mathrm r}$ should be the same as the value obtained from evaluating
   expression $e$ with the initial association map
-  $\Gamma^{\mathrm{I}}_{\mathrm r}$.
+  $\Gamma^{0}_{\mathrm r}$.
 
   \begin{equation*}
     \begin{aligned}
-      &\invinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \defeq \\
+      &\invinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \defeq \\
       &\qquad \forall r\ e\ldotp \at{t}{r} = \some{e} \implies \exists v\ldotp
-      ((\Gamma^{\mathrm{I}}_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
+      ((\Gamma^{0}_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
       \land \at{\Gamma_{\mathrm r}}{r} = \some{v}
     \end{aligned}
   \end{equation*}
@@ -1362,14 +1360,14 @@ $\at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2}} =
   If the register $r$ is not in the substitution map $\substmap$, then the value
   for that register in the blocking assignment association map
   $\Gamma_{\mathrm r}$ should be the same as the value of the register in the
-  initial association map $\Gamma^{\mathrm{I}}_{\mathrm r}$ at the start of the
-  execution of the statement.
+  initial association map $\Gamma^{0}_{\mathrm r}$ at the start of the execution
+  of the statement.
 
   \begin{equation*}
     \begin{aligned}
-      &\invnotinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap}
+      &\invnotinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap}
       \defeq \\
-      &\qquad\forall r\ldotp \at{t}{r} = \cnone \implies \at{\Gamma^{\mathrm{I}}_{\mathrm r}}{r} =
+      &\qquad\forall r\ldotp \at{t}{r} = \cnone \implies \at{\Gamma^{0}_{\mathrm r}}{r} =
       \at{\Gamma_{\mathrm r}}{r}
     \end{aligned}
   \end{equation*}
@@ -1385,22 +1383,30 @@ following.
   substitution $e$, and the result of forward substituting $e$ with map $t$
   resulting in expression $e'$, then executing $e$ with the dynamically updated
   association map $\Gamma_{\mathrm r}$ should be equivalent to executing $e'$
-  with the initial state of all the registers $\Gamma^{\mathrm{I}}_{\mathrm r}$.
+  with the initial state of all the registers $\Gamma^{0}_{\mathrm r}$.
 
   {\normalfont
     \begin{equation*}
       \begin{aligned}
         &\substexpr{\substmap}{e} = \some{e'} \implies \\
-        &\invinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \implies\\
-        &\invnotinsubstmap{\Gamma^{\mathrm{I}}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap} \implies\\
+        &\invinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \implies\\
+        &\invnotinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap} \implies\\
         &\forall v\ldotp ((\Gamma_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
-          \implies ((\Gamma^{\mathrm{I}}_{\mathrm r}, \Gamma_{\mathrm a}), e') \downarrow_{\text{expr}} v
+          \implies ((\Gamma^{0}_{\mathrm r}, \Gamma_{\mathrm a}), e') \downarrow_{\text{expr}} v
       \end{aligned}
     \end{equation*}}
+
+  \begin{proof}[Proof sketch]
+    Using the invariants, one can show that the modified expression $e'$ will
+    behave like the original expression $e$ at the current context
+    $(\Gamma_{\mathrm r}, \Gamma_{\mathrm a})$, when it is evaluated in the
+    initial context at the start of the state, i.e.
+    $(\Gamma^{0}_{\mathrm r}, \Gamma_{\mathrm a})$.
+  \end{proof}
 \end{lemma}
 
-\YH{TODO: Talk a bit more about the top-level proof.  Especially the
-  invariants.}
+% \YH{TODO: Talk a bit more about the top-level proof.  Especially the
+%   invariants.}
 
 \section{Verilog Generation}%
 \label{sec:hg:verilog-generation}

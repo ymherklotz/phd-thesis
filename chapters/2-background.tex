@@ -22,7 +22,7 @@ years of development time.  \Glspl{FPGA} instead provide a platform to test
 custom hardware quickly without these turnaround times, and can be reprogrammed
 at will in case the hardware ever needs to change.  Because they still allow for
 reprogrammability, they can never be as efficient as an equivalent \gls{ASIC}
-design, however, for many application having the chance to reprogram the
+design, however, for many applications having the chance to reprogram the
 hardware is an advantage.  In addition to that, an \gls{FPGA} will still
 generally be more efficient and more performant than running the same workload
 on a general purpose processor.  \Glspl{FPGA} comprise the following four main
@@ -136,11 +136,11 @@ components~\cite{boutros21_fpga_archit}, which are also shown in
   by turquoise blocks being DSPs and green blocks being BRAMs.  The programmable
   interconnects are made up of connection blocks and switches shown in beige and
   yellow respectively.]{\Gls{FPGA} layout, showing an example of a design that
-    is placed and routed on the \gls{FPGA} highlighted in red.  The white blocks
-    correspond to \glspl{LUT}, followed by turquoise blocks being \glspl{DSP}
-    and green blocks being \glspl{BRAM}.  The programmable interconnects are
-    made up of connection blocks and switches shown in beige and yellow
-    respectively.\YH{TODO: Fix colors}}%
+    is placed and routed on the \gls{FPGA} highlighted in red.  The beige blocks
+    correspond to \glspl{LUT}, followed by green blocks being \glspl{DSP} and
+    purple blocks being \glspl{BRAM}.  The programmable interconnects are made
+    up of connection blocks and switches shown in pink and blue
+    respectively.}%
   \label{fig:bg:fpga-layout}
 \end{figure}
 
@@ -149,10 +149,10 @@ Verilog or VHDL, to then be placed onto an \gls{FPGA} is to first
 \emph{synthesise} the hardware design, which generates a lower level description
 of the hardware in terms of the resources that are available on the \gls{FPGA}.
 Next, the netlist is place-and-routed on the \gls{FPGA}, which assigns a
-physical location to each resources and programs the interconnects so that all
-the components are connected properly.  This description low-level description
-of the hardware is then turned into a bit stream that will program all the
-individual resources on the \gls{FPGA}.  The result can be seen in
+physical location to each resource and programs the interconnects so that all
+the components are connected properly.  This low-level description of the
+hardware is then turned into a bit stream that will program all the individual
+resources on the \gls{FPGA}.  The result can be seen in
 \cref{fig:bg:fpga-layout} by looking at the highlighted paths in red, as the
 place-and-route process placed logical functions into \glspl{LUT} and connected
 them together correctly, also making use of a \gls{BRAM} and a \gls{DSP}.
@@ -162,12 +162,11 @@ them together correctly, also making use of a \gls{BRAM} and a \gls{DSP}.
 
 This section will introduce Verilog for readers who may not be familiar with the
 language, concentrating on the features that are used in the output of
-\vericert{}.  Verilog is a hardware description language (HDL) and is used to
-design hardware ranging from complete CPUs that are eventually produced as
-integrated circuits, to small application-specific accelerators that are placed
-on FPGAs.  Verilog is a popular language because it allows for fine-grained
-control over the hardware, and also provides high-level constructs to simplify
-development.
+\vericert{}.  Verilog is an \gls{HDL} and is used to design hardware ranging
+from complete CPUs that are eventually produced as integrated circuits, to small
+application-specific accelerators that are placed on FPGAs.  Verilog is a
+popular language because it allows for fine-grained control over the hardware,
+and also provides high-level constructs to simplify development.
 
 Verilog behaves quite differently to standard software programming languages due
 to it having to express the parallel nature of hardware.  The basic construct to
@@ -175,7 +174,7 @@ achieve this is the always-block, which is a collection of assignments that are
 executed every time some event occurs.  In the case of \vericert{}, this event
 is either a positive (rising) or a negative (falling) clock edge.  All
 always-blocks triggering on the same event are executed in
-parallel. Always-blocks can also express control-flow using if-statements and
+parallel. Always-blocks can also express control flow using if-statements and
 case-statements.
 
 % \NR{Might be useful to talk about registers must be updated only within an
@@ -255,7 +254,7 @@ clock cycle.  Finally, the last always-block will set the state to 0 again.
 There are many different types of \gls{HLS}, which can vary in terms of the
 languages they accept or the devices that are targeted, however, they often
 share similar steps in how the translation is performed, as they all go from a
-higher-level, behavioural description of the algorithm to a timed hardware
+higher level, behavioural description of the algorithm to a timed hardware
 description.  In this dissertation, we will assume that we are targeting
 \glspl{FPGA} instead of \glspl{ASIC}, which lead to different resources that are
 available to the \gls{HLS} tool to target.
@@ -278,8 +277,8 @@ following~\cite{coussy09_introd_to_high_level_synth,canis13_l}:
 
 \item[Hardware resource allocation] Depending on if the hardware target is a
   specific \gls{FPGA} or an \gls{ASIC} built on a specific technology library,
-  the \gls{HLS} tool will have to allocated resources differently.  For example,
-  on \glspl{FPGA} there are only a limited number of \glspl{LUT}, \gls{DSP}
+  the \gls{HLS} tool will have to allocate resources differently.  For example,
+  on \glspl{FPGA} there are only a limited number of \glspl{LUT} and \glspl{DSP}
   available.  The \gls{HLS} tool therefore often decides ahead of time which
   resources the program will need based on the operations that are present in
   the program.  A few resources are often assumed to be infinite to simplify the
@@ -524,7 +523,7 @@ represented as a list will have labels attached to them, and goto instructions
 can then jump to those labels.  These jumps are represented using the dashed
 arrows in the figure.  This is the simplest representation of the code as it is
 completely linear, however, analysing such a program will be more difficult
-because a lot of information, such as a lot of edges, are implicit in the
+because a lot of information, such as a lot of edges, is implicit in the
 representation.  Every analysis pass would have to reconstruct the control-flow
 edges between the nodes, which would have to be stored as a graph, so lists are
 likely only to be the final representation of the code.
@@ -558,7 +557,7 @@ shown in \cref{fig:data-structure-comparison:dfg}, where arrows now represent
 data dependencies between nodes instead of control-flow dependencies.
 
 As can be observed in the diagram, the edges between the nodes are very
-different to the edges in the \gls{CFG}, as nodes in the \gls{CFG} may not have
+different to the edges in the \gls{CFG}.  Nodes in the \gls{CFG} may not have
 \emph{needed} to be in that particular order, because when two instructions are
 independent, one still needs to define an order between them.  Additionally, we
 have added two additional nodes to handle the back edges of the loop, which are
@@ -755,15 +754,15 @@ of code without back edges as a single block.  For example, the block present in
 the \gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg} could not be
 represented by a \gls{superblock}.  \Glspl{hyperblock} are defined as
 \glspl{basic block} of \glspl{predicated instruction} with arbitrary outgoing
-edges~\cite[]{mahlke92_effec_compil_suppor_predic_execut_using_hyper}, meaning
-they can represented arbitrary branching code without incoming edges, and are
-therefore an extension to \glspl{superblock}.  This means that they could
-represent the \gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg}, and
-an example of a hyperblock is shown in \cref{fig:block-comparison:hyperblocks},
-where code within the \gls{hyperblock} has been linearised instead of containing
-a \gls{DFG}.  This leads to possibly more complex control flow than in both of
-the previous cases, however, it can be reasoned with using a \gls{SAT} or
-\gls{SMT} solver.
+edges~\cite[]{mahlke92_effec_compil_suppor_predic_execut_using_hyper}.  They can
+represent arbitrary branching code without incoming edges, and are therefore an
+extension to \glspl{superblock}.  This means that they could represent the
+\gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg}, and an example of
+a hyperblock is shown in \cref{fig:block-comparison:hyperblocks}, where code
+within the \gls{hyperblock} has been linearised instead of containing a
+\gls{DFG}.  This leads to possibly more complex control flow than in both of the
+previous cases, however, it can be reasoned with using a \gls{SAT} or \gls{SMT}
+solver.
 
 \section{Scheduling}%
 \label{sec:bg:scheduling}
@@ -802,8 +801,8 @@ node corresponds to the longest path from the start of the \gls{DFG} to that
 node.  If instead the start time of a node is taken to be the longest path from
 the node to the end of the \gls{DFG}, then this would result in an \gls{ALAP}
 schedule.  These two types of schedules show the \emph{slack} of a particular
-operation, which can be exploited by schedulers to minimise resources by still
-obtaining the minimum latency.
+operation, which can be exploited by schedulers to minimise resources but still
+minimise latency.
 
 A more advanced scheduler can either optimise for resource usage based on a
 maximum latency or for latency based on a maximum amount of resources.  In
@@ -847,7 +846,7 @@ Other types of constraints that are normally added to get a valid schedule are:
   edges therefore need to be removed during the \gls{SDC} construction, as
   otherwise the system would become unsatisfiable.
 
-\item[Relative timing constraint] This constraint ensure that two operations
+\item[Relative timing constraint] This constraint ensures that two operations
   are separated by at least or at most a fixed number of cycles.  This can be
   used to satisfy I/O timings.
 
@@ -855,7 +854,7 @@ Other types of constraints that are normally added to get a valid schedule are:
   of blocks.
 
 \item[Cycle time constraint] This constraint is used to target a specific final
-  clock period, and split long combinational paths through the \gls{DFG} up into
+  clock period, and split up long combinational paths through the \gls{DFG} into
   separate cycles.  This allows for \emph{\gls{operation chaining}}, whereby
   multiple operations that are estimated to have a latency less than a clock
   cycle can be chained within the same clock cycle.
@@ -901,12 +900,12 @@ however, the scheduling is then done dynamically at run time, depending on how
 long each primitive takes to finish and when the tokens activate the next
 operations.
 
-The benefits of this approach over static scheduling is that the latency of
-these circuits is normally significantly lower than the latency of static
-scheduled circuits, because they can take advantage of runtime information of
-the circuit.  However, because of the signalling required to perform the runtime
-scheduling, the area of these circuits is usually much larger than the area of
-static scheduled circuits.  In addition to that, much more analysis is needed to
+The benefit of this approach over static scheduling is that the latency of these
+circuits is normally significantly lower than the latency of static scheduled
+circuits, because they can take advantage of runtime information of the circuit.
+However, because of the signalling required to perform the runtime scheduling,
+the area of these circuits is usually much larger than the area of static
+scheduled circuits.  In addition to that, much more analysis is needed to
 properly parallelise loads and stores to prevent bugs, which requires the
 addition of buffers in certain locations.
 
@@ -941,7 +940,7 @@ logic, for example by including linear integer arithmetic or a theory of arrays.
 This is powerful, and means that \gls{SMT} solvers such as
 Z3~\cite[]{moura08_z}, cvc5~\cite[]{barbosa22_cvc5},
 Boolector~\cite[]{brummayer09_b} or veriT~\cite{bouton09} are used by
-higher-level automatic verification tools such as bounded model checkers like
+higher level automatic verification tools such as bounded model checkers like
 CBMC~\cite[]{kroening14_c} or verification aware programming languages like
 Dafny~\cite[]{leino10_d}.
 
@@ -953,26 +952,25 @@ Formal~\cite[]{synopsys23_v}.  More details about current hardware verification
 methodologies are given in \cref{sec:bg:unmechanised-verification-of-hls},
 especially as they apply to \gls{HLS}.
 
-One question one might have is how can one trust the answer of such automatic
-theorem provers?  From a high-level, they are running an opaque, highly
-optimised algorithm and return an answer to the problem, which may be incorrect.
-If the formula is satisfiable, the solution is simple.  The solver can provide a
-model that satisfies the formula.  Checking if the solver gave the right answer
-is just a matter of checking that the model satisfies the formula.  If the
-formula is unsatisfiable, the solver will return \enquote{unsat} as the answer
-as there is no model.  Checking that a formula is actually unsatisfiable without
-having to trust the \gls{SMT} solver can be done if the \gls{SMT} solver can
-generate a proof witness, which can be checked by an independent, trusted
-checker.  Proof witnesses are normally a series of rewrites of axioms or basic
-lemmas that translate the original formula into \textit{false}.  If one trusts
-the checker, one does not have to trust the \gls{SMT} solver, because if it can
-generate a valid proof witness, then one knows that the formula has to be
-equivalent to \textit{false}.  Some examples of \gls{SMT} solvers that can
-generate proof witnesses are veriT~\cite{bouton09} or
-cvc5~\cite[]{barbosa22_cvc5}, and the proof witnesses generated by these tools
-can actually be checked by a formally verified proof checker called
-SMTCoq~\cite{armand11_modul_integ_sat_smt_solver}, so that these proofs of
-\gls{SMT} formulas can be used in a verified context.
+How can one trust the answer of such automatic theorem provers?  From a
+high-level, they are running an opaque, highly optimised algorithm and return an
+answer to the problem, which may be incorrect.  If the formula is satisfiable,
+the solution is simple: the solver can provide a model that satisfies the
+formula.  Checking if the solver gave the right answer is just a matter of
+checking that the model satisfies the formula.  If the formula is unsatisfiable,
+the solver will return \enquote{unsat} as the answer as there is no model.
+Checking that a formula is actually unsatisfiable without having to trust the
+\gls{SMT} solver can be done if the \gls{SMT} solver can generate a proof
+witness, which can be checked by an independent, trusted checker.  Proof
+witnesses are normally a series of rewrites of axioms or basic lemmas that
+translate the original formula into \textit{false}.  If one trusts the checker,
+one does not have to trust the \gls{SMT} solver, because if it can generate a
+valid proof witness, then one knows that the formula has to be equivalent to
+\textit{false}.  Some examples of \gls{SMT} solvers that can generate proof
+witnesses are veriT~\cite{bouton09} or cvc5~\cite[]{barbosa22_cvc5}, and the
+proof witnesses generated by these tools can actually be checked by a formally
+verified proof checker called SMTCoq~\cite{armand11_modul_integ_sat_smt_solver},
+so that these proofs of \gls{SMT} formulas can be used in a verified context.
 
 Unfortunately, equivalence checkers used to verify designs or formal
 verification tools to prove assertions about hardware normally do not produce a
@@ -1019,7 +1017,7 @@ More details on how an interactive theorem prover is used to develop verified
 programs is described in
 \cref{sec:bg:mechanised-compiler-proofs,sec:bg:compcert}.
 
-\YH{TODO: Expand on section.}
+\YH{TODO: Maybe expand on section.}
 
 \section{Verification of High-Level Synthesis}
 
@@ -1029,11 +1027,12 @@ tools are validated.  First, we will describe unmechanised verification of
 been formalised in an interactive theorem prover.  Next, we will describe
 mechanised verification around \gls{HLS}.
 
-A summary of the related works can be found in \cref{fig:related_euler}, which
-is represented as an Euler diagram.  The categories chosen for the Euler diagram
-are: whether the tool is usable, whether it takes a high-level software language
-as input, whether it has a correctness proof, and finally whether that proof is
-mechanised.  The goal of \vericert{} is to cover all of these categories.
+A summary of the related works can be found in \cref{fig:bg:related_euler},
+which is represented as an Euler diagram.  The categories chosen for the Euler
+diagram are: whether the tool is usable, whether it takes a high-level software
+language as input, whether it has a correctness proof, and finally whether that
+proof is mechanised.  The goal of \vericert{} is to cover all of these
+categories.
 
 Most practical \gls{HLS}
 tools~\cite{canis13_l,amd23_vitis_high_synth,intel20_sdk_openc_applic,nigam20_predic_accel_desig_time_sensit_affin_types}
@@ -1202,14 +1201,13 @@ tokens are used to start the next operations.  To take advantage of the parallel
 nature of hardware, occam has explicit concurrency using the PAR constructs with
 channels to share state.  Handel-C, a version of occam with many more features
 such as memory and pointers, and is described further in
-\cref{sec:bg:mechaniced-handel-c-to-netlist-translation} as there is mechanised
-translation from Handel-C into a netlist.  One thing to note about these
-translations from occam and Handel-C into netlists is that they are essentially
-timed languages in SEQ blocks.  This is because every assignment takes one cycle
-to complete and expressions are assumed to finish evaluation within that cycle.
-No automatic scheduling is performed by the translation, and the designer has
-full control over the design and can manually pipeline and parallelise the
-design.
+\cref{sec:bg:mechanised-compiler-proofs} as there is mechanised translation from
+Handel-C into a netlist.  One thing to note about these translations from occam
+and Handel-C into netlists is that they are essentially timed languages in SEQ
+blocks.  This is because every assignment takes one cycle to complete and
+expressions are assumed to finish evaluation within that cycle.  No automatic
+scheduling is performed by the translation, and the designer has full control
+over the design and can manually pipeline and parallelise the design.
 
 \subsection{Mechanised compiler proofs in high-level hardware design}%
 \label{sec:bg:mechanised-compiler-proofs}
@@ -1234,9 +1232,9 @@ the compiler, meaning this method of proving algorithms correct ensures a
 correct compiler.
 
 This section explores formalisation of hardware design in general, focusing
-specifically on higher-level hardware design, by describing formalisations of
-higher-level hardware description languages that are synthesised to a
-lower-level netlist representation of the hardware design.
+specifically on higher level hardware design, by describing formalisations of
+higher level hardware description languages that are synthesised to a lower
+level netlist representation of the hardware design.
 
 \textcite{perna12_mechan_wire_wise_verif_handel_c_synth} developed a
 mechanically verified Handel-C to netlist translation written in HOL.  The
@@ -1278,7 +1276,7 @@ sequential software definition.
 Finally, another related formalisation is Lutsig, a formally verified Verilog
 synthesis tool~\cite[]{lööw21_lutsig}.  This is concerned with translating
 register transfer level Verilog into netlist level Verilog, instead of
-translating from a higher-level specification into hardware.
+translating from a higher level specification into hardware.
 
 \subsection{HLS formalised in Isabelle}
 
@@ -1298,7 +1296,7 @@ netlist format is written in Isabelle, which is a theorem prover comparable to
 Coq.
 
 As both the input IR and output netlist format have been designed from scratch,
-there is no description of a translation from a higher-level languages into the
+there is no description of a translation from a higher level languages into the
 \gls{SSA} form, as well as no description on how to map the netlist language
 onto an \gls{FPGA}.  These translations would likely remain unverified.  A
 custom IR and netlist was used to describe how the correctness between the two
@@ -1431,18 +1429,18 @@ have different colours.  It is therefore clear that checking the colouring of
 such a graph is simple, as one can check that nodes connected by an edge have
 different colours.  However, proving that such an algorithm will always produce
 such a graph is more difficult because many heuristics can be used during the
-graph colour to try and achieve the fewest colours efficiently.  The algorithm
-that checks the colours of the graph is called the validator.  CompCert
-implements register allocation in this way, performing the register allocation
-in unverified OCaml code, and implementing a verified validator for register
-allocation in Coq.  This still produces a verified translation, as CompCert is
-allowed to fail on inputs, in which case no correctness theorem holds.  For
-translation validation, that means that as long as compilation only proceeds
-when the validator succeeds, it is equivalent to having verified the
-transformation correct.  However, unlike verifying transformations correct
-directly, using a validator means that it needs to check the correctness
-criterion every time the compiler is run, meaning the efficiency of the
-validator is also important to take into account.
+graph colouring to try and achieve the fewest colours efficiently.  The
+algorithm that checks the colours of the graph is called the validator.
+CompCert implements register allocation in this way, performing the register
+allocation in unverified OCaml code, and implementing a verified validator for
+register allocation in Coq.  This still produces a verified translation, as
+CompCert is allowed to fail on inputs, in which case the correctness theorem
+holds trivially.  For translation validation, that means that as long as
+compilation only proceeds when the validator succeeds, it is equivalent to
+having verified the transformation correct.  However, unlike verifying
+transformations correct directly, using a validator means that it needs to check
+the correctness criterion every time the compiler is run, meaning the efficiency
+of the validator is also important to take into account.
 
 \subsection{CompCert correctness theorem}%
 \label{sec:bg:compcert-correctness-theorem}
@@ -1456,16 +1454,16 @@ programs written in Assembly.
 
 Small-step semantics in CompCert are defined as a labelled transition system.  A
 transition between states $s$ and $s'$, emitting events $t$, is denoted as a
-single step $s \oset{t}{\longrightarrow} s'$.  In addition to that, one needs to
-define an initial state and a final state.  Finally, each program is also
+single step $s \oset{t}{\longrightarrow} s'$.  In addition to that, one also
+needs to designate an initial state and a final state, the latter returning the
+final result after executing the program.  Finally, each program is also
 associated with a global environment.  CompCert defines a small-step semantics
-framework that can be reused by most languages, defining additional useful
+framework that can be reused by most languages, providing additional useful
 constructs such as the reflexive, transitive closure of $\longrightarrow$
 denoted as $\longrightarrow^{*}$ or the transitive \enquote{plus} closure
 denoted as $\longrightarrow^{+}$.  A semantics for a CompCert language is
-created by defining the type for the state, the definition for a step in the
-semantics, defining the initial and final states and the global environment of
-the program.
+created by defining the type for the state, for a step in the semantics, and the
+initial and final states and the global environment of the program.
 
 \paragraph{Program behaviour}
 
@@ -1502,9 +1500,9 @@ program semantics and compiled program semantics, stated as follows.
 \end{theorem}
 
 A direct corollary of this is the following semantic preservation, where one
-proves that the source program is \emph{safe}, i.e. that it is free of undefined
-behaviour.  In that case, one cannot define any more behaviour, so $B$ must be a
-valid behaviour for the source program.
+proves that the source program is \emph{safe}, i.e. that it is free of behaviour
+that goes wrong.  In that case, one cannot define any more behaviour, so $B$
+must be a valid behaviour for the source program.
 
 \begin{corollary}[Refinement of compilation]
   If a successfully compiled assembly program $C$ has a behaviour $B$ and the
@@ -1542,8 +1540,8 @@ produces a state $s_2$ that matches with state $c_2$.  If the state transition
 in the compiled program does not emit a trace, but some measure on the state has
 a well-founded order that decreases, then the source semantics may stall as long
 as $s_1$ matches with both $c_1$ and $c_2$.  In addition to that, to be able to
-show semantic preservation from the backward simulation, one also needs to
-prove that the compiled program make progress if there exist transitions in the
+show semantic preservation from the backward simulation, one also needs to prove
+that the compiled program makes progress if there exist transitions in the
 source program from two matching states $s_1$ and $c_1$.  This is shown in
 \cref{fig:bg:backwards-progress-property}.
 
@@ -1562,13 +1560,16 @@ source program from two matching states $s_1$ and $c_1$.  This is shown in
       \draw[imparrow] (t1) -- node[right] {$t$} (t2);
       \draw (s1) -- node[above] {$\approx$} (t1);
       \draw[dashed] (s2) -- node[below] {$\approx$} (t2);
-      \begin{scope}[xshift=3cm]
-        \node (s1) {$s_1$}; \node[right=of s1] (t1) {$c_1$}; \node[below=of t1]
-        (t2) {$c_2$}; \draw[dashed] (s1) -- node[left,yshift=-1mm] {$\approx$}
-        (t2); \draw[imparrow] (t1) -- node[right] (nothing) {$\varnothing$}
-        (t2); \draw (s1) -- node[above] {$\approx$} (t1); \node[right=of
-        nothing] (wf) {$m(c_2) < m(c_1)$}; \path (nothing) -- node {$\land$}
-        (wf);
+      \begin{scope}[xshift=5cm,yshift=1cm]
+      \node (s1) {$s_1$};
+      \node[below=of s1] (s2) {$s_2$};
+      \node[right=of s1] (t1) {$c_1$};
+      \path (s2) -| node (t2) {$c_2$} (t1);
+      \draw[imparrow,dashed] (s1) -- node[left] {$t$} node[below right,font=\scriptsize] {$*$} (s2);
+      \draw[imparrow] (t1) -- node[right] {$t$} (t2);
+      \draw (s1) -- node[above] {$\approx$} (t1);
+      \draw[dashed] (s2) -- node[below] (app) {$\approx$} (t2);
+      \node[below=2mm of app] {with $|c_2| < |c_1|$};
       \end{scope}
     \end{tikzpicture}
   \caption{Backward simulation diagrams with a well-founded order on the
@@ -1609,11 +1610,11 @@ behaviours in the compiled program that were not behaviours of the source
 program.
 
 However, if one can show that the semantics of the compiled program is
-deterministic, then the forward simulation implies the backward
-simulation.\footnote{In practice, one can be more precise and have properties on
-  the source and compiled program, such that one can show that the source
-  program is \emph{receptive} and the target program \emph{determinate}.}  In
-addition to that, forward simulations as well as backward simulations can be
+deterministic, then the forward simulation implies the backward simulation.
+%\footnote{In practice, one can be more precise and have properties on
+%  the source and compiled program, such that one can show that the source
+%  program is \emph{receptive} and the target program \emph{determinate}.}
+In addition to that, forward simulations as well as backward simulations can be
 composed.  This means that one can prove a forward simulation for each
 transformation shown in \cref{fig:bg:compcert-languages} from Clight to Assembly
 which implies a forward simulation from Clight to Assembly.  After showing that
@@ -1639,17 +1640,20 @@ simulation from Assembly to Clight.
     \centering
     \begin{tikzpicture}
       \node (s1) {$s_1$};
-      \node[right=of s1] (t1) {$c_1$};
       \node[below=of s1] (s2) {$s_2$};
-      \draw[dashed] (t1) -- node[right,yshift=-1mm] (nothing) {$\approx$} (s2);
-      \draw[imparrow] (s1) -- node[left] {$\varnothing$} (s2);
+      \node[right=of s1] (t1) {$c_1$};
+      \path (s2) -| node (t2) {$c_2$} (t1);
+      \draw[imparrow] (s1) -- node[left] {$t$} (s2);
+      \draw[imparrow,dashed] (t1) -- node[right] {$t$} node[below left,font=\scriptsize] {$*$} (t2);
       \draw (s1) -- node[above] {$\approx$} (t1);
-      \node[right=of nothing] (wf) {$m(s_2) < m(s_1)$};
-      \path (nothing) -- node {$\land$} (wf);
+      \draw[dashed] (s2) -- node[below] (app) {$\approx$} (t2);
+      \node[below=2mm of app] {with $|s_2| < |s_1|$};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Forward simulation diagrams with a well-founded order on the source
-    program state.}%
+  \caption{Forward simulation diagrams, either performing one or more steps in
+    the target program using the \enquote{plus} forward simulation, or
+    performing zero or more steps in the target program with a well-founded
+    order on the target program states.}%
   \label{fig:bg:forwards-simulation-diagram}
 \end{figure}
 
@@ -1721,22 +1725,24 @@ then optimise the validator and extend it so that it works with the Kalray KVX
 integrated into a fork of CompCert called CompCert KVX~\cite[]{six23_c}.  In
 both these cases, the list scheduling algorithm works on the Mach intermediate
 language in CompCert, but in the case of CompCert KVX the list scheduling pass
-is also used to transform the Mach into Assembly.  The schedule is validated
-after the fact by running symbolic execution before and after scheduling and
-comparing the resultant symbolic states.  List scheduling is performed on
-\glspl{basic block}.  These are implicitly represented in
+is also used to transform the Mach into Assembly.  List scheduling is performed
+on \glspl{basic block}.  These are implicitly represented in
 \textcite{tristan08_formal_verif_trans_valid}, but are explicitly constructed in
 \textcite{six20_certif_effic_instr_sched} as an \textsc{AsmBlock} language,
 making it easier to reason about transformations in individual blocks.
 
-If the scheduler only \emph{reorders} instructions, structural equality suffices
-for comparing symbolic states.  \citeauthor*{six20_certif_effic_instr_sched}
-also perform peephole optimisations and therefore include a symbolic expression
-rewriting step that normalises the symbolic expressions based on the rewrites
-that the scheduler can perform.  However, the scheduler is unverified, and it
-could therefore introduce new instructions.  This means that the comparison of
-the symbolic state does not imply equivalent behaviour, consider the following
-example:
+The schedule is validated after the fact by running symbolic execution before
+and after scheduling.  The symbolic execution of both blocks starts with the
+same symbolic state, sequentially symbolically executing each instruction while
+updating the symbolic state.  The final states reached for both the block before
+and after scheduling can then be compared.  If the scheduler only
+\emph{reorders} instructions, structural equality suffices for comparing
+symbolic expressions, as an instruction is only reordered if it does not break
+any data-dependencies.  In that case, the symbolic expressions for the reordered
+instruction would be identical as they were independent.  However, the scheduler
+is unverified, and it could therefore introduce new instructions.  This means
+that the comparison of the symbolic state is not enough to show equivalent
+behaviour.  Consider the following example:
 
 \begin{center}
 \begin{tikzpicture}
@@ -1764,9 +1770,9 @@ transformed block may encounter undefined behaviour when \rtlinline`r1` is 0.
 To guard against the scheduler introducing additional instructions that may have
 undefined behaviour, \citeauthor*{tristan08_formal_verif_trans_valid} introduce
 the concept of \emph{constraints}, which is the set of all previously
-encountered operations.  In the case of the example, the set of the original
-block would be empty, whereas the constraints of the second block would be
-$\set{\mrtl{5} \adiv \mrtl{r1}}$.  For correctness, the scheduled basic block
+encountered operations.  In the case of the example, the constraint set of the
+original block would be empty, whereas the constraints of the second block would
+be $\set{\mrtl{5} \adiv \mrtl{r1}}$.  For correctness, the scheduled basic block
 should therefore not introduce new constraints, like in the previous example.
 Instead, the validation has to ensure that the constraints of the scheduled
 block are a subset of the constraints of the original block.
@@ -1855,8 +1861,10 @@ comparisons.
     \end{tikzpicture}
     \caption{Block transfer language (\textsc{Btl})}\label{fig:block-comparison:btl}
   \end{subfigure}
-  \caption{Comparison of basic blocks, superblocks and hyperblocks.}%
-  \label{fig:block-comparison}
+  \caption{Comparison of the graph of trees structure and the block transfer
+    language (\textsc{Btl}) structure, extending the comparisons shown in
+    \cref{fig:block-comparison}.}%
+  \label{fig:block-comparison-second}
 \end{figure}
 
 \textcite{tristan08_formal_verif_trans_valid} also formalises a version of trace
@@ -1866,14 +1874,14 @@ This gives more freedom to the scheduler, leading to more optimal code in most
 cases.  The first part of the trace scheduling algorithm is to transform the
 \gls{CFG} into a graph of trees representation, shown in
 \cref{fig:block-comparison:graph-of-trees}.  This representation is similar to
-the superblock representation in that tail duplication is needed to represent
-any internal joining control flow.  However, this tail duplication then means
-that the whole block can be represented as a single tree.  Instructions can then
-be reordered by the scheduler within a tree.  In general, tail duplication
-should be avoided as it can result in an exponential increase in the number of
-nodes.  The boundaries of the trees are chosen by calculating possible cut
-points in the \gls{CFG}, which correspond to labels that are the target of back
-edges, or function calls.
+the superblock representation shown in \cref{fig:block-comparison:superblocks}
+in that tail duplication is needed to represent any internal joining control
+flow.  However, this tail duplication then means that the whole block can be
+represented as a single tree.  Instructions can then be reordered by the
+scheduler within a tree.  In general, tail duplication should be avoided as it
+can result in an exponential increase in the number of nodes.  The boundaries of
+the trees are chosen by calculating possible cut points in the \gls{CFG}, which
+correspond to labels that are the target of back edges, or function calls.
 
 Validation can then be done by running the symbolic execution over the tree and
 comparing symbolic states in the same way as was done for list scheduling when
@@ -1927,21 +1935,30 @@ requires validation of symbolic states at each exit of the superblock with the
 corresponding exit in the scheduled \gls{superblock}.  This is similar to the
 validation of graph of trees, except that traces are still lists instead of
 trees.  \textcite[]{gourdin23_fvopbs} later replaced \textsc{Rtlpath} with
-\textsc{Btl}, a general intermediate block language shown in
-\cref{fig:block-comparison:btl}.  This block languages is defined as a nested
-structure of blocks with conditionals, and are therefore general enough to
-represent \glspl{hyperblock}.  The main difference between the graph of trees
-representation and \textsc{Btl} is that graph of trees cannot represent a
-sequence of two trees, which is representable in \textsc{Btl}.  As the language
-is not restricted to superblocks anymore, the scheduler was modified to work
-with \emph{extended blocks}, which are essentially equivalent to the graph of
-trees representation, as they are trees without any internal joining
-\gls{control flow}.  This makes the scheduler more flexible, making it possible
-to apply light loop pipelining optimisations by scheduling an unrolled loop.
-However, the symbolic execution is still performed on each trace through the
-program, and no sharing between tracing takes place, meaning that the validation
-is exponential in the number of internal joins.  Only extended blocks are
-scheduled so this is avoided.
+\gls{BTL}, a general intermediate block language shown in
+\cref{fig:block-comparison:btl}, where blocks are either:
+\begin{enumerate*}[label=(\arabic*)]
+\item a sequence of blocks, shown in the diagram as being connected by an arrow
+  inside of a grey box,
+\item a conditional instruction containing two blocks, shown as a node with two
+  split arrows pointing to a block,
+\item a standard instruction, shown as a simple node in the graph, or finally
+\item a control-flow instruction, shown as a node in the graph with an edge
+  exiting the block and pointing to a new external block.
+\end{enumerate*}
+\textsc{Btl} is defined as a nested structure of blocks with conditionals, and
+are therefore general enough to represent \glspl{hyperblock}.  The main
+difference between the graph of trees representation and \textsc{Btl} is that
+graph of trees cannot represent a sequence of two trees, which is representable
+in \textsc{Btl}.  As the language is not restricted to superblocks anymore, the
+scheduler was modified to work with \emph{extended blocks}, which are
+essentially equivalent to the graph of trees representation, as they are trees
+without any internal joining \gls{control flow}.  This makes the scheduler more
+flexible, making it possible to apply light loop pipelining optimisations by
+scheduling an unrolled loop.  However, the symbolic execution is still performed
+on each trace through the program, and no sharing between tracing takes place,
+meaning that the validation is exponential in the number of internal joins.
+Only extended blocks are scheduled so this is avoided.
 
 % It is notable that these unverified tools tend towards fewer, larger passes,
 % where several optimisations are packed into \enquote{scheduling}.  This

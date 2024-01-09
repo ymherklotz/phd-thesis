@@ -10,5 +10,8 @@ set style fill solid 1.0
 set xlabel "Test number"
 set ylabel "Time to verify symbolic state (s)"
 
-plot 'unhashed-performance.csv' every ::1 using 2:xtic(1) with points pointtype 5 notitle,\
-     '' every ::1 using 3:xtic(1) with points pointtype 12 notitle
+set key outside;
+set key right;
+
+plot 'unhashed-performance.csv' every ::1 using 2:xtic(1) with points pointtype 5 title "naïve validator",\
+     '' every ::1 using 3:xtic(1) with points pointtype 13 title "hashed predicate validator"

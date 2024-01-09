@@ -557,18 +557,19 @@ be validated, but we save that for future work.)
 \section{Verified If-Conversion}%
 \label{sec:hs:if-conversion}
 
-If-conversion introduces the predicated instructions that form hyperblocks.  As
-mentioned in \cref{sec:overview}, CompCert does have an if-converter already,
-but it applies only in a few special cases. We need a more general algorithm
-that can handle arbitrary branching code.
+If-conversion introduces the predicated instructions that form hyperblocks.
+CompCert does have an if-converter already, but it applies only in a few special
+cases. We need a more general algorithm that can handle arbitrary branching
+code.
 % Such code can be represented using non-branching instructions due to the
 % predicated instructions introduced in \cref{sec:rtlblockdef}.
 We therefore implement the first formally verified implementation of a general
 if-conversion algorithm, with support for heuristics for branch prediction.
 
 To simplify both the implementation of the if-converter and its correctness
-proof, it is split up into three distinct
-transformations:%, as shown in \cref{fig:if-conversion-details}:
+proof, it is split up into three distinct transformations, which are also shown
+in
+\cref{fig:if-conversion-details}:%, as shown in \cref{fig:if-conversion-details}:
 
 \begin{figure}
   \centering

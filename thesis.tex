@@ -72,7 +72,7 @@
 \usepackage{verbatim}
 
 \usepackage{accents}
-\usepackage{enumitem}
+\usepackage[inline]{enumitem}
 \usepackage{soul}
 \usepackage{subcaption}
 
@@ -203,6 +203,9 @@ Imperial College London.}
     (\textsc{Rtl})}}
 \newacronym{VLIW}{VLIW}{very large instruction word}
 \newacronym{DRAM}{DRAM}{dynamic random-access memory}
+\newglossaryentry{BTL}{type=\acronymtype, name={\textsc{Btl}},
+  description={block transfer language}, first={block transfer language
+    (\textsc{Btl})}}
 
 \newterm[name={\enquote{plus} forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
 \newterm[name={\enquote{star} forward simulation},sort=starforwardsimulation]{star-forward-simulation}
@@ -229,22 +232,22 @@ Imperial College London.}
 
 %\newterm
 
-\includeonly{%
- % titlepage,
- % copyright-assignment,
- % abstract,
- % acknowledgements,
- % lists,
- % chapters/1-introduction,
- % chapters/2-background,
- % chapters/3-introduction-to-vericert,
- % chapters/4-trusted-computing-base,
- % chapters/5-hyperblock-scheduling,
- % chapters/6-hardware-generation,
- % chapters/7-evaluation,
- chapters/8-conclusion,
- % bibliography,
-}
+% \includeonly{%
+%  % titlepage,
+%  % copyright-assignment,
+%  abstract,
+%  % acknowledgements,
+%  % lists,
+%  % chapters/1-introduction,
+%  % chapters/2-background,
+%  % chapters/3-introduction-to-vericert,
+%  % chapters/4-trusted-computing-base,
+%  % chapters/5-hyperblock-scheduling,
+%  % chapters/6-hardware-generation,
+%  % chapters/7-evaluation,
+%  % chapters/8-conclusion,
+%  % bibliography,
+% }
 
 \setcapindent{1em}
 
