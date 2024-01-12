@@ -198,14 +198,14 @@ Imperial College London.}
 \newacronym{AST}{AST}{abstract syntax tree}
 \newacronym{ILP}{ILP}{integer linear programming}
 \newacronym{LP}{LP}{linear programming}
-\newglossaryentry{RTL}{type=\acronymtype, name={\textsc{Rtl}},
-  description={register transfer language}, first={register transfer language
-    (\textsc{Rtl})}}
 \newacronym{VLIW}{VLIW}{very large instruction word}
 \newacronym{DRAM}{DRAM}{dynamic random-access memory}
-\newglossaryentry{BTL}{type=\acronymtype, name={\textsc{Btl}},
-  description={block transfer language}, first={block transfer language
-    (\textsc{Btl})}}
+\newacronym{FSM}{FSM}{finite-state machine}
+\newcommand\newlanguageentry[3]{\newglossaryentry{#1}{type=\acronymtype, name={\textsc{#2}},%
+  description={#3}, first={#3 (\textsc{#2})}}}
+\newlanguageentry{RTL}{Rtl}{register transfer language}
+\newlanguageentry{LTL}{Ltl}{linear transfer language}
+\newlanguageentry{BTL}{Btl}{block transfer language}
 
 \newterm[name={\enquote{plus} forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
 \newterm[name={\enquote{star} forward simulation},sort=starforwardsimulation]{star-forward-simulation}
@@ -232,22 +232,22 @@ Imperial College London.}
 
 %\newterm
 
-% \includeonly{%
-%  % titlepage,
-%  % copyright-assignment,
-%  abstract,
-%  % acknowledgements,
-%  % lists,
-%  % chapters/1-introduction,
-%  % chapters/2-background,
-%  % chapters/3-introduction-to-vericert,
-%  % chapters/4-trusted-computing-base,
-%  % chapters/5-hyperblock-scheduling,
-%  % chapters/6-hardware-generation,
-%  % chapters/7-evaluation,
-%  % chapters/8-conclusion,
-%  % bibliography,
-% }
+\includeonly{%
+ % titlepage,
+ % copyright-assignment,
+ abstract,
+ % acknowledgements,
+ lists,
+ chapters/1-introduction,
+ % chapters/2-background,
+ % chapters/3-introduction-to-vericert,
+ % chapters/4-trusted-computing-base,
+ % chapters/5-hyperblock-scheduling,
+ % chapters/6-hardware-generation,
+ % chapters/7-evaluation,
+ % chapters/8-conclusion,
+ % bibliography,
+}
 
 \setcapindent{1em}
 

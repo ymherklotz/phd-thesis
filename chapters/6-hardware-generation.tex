@@ -806,7 +806,7 @@ again.
         \vertlines[help lines]{2,8,14}
       \end{pgfonlayer}
     \end{tikztimingtable}
-    \caption{Timing diagram for loads. At time 1, the \texttt{u\_en} signal is toggled to enable the \gls{BRAM}. At time 2, \texttt{d\_out} is set to the value stored at the address in the \gls{BRAM}, which is finally assigned to the register \texttt{r} at time 3.}\label{fig:ram_load}
+    \caption[Timing diagrams for loads.]{Timing diagram for loads. At time 1, the \texttt{u\_en} signal is toggled to enable the \gls{BRAM}. At time 2, \texttt{d\_out} is set to the value stored at the address in the \gls{BRAM}, which is finally assigned to the register \texttt{r} at time 3.}\label{fig:ram_load}
   \end{subfigure}\hfill%
   \begin{subfigure}[b]{0.48\linewidth}
     \begin{tikztimingtable}[timing/d/background/.style={fill=white}]
@@ -824,10 +824,15 @@ again.
         \vertlines[help lines]{2,9}
       \end{pgfonlayer}
     \end{tikztimingtable}
-    \caption{Timing diagram for stores. At time 1, the \texttt{u\_en} signal is toggled to enable the \gls{BRAM}, and the address \texttt{addr} and the data to store \texttt{d\_in} are set. On the negative edge at time 2, the data is stored into the \gls{BRAM}.}\label{fig:ram_store}
+    \caption[Timing diagram for stores.]{Timing diagram for stores. At time 1,
+      the \texttt{u\_en} signal is toggled to enable the \gls{BRAM}, and the
+      address \texttt{addr} and the data to store \texttt{d\_in} are set. On the
+      negative edge at time 2, the data is stored into the
+      \gls{BRAM}.}\label{fig:ram_store}
   \end{subfigure}
 %  \alt{Timing diagrams of loads and stores, showing which signals are modified at which time step.}
-  \caption{Timing diagrams showing the execution of loads and stores over multiple clock cycles.}\label{fig:ram_load_store}
+  \caption{Timing diagrams showing the execution of loads and stores over
+    multiple clock cycles.}\label{fig:ram_load_store}
 \end{figure}
 
 \subsection{BRAM insertion and correctness proof}%
@@ -844,7 +849,9 @@ again.
       \inferrule[Store]{\Gamma_{\mathrm{r}}[r.\mathrm{en}] \ne \Gamma_{\mathrm{r}}[r.\mathrm{u\_en}] \\ \Gamma_{\mathrm{r}}[r.\mathrm{wr\_en}] = 1}{((\Gamma_{\mathrm{r}}, \Gamma_{\mathrm{a}}), (\Delta_{\mathrm{r}}, \Delta_{\mathrm{a}}), r) \downarrow_{\mathrm{ram}} (\Delta_{\mathrm{r}}[r.\mathrm{en} \mapsto r.\mathrm{u\_en}], \Delta_{\mathrm{a}}[r.\mathrm{mem} \mapsto (\Gamma_{\mathrm{a}}[ r.\mathrm{mem}])[r.\mathrm{addr} \mapsto r.\mathrm{d\_in}]]) }
     \end{gather*}
   \end{minipage}
-  \caption{Specification for the memory implementation in \htl{}, where $r$ is the \gls{BRAM}, which is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
+  \caption[Specification for the memory implementation in \htl{}.]{Specification
+    for the memory implementation in \htl{}, where $r$ is the \gls{BRAM}, which
+    is then implemented by equivalent Verilog code.}\label{fig:htl_ram_spec}
 \end{figure}
 
 \YH{TODO: Link the \gls{BRAM} from \htl{} to the ram instantiated here.}
@@ -959,8 +966,9 @@ applies to the translation of loads.)
 (\forall c\ d\ e_1\ e_2\ldotp d[i] \neq (d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \sigma \blockasgn e_2))}%
   {\yhfunction{spec\_ram\_tr}\ \sigma\ r\ d\ d\ i\ n}
 \end{mathpar}
-\caption{Memory transformation specification.\YH{TODO: replace register name $d$
-  because it's also used for the data path.}}%
+\caption[Memory transformation specification.]{Memory transformation
+  specification.\YH{TODO: replace register name $d$ because it's also used for
+    the data path.}}%
 \label{sec:hg:memory-transformation-specification}
 \end{figure}
 
@@ -1196,9 +1204,11 @@ reasons why this transformation is needed.
    \path (initial block) -- node[pass] (fs) {forward substitution} (transf block);
    \draw[ed] (initial block) -- (fs) -- (transf block);
   \end{tikzpicture}
-  \caption{Simple forward substitution transformation together with the runtime
-    value of the blocking assignment association map ($\Gamma_{\mathrm r}$) and
-    the nonblocking assignment association map ($\Delta_{\mathrm r}$).}%
+  \caption[Simple forward substitution transformation with the runtime
+  association maps.]{Simple forward substitution transformation together with
+    the runtime value of the blocking assignment association map
+    ($\Gamma_{\mathrm r}$) and the nonblocking assignment association map
+    ($\Delta_{\mathrm r}$).}%
   \label{fig:hg:forward-substitution}
 \end{figure}
 
@@ -1476,7 +1486,9 @@ endmodule
       memory instantiation.}%
     \label{fig:hg:ram-instantiation:verilog}
   \end{subfigure}
-  \caption{Instantiation of \gls{BRAM} specification with Verilog implementation.}%
+  \caption[Instantiation of BRAM specification with Verilog
+  implementation.]{Instantiation of \gls{BRAM} specification with Verilog
+    implementation.}%
   \label{fig:hg:ram-instantiation}
 \end{figure}
 

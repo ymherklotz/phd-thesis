@@ -5,30 +5,37 @@ leading to custom hardware accelerators being designed for numerous applications
 instead of using less efficient general processors.  Alas, designing these
 accelerators can be a tedious and error-prone process, especially when using
 \glspl{HDL} such as Verilog or VHDL, which operate at the register transfer
-level where the hardware needs to be described manually.
+level.
 
 An attractive alternative is \emph{\gls{HLS}}, where hardware designs are
 automatically compiled from software written in a high-level language like C.
-This way, hardware design can benefit from mature software development tools
-while working on the general functionality of the hardware design, while promise
+This way, hardware designers can benefit from mature software development tools
+while working on the functionality of the design.  \gls{HLS} tools promise
 designs with comparable performance and energy-efficiency to those hand-written
-in an \gls{HDL}.  This reduces the time needed to design new accelerators, but
-it should also make the process less error-prone, as one can reason about the
-behaviour of the hardware at a higher level.  Unfortunately, \gls{HLS} tools
-have been found to be unreliable, for example, Vivado HLS produces incorrect
-designs in up to 1.2\% of randomly generated C programs.  This undermines
-testing that was performed at the higher level of abstraction.
+in an \gls{HDL}, reducing the time needed to design new accelerators.  Being
+able to reasoning about behaviour at a higher level should also make the process
+less error-prone.  Unfortunately, \gls{HLS} tools have been found to be
+unreliable; Vivado HLS produces incorrect designs in 1.2\% of randomly generated
+C programs, undermining testing that was performed at the higher level of
+abstraction.
 
-We propose a formally verified \gls{HLS} tool called Vericert, which extends
-CompCert, an existing formally verified C compiler, with a hardware back end.
-Vericert branches off from the CompCert middle end and first parallelises the
-instructions by scheduling hyperblocks, large regions of code without loops.
-Scheduling places instructions into clock cycles, producing a finite-state
-machine.  This state machine is then refined and transformed into a subset of
-Verilog, which can subsequently be synthesised to a netlist.  Compared to a
-state-of-the-art \gls{HLS} tool called Bambu, Vericert produces designs that are
-around $1.6\times$ slower than Bambu with some optimisations turned off, and
-$3.6\times$ slower than Bambu with the default optimisations turned on.
+I propose a formally verified \gls{HLS} tool called Vericert, providing a
+computer-checked proof that ensures it only generates hardware designs that
+behave the same as the input software program.  Vericert extends CompCert, an
+established formally verified C Compiler, with a hardware back end.  One expects
+a verified tool to produce significantly worse hardware than existing optimising
+\gls{HLS} tools, as each transformation has to be proven correct.  Indeed, an
+initial version of Vericert without optimisations was up to $8\times$ slower
+than a state-of-the-art \gls{HLS} tool called Bambu with many optimisations
+switched off.
+
+However, by verifying hyperblock scheduling in Vericert, a transformation which
+parallelises the instructions in large regions of code without loops, hardware
+produced by Vericert becomes only around $1.6\times$ slower than Bambu without
+optimisations and $3.6\times$ slower than hardware produced by optimised Bambu.
+This is encouraging, showing that a verified \gls{HLS} tool can be compared with
+an existing \gls{HLS} tool with some optimisations turned off, while being
+guaranteed to generate correct hardware designs.
 
 %%% Local Variables:
 %%% mode: latex

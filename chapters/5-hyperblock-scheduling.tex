@@ -223,7 +223,8 @@ duplication that is inserted by the if-conversion transformation.
 % \draw[-{Latex[length=3mm]}] (initial.east) ++(0.5,0) -- node [below] {if-conversion}
 % ($(scheduled.west)-(0.5,0)$);
 \end{tikzpicture}
-\caption{Example of an if-conversion transformation performed in Vericert,
+\caption[Example of an if-conversion transformation followed by a scheduling
+operation.]{Example of an if-conversion transformation performed in Vericert,
   followed by a scheduling operation, after which the final node in the CFG can
   be shared.}
   \label{fig:itv:if-conv-sched-transformation}
@@ -372,7 +373,9 @@ states to instructions, \rtlblock{} maps from states to hyperblocks, and
       & \llap{$\rtlbb \in \rtlblock{}$} & ::= & $\instr\ \texttt{list}$ \\
       & \llap{$\rtlpb \in \rtlpar{}$} & ::= & $\instr\ \texttt{list}\ \texttt{list}\ \texttt{list}$
 \end{tabular}
-\caption{Syntax of \rtlblock{} and \rtlpar{}, with our hyperblock additions \hl{highlighted}.}
+\caption[Syntax of \rtlblock{} and \rtlpar{}, with our hyperblock additions
+highlighted.]{Syntax of \rtlblock{} and \rtlpar{}, with our hyperblock additions
+  \hl{highlighted}.}
 \label{fig:instructions}
 \end{figure}
 
@@ -1019,11 +1022,12 @@ different groups (the outermost list of the \rtlpar{} block).
         \mono{nstate} & 13D{}; [dotted]1D{}; [diagonal fill={s7col}{s7colalter}]6.5D{\mono{10}};
         6.5D{}; [dotted]1D{}; 1D{}\\
       \end{tikztimingtable}
-      \caption{Timing diagram showing how the operations in the \rtlpar{} hyperblock are
-        scheduled in the hardware. The colours represent which operations are
-        allocated to which register in each cycle. We only show the positive edges of the
-        clock (\mono{clk}) because the negative edges of the clock are reserved
-        for memory operations.}%
+      \caption[Timing diagram showing how the operations are scheduled in
+      hardware.]{Timing diagram showing how the operations in the \rtlpar{}
+        hyperblock are scheduled in the hardware. The colours represent which
+        operations are allocated to which register in each cycle. We only show
+        the positive edges of the clock (\mono{clk}) because the negative edges
+        of the clock are reserved for memory operations.}%
       \label{fig:op_chain_d}
     \end{subfigure}
   \end{subfigure}
@@ -1127,10 +1131,11 @@ precisely in \cref{sec:algorithm-symbolic-execution}.
 (scheduled);
 \draw[ed] (initial) -- (sched) -- (scheduled);
 \end{tikzpicture}
-\caption{An example schedule. It is valid to move \protect\seIII{} before
-  \protect\seI{} and \protect\seII{} because despite the appearance of data
-  dependencies on \protect\rtlinline|r2|, \protect\seIII{} is in fact
-  independent because its guard is mutually exclusive with the other two.}
+\caption[An example schedule.]{An example schedule. It is valid to move
+  \protect\seIII{} before \protect\seI{} and \protect\seII{} because despite the
+  appearance of data dependencies on \protect\rtlinline|r2|, \protect\seIII{} is
+  in fact independent because its guard is mutually exclusive with the other
+  two.}
 \label{fig:symbex_worked_example}
 \end{figure}
 
@@ -2810,10 +2815,11 @@ was simply unworkable.
       \node[fit={(predexpr)(atomisation)(arraysmt)},bgbox,fill=bgbox6,inner sep=5mm]{};
     \end{pgfonlayer}
   \end{tikzpicture}
-  \caption{Validation of predicate expressions using 3-valued logic.  An
-    external SMT solver is used to generate a proof witness, which is then given
-    to a formally verified proof witness checker by SMTCoq.  The result is then
-    \enquote{yes} if the formula always holds, and \enquote{no} otherwise.}%
+  \caption[Validation of predicate expressions using 3-valued logic.]{Validation
+    of predicate expressions using 3-valued logic.  An external SMT solver is
+    used to generate a proof witness, which is then given to a formally verified
+    proof witness checker by SMTCoq.  The result is then \enquote{yes} if the
+    formula always holds, and \enquote{no} otherwise.}%
   \label{fig:hs:validated-three-valued-logic}
 \end{figure}
 
@@ -2900,8 +2906,9 @@ meaning the expressions are equivalent.
           {\evalpred{\rs}{\varpred_1 \predimp \varpred_2}{1 \booland
               (1 - \varbool_1 + \varbool_2)}}
 \end{mathpar}
-\caption{Evaluation of three-valued logic predicates, where $\rs$ is a valuation
-  from predicate variables $c$ to $\set{\bvrai,\bfalse,\boolundef}$.}%
+\caption[Evaluation of 3-valued logic predicates.]{Evaluation of 3-valued logic
+  predicates, where $\rs$ is a valuation from predicate variables $c$ to
+  $\set{\bvrai,\bfalse,\boolundef}$.}%
 \label{fig:evalpred}
 \end{figure}
 

@@ -25,7 +25,7 @@ reprogrammability, they can never be as efficient as an equivalent \gls{ASIC}
 design, however, for many applications having the chance to reprogram the
 hardware is an advantage.  In addition to that, an \gls{FPGA} will still
 generally be more efficient and more performant than running the same workload
-on a general purpose processor.  \Glspl{FPGA} comprise the following four main
+on a general-purpose processor.  \Glspl{FPGA} comprise the following four main
 components~\cite{boutros21_fpga_archit}, which are also shown in
 \cref{fig:bg:fpga-layout}.
 
@@ -131,16 +131,12 @@ components~\cite{boutros21_fpga_archit}, which are also shown in
     \foreach \v in {{4,0}}
     {\draw[emphasize] ($(\v)+(0.3,1.3)$) rectangle ($(\v)+(0.7,1.7)$);}
   \end{tikzpicture}
-  \caption[FPGA layout, showing an example of a design that is placed and routed
-  on the FPGA highlighted in red.  The white blocks correspond to LUTs, followed
-  by turquoise blocks being DSPs and green blocks being BRAMs.  The programmable
-  interconnects are made up of connection blocks and switches shown in beige and
-  yellow respectively.]{\Gls{FPGA} layout, showing an example of a design that
-    is placed and routed on the \gls{FPGA} highlighted in red.  The beige blocks
-    correspond to \glspl{LUT}, followed by green blocks being \glspl{DSP} and
-    purple blocks being \glspl{BRAM}.  The programmable interconnects are made
-    up of connection blocks and switches shown in pink and blue
-    respectively.}%
+  \caption[FPGA layout showing a place and routed design.]{\Gls{FPGA} layout,
+    showing an example of a design that is placed and routed on the \gls{FPGA}
+    highlighted in red.  The beige blocks correspond to \glspl{LUT}, followed by
+    green blocks being \glspl{DSP} and purple blocks being \glspl{BRAM}.  The
+    programmable interconnects are made up of connection blocks and switches
+    shown in pink and blue respectively.}%
   \label{fig:bg:fpga-layout}
 \end{figure}
 
@@ -226,7 +222,12 @@ endmodule
     \end{tikzpicture}
   \end{subfigure}
 %  \alt{Verilog code of a state machine, and its equivalent state machine diagram.}
-  \caption{A simple state machine implemented in Verilog, with its diagrammatic representation on the right. The \texttt{x} stands for ``don't care'' and each transition is labelled with the values of the inputs \texttt{rst} and \texttt{y} that trigger the transition.  The output that will be produced is shown in each state.}%
+  \caption[A simple Verilog implementation of a finite-state machine.]{A simple
+    state machine implemented in Verilog, with its diagrammatic representation
+    on the right. The \texttt{x} stands for ``don't care'' and each transition
+    is labelled with the values of the inputs \texttt{rst} and \texttt{y} that
+    trigger the transition.  The output that will be produced is shown in each
+    state.}%
   \label{fig:tutorial:state_machine}
 \end{figure}
 
@@ -1134,9 +1135,9 @@ This section describes how \gls{HLS} designs are typically verified and also
 describes the current state-of-the-art in verification of \gls{HLS}
 transformations.  The standard way to test designs in \gls{HLS} is either using
 hardware test benches, testing the final hardware design like any other hardware
-design, or by using C/RTL co-simulation, which is a feature some \gls{HLS} tools
-support, whereby the same test code that drove the C code can also be used to
-drive the hardware design.
+design, or by using C/Verilog co-simulation, which is a feature some \gls{HLS}
+tools support, whereby the same test code that drove the C code can also be used
+to drive the hardware design.
 
 Proving the equivalence between the generated hardware and the original
 behavioural description in C is an ongoing research problem.  There are
@@ -1404,10 +1405,10 @@ is run on the \gls{CPU}.
     \draw[ed] (mach) -- (assemblygen) -| (assembly);
     \draw[ed] (assembly) -- (nativegen) -- (nativecode);
   \end{tikzpicture}
-  \caption{CompCert intermediate languages in the front end and back end of the
-    compiler.  The parts outside of the coloured boxes are trusted, whereas all
-    the languages transformations within the coloured boxes are verified and
-    untrusted.}%
+  \caption[CompCert diagram describing the intermediate languages.]{CompCert
+    intermediate languages in the front end and back end of the compiler.  The
+    parts outside of the coloured boxes are trusted, whereas all the languages
+    transformations within the coloured boxes are verified and untrusted.}%
   \label{fig:bg:compcert-languages}
 \end{figure}
 
@@ -1650,10 +1651,10 @@ simulation from Assembly to Clight.
       \node[below=2mm of app] {with $|s_2| < |s_1|$};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Forward simulation diagrams, either performing one or more steps in
-    the target program using the \enquote{plus} forward simulation, or
-    performing zero or more steps in the target program with a well-founded
-    order on the target program states.}%
+  \caption[Examples of forward simulation diagrams.]{Forward simulation
+    diagrams, either performing one or more steps in the target program using
+    the \enquote{plus} forward simulation, or performing zero or more steps in
+    the target program with a well-founded order on the target program states.}%
   \label{fig:bg:forwards-simulation-diagram}
 \end{figure}
 
@@ -1710,8 +1711,8 @@ y := M[x];
       \end{array}
     \end{equation*}
   \end{subfigure}
-  \caption[Example of symbolic execution adapted from Tristan and Leroy]{Example
-    of symbolic execution adapted from
+  \caption[Example of symbolic execution adapted from Tristan and
+  Leroy.]{Example of symbolic execution adapted from
     \textcite{tristan08_formal_verif_trans_valid}.}
   \label{fig:bg:symbolic-evaluation}
 \end{figure}
@@ -1861,9 +1862,10 @@ comparisons.
     \end{tikzpicture}
     \caption{Block transfer language (\textsc{Btl})}\label{fig:block-comparison:btl}
   \end{subfigure}
-  \caption{Comparison of the graph of trees structure and the block transfer
-    language (\textsc{Btl}) structure, extending the comparisons shown in
-    \cref{fig:block-comparison}.}%
+  \caption[Comparison of the graph of trees structure and
+  \textsc{Btl}.]{Comparison of the graph of trees structure and the block
+    transfer language (\textsc{Btl}) structure, extending the comparisons shown
+    in \cref{fig:block-comparison}.}%
   \label{fig:block-comparison-second}
 \end{figure}
 

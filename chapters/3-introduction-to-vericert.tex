@@ -68,10 +68,8 @@ int main() {
 \end{minted}
 \end{minipage}
 \caption[Miscompilation bug in Xilinx Vivado HLS v2018.3, v2019.1 and
-v2019.2. The generated hardware returns \texttt{0x006535FF} but the correct
-result is \texttt{0x046535FF}.]{Miscompilation bug in Xilinx Vivado HLS. The
-  generated hardware returns \texttt{0x006535FF} but the correct result is
-  \texttt{0x046535FF}.}%
+v2019.2.]{Miscompilation bug in Xilinx Vivado HLS. The generated hardware
+  returns \texttt{0x006535FF} but the correct result is \texttt{0x046535FF}.}%
 \label{fig:vivado_bug1}
 \end{figure}
 
@@ -147,7 +145,9 @@ This motivates the need for a verified \gls{HLS} tool.
       \node at (5.5,3.3) {\small 13};
       \node at (-6,0.7) {5509};
     \end{tikzpicture}
-\caption{The number of failures per tool out of \totaltestcases{} test-cases. Overlapping regions mean that the same test-cases failed in multiple tools.}\label{fig:existing_tools}
+    \caption[The number of failures per tool.]{The number of failures per tool
+      out of \totaltestcases{} test-cases. Overlapping regions mean that the
+      same test-cases failed in multiple tools.}\label{fig:existing_tools}
 \end{figure}
 
 \section{Main Design Decisions of Vericert}%
@@ -596,7 +596,7 @@ insertion.
   \node[anchor=north west,font=\bfseries\sffamily] at (6.9,4.9) {Control Logic};
 
   \filldraw[fill=white,rounded corners=3pt] (7,0.5) rectangle (11.5,2.2);
-  \node at (8.2,2) {\footnotesize \texttt{Next State FSM}};
+  \node at (8.2,2) {\footnotesize \texttt{Next State \gls{FSM}}};
   \begin{scope}[xshift=5mm,yshift=-1mm]
   \foreach \x in {8,...,3}
     {\pgfmathtruncatemacro{\y}{8-\x}%
@@ -695,19 +695,20 @@ insertion.
 \end{scope}
 \end{tikzpicture}
 %  \alt{Diagram displaying the data-path and its internal modules, as well as the control logic and its state machine.}
-\caption{The FSMD for the example shown in \cref{fig:accumulator_c_rtl}, split
-  into a data path and control logic for the next state calculation.  The update
-  block takes the current state, current values of all registers and at most one
-  value stored in the \gls{BRAM}, and calculates a new value that can either be
-  stored back in the \gls{BRAM} or in a
-  register.}\label{fig:accumulator_diagram}
+\caption[Diagram of the FSMD for the example.]{The FSMD for the example shown in
+  \cref{fig:accumulator_c_rtl}, split into a data path and control logic for the
+  next state calculation.  The update block takes the current state, current
+  values of all registers and at most one value stored in the \gls{BRAM}, and
+  calculates a new value that can either be stored back in the \gls{BRAM} or in
+  a register.}\label{fig:accumulator_diagram}
 \end{figure}
 
 \begin{figure}
   \centering
   \inputminted[fontsize=\footnotesize,linenos,xleftmargin=20pt]{systemverilog}{figures/3-introduction-to-vericert/translated-verilog.sv}
-  \caption{Verilog implementation of \rtl{} code produced by CompCert produced
-    by scheduling the code, instantiating a BRAM and translating to Verilog.}
+  \caption[Verilog implementation of the \textsc{Rtl} code.]{Verilog
+    implementation of \rtl{} code produced by CompCert produced by scheduling
+    the code, instantiating a BRAM and translating to Verilog.}
   \label{fig:accumulator_v}
 \end{figure}
 
