@@ -77,13 +77,13 @@ fail and not produce any output; the correctness theorem only applies when the
 translation succeeds.
 
 How can we prove this theorem?  Note that like in CompCert, this theorem can be
-proven using a backwards simulation.  We use the same proof technique as in
-CompCert, extending the forward simulation from \rtl{} to Verilog.  Then, by
-proving that the Verilog semantics are \emph{deterministic}, the composition of
-forward simulation in CompCert, as well ase the simulations in Vericert imply
-the backwards simulation needed to prove the theorem.  For each transformation
-this dissertation will therefore describe how the forward simulations are
-proven.
+proven using a backwards simulation.  The same proof technique can be used to
+verify the correctness of \vercert{}, extending the forward simulation from
+\rtl{} to Verilog.  Then, by proving that the Verilog semantics are
+\emph{deterministic}, the composition of forward simulation in CompCert, as well
+ase the simulations in Vericert imply the backwards simulation needed to prove
+the theorem.  For each transformation this dissertation will therefore describe
+how the forward simulations are proven.
 
 Because the correctness theorem is unchanged except for the target language
 semantics, it means that all the corollaries proven using the top-level CompCert
@@ -112,8 +112,8 @@ according to the semantics.  Luckily, the syntax and semantics can be reduced to
 a small subset that \vericert{} can target.  This section also describes how
 \vericert{}'s representation of memory differs from \compcert{}'s memory model.
 
-The Verilog semantics we use is ported to Coq from a semantics written in HOL4
-by \textcite{lööw19_proof_trans_veril_devel_hol} which was used to prove the
+The Verilog semantics I use is ported to Coq from a semantics written in HOL4 by
+\textcite{lööw19_proof_trans_veril_devel_hol} which was used to prove the
 translation from a HOL4 description of the hardware to
 Verilog~\cite{lööw19_verif_compil_verif_proces}.  This semantics is quite
 practical as it is restricted to a small subset of Verilog, which can
@@ -127,7 +127,7 @@ used to describe hardware directly, which is inherently parallel, rather than an
 algorithm, which is usually sequential.  The main construct in Verilog is the
 always-block.  A module can contain multiple always-blocks, all of which run in
 parallel.  These always-blocks further contain statements such as if-statements
-or assignments to variables.  We support only \emph{synchronous} logic, which
+or assignments to variables.  Only \emph{synchronous} logic is supported, which
 means that the always-block is triggered on (and only on) the positive or
 negative edge of a clock signal.  However, combinational expressions can still
 be expressed within synchronous assignments, so in practice these features are
@@ -224,7 +224,7 @@ module) could be modelled using a function from variable names to values, which
 could be modified accordingly to model inputs to the module.  However, this
 representation does not support merging of individual array elements.  This is
 quite an abstract description of memory and can also be expressed as an array
-instead, which is the path we took.  This requires the addition of array
+instead, which is the path I took.  This requires the addition of array
 operators to the semantics and correct reasoning of loads and stores to the
 array in different always-blocks simultaneously.  Consider the following Verilog
 code:
@@ -244,7 +244,7 @@ a second using nonblocking assignment.  If the existing semantics were used to
 update the array, then during the merge, the entire array \texttt{x} from the
 nonblocking association map would replace the entire array from the blocking
 association map.  This would replace \texttt{x[0]} with its original value and
-therefore behave incorrectly. Accordingly, we modified the maps so they record
+therefore behave incorrectly. Accordingly, I modified the maps so they record
 updates on a per\?element basis. Our state $\Gamma$ is therefore further split
 up into $\Gamma_{r}$ for instantaneous updates to variables, and $\Gamma_{a}$
 for instantaneous updates to arrays ($\Gamma = (\Gamma_{r}, \Gamma_{a})$);
@@ -298,7 +298,7 @@ used to model memory in the original semantics, which is not needed as arrays
 are fully supported.  This means that the \gls{BRAM} can faithfully be modelled
 as Verilog and it can be reasoned about.
 
-\paragraph{Simplifying representation of bitvectors} Finally, we use 32-bit
+\paragraph{Simplifying representation of bitvectors} Finally, I use 32-bit
 integers to represent bitvectors rather than arrays of booleans. This is because
 \vericert{} (currently) only supports types represented by 32 bits.  However,
 extending Vericert would likely not require the full flexibility of bitvectors
@@ -328,7 +328,7 @@ CompCert integer type.
 \end{figure*}
 
 The \compcert{} computation model defines a set of states through which
-execution passes. In this subsection, we explain how we extend our Verilog
+execution passes. In this subsection, I explain how I extend our Verilog
 semantics with four special-purpose registers in order to integrate it into
 \compcert{}.
 
@@ -358,8 +358,8 @@ Verilog semantics for designs produced through \gls{HLS}.
     return value $v$.
 \end{description}
 
-To support this computational model, we extend the Verilog module we generate
-with the following four registers and a \gls{BRAM} block:
+To support this computational model, I extend the Verilog module I generate with
+the following four registers and a \gls{BRAM} block:
 
 \begin{description}
 \item[program counter] The program counter is modelled using a register that
@@ -436,10 +436,10 @@ needed for a hardware description language.  There is no preexisting
 architecture that Verilog will produce; it can describe any memory layout that
 is needed.  Instead of having a specific semantics for memory, the Verilog
 semantics only needs to support the language features that can produce these
-different memory layouts, these being Verilog arrays.  We therefore define
+different memory layouts, these being Verilog arrays.  I therefore define
 semantics for updating Verilog arrays using blocking and nonblocking assignment.
 This makes it possible to describe many different memory layouts in Verilog,
-providing a lot of flexibility.  We then have to develop a memory layout that
+providing a lot of flexibility.  I then have to develop a memory layout that
 will be targeted by the \gls{HLS} tool and prove that the C memory model that
 \compcert{} uses matches the interpretation of arrays used in Verilog together
 with the memory layout that was chosen.  The \compcert{} memory model is
@@ -448,7 +448,7 @@ There have already been efforts to define a general finite memory model for all
 intermediate languages in \compcert{}, such as CompCertS~\cite{besson18_compc}
 or CompCert-TSO~\cite{sevcik13_compc}, or keeping the intermediate languages
 intact and translating to a more concrete finite memory model in the back end,
-such as in Comp\-Cert\-ELF~\cite{wang20_compc}.  We also define such a
+such as in Comp\-Cert\-ELF~\cite{wang20_compc}.  I also define such a
 translation from \compcert{}'s standard infinite memory model to finite arrays
 that can be represented in Verilog.  There is therefore no more notion of an
 abstract memory model and all the interactions to memory are encoded in the
@@ -567,7 +567,7 @@ word-addressable memories behind the byte-addressable interface.  Often, the
 performance of the caches will be tuned to provide the best performance for
 reading and writing words to memory.  This makes it possible to have good
 general performance, and makes it possible to interact with larger, but slower
-memories such as \gls{DRAM}.  However, we are assuming that we are targeting an
+memories such as \gls{DRAM}.  However, I are assuming that I are targeting an
 \gls{FPGA} without external \gls{DRAM}, so only fast \gls{BRAM} memory is used.
 This means that the memory architecture can be specialised to work well with
 words without using a complex memory architecture, by directly using a
@@ -592,8 +592,8 @@ subset of C that is translated to Verilog.
 \label{sec:proof:deterministic}
 
 The final lemma we need is that the Verilog semantics is deterministic. This
-result allows us to replace the forwards simulation we have proved with the
-backwards simulation we desire.  This was proven for the small-step semantics
+result allows us to replace the forward simulations I have proved with the
+desired backward simulations.  This was proven for the small-step semantics
 shown in \cref{fig:inference_module}.
 
 \begin{lemma}\label{lemma:deterministic}
@@ -610,10 +610,10 @@ shown in \cref{fig:inference_module}.
   the constructs is defined, so there is only one way to evaluate the module,
   and hence only one possible behaviour.  In particular, non-determinism in the
   simulation of Verilog designs often comes from the fact that always-blocks are
-  evaluated in an arbitrary order.  However, as we ensure that always-blocks
-  only communicate using nonblocking assignment, the order of evaluation does
-  not change the final state, meaning a sequential evaluation of always-blocks
-  can be chosen.
+  evaluated in an arbitrary order.  However, as I ensure that always-blocks only
+  communicate using nonblocking assignment, the order of evaluation does not
+  change the final state, meaning a sequential evaluation of always-blocks can
+  be chosen.
 \end{proof}
 
 \section{Summary}
@@ -621,7 +621,7 @@ shown in \cref{fig:inference_module}.
 In conclusion, the trusted computing base of Vericert is similar to that of
 CompCert.  The correctness theorem can remain unchanged, except for the change
 of the target language semantics.  The Verilog semantics can be formalised
-within CompCert's semantic framework.  We reuse an existing semantics by
+within CompCert's semantic framework.  I reuse an existing semantics by
 \textcite{lööw19_proof_trans_veril_devel_hol} and modify it to be a suitable
 \gls{HLS} target, in addition to integrating the semantics into CompCert's
 general state transition framework for its intermediate languages.

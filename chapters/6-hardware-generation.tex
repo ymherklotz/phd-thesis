@@ -329,7 +329,7 @@ correctness of the Verilog implementation in terms of shifts.
 Translating memory operations and the memory itself is one of the trickiest part
 of the translation, especially from a correctness point of view, because of the
 large difference in behaviour between CompCert memories and their Verilog
-implementation.  At the stage of \htl{} generation, we use a Verilog array to
+implementation.  At the stage of \htl{} generation, a Verilog array is used to
 represent the stack of the function in \rtlsubpar{}.  The verilog array is
 defined as the following:
 
@@ -341,17 +341,17 @@ This is essentially an array of size \veriloginline`STK_LEN` of 32-bit integers.
 This array is therefore word-addressable.  One big difference between C and
 Verilog is how memory is represented.  Although Verilog arrays use similar
 syntax to C arrays, they must be treated quite differently.  Eventually, this
-array will have to be replaced by an actual \gls{BRAM}, which only has a limited set of
-read and write ports (one of each in our case).  To make loads and stores of
-words as efficient as possible, the \gls{BRAM} needs to be word-addressable, which
-means that an entire integer can be loaded or stored in one clock cycle.
+array will have to be replaced by an actual \gls{BRAM}, which only has a limited
+set of read and write ports (one of each in our case).  To make loads and stores
+of words as efficient as possible, the \gls{BRAM} needs to be word-addressable,
+which means that an entire integer can be loaded or stored in one clock cycle.
 However, the memory model that \compcert{} uses for its intermediate languages
 is byte\?addressable~\cite{blazy05_formal_verif_memor_model_c}.  If a
 byte\?addressable memory was used in the target hardware, which is closer to
 \compcert{}'s memory model, then a load and store would instead take four clock
-cycles, the \gls{BRAM} we implement in hardware can only perform one read and write per
-clock cycle.  It therefore has to be proven that the byte-addressable memory
-behaves in the same way as the word-addressable memory in hardware.  Any
+cycles, the \gls{BRAM} implemented in hardware can only perform one read and
+write per clock cycle.  It therefore has to be proven that the byte-addressable
+memory behaves in the same way as the word-addressable memory in hardware.  Any
 modifications of the bytes in the \compcert{} memory model also have to be shown
 to modify the word-addressable memory in the same way.  Since only integer loads
 and stores are currently supported in \vericert{}, it follows that the addresses
@@ -506,7 +506,7 @@ in this subsection.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-  We prove this lemma by first establishing a specification of the translation
+  I prove this lemma by first establishing a specification of the translation
   function $\yhfunction{tr\_htl}$ that captures its important properties, and
   then splitting the proof into two parts: one to show that the translation
   function does indeed meet its specification, and one to show that the
@@ -602,7 +602,7 @@ the current state to be valid:
 \begin{itemize}
 \item that all pointers in the program use the stack as a base pointer,
 \item that any loads or stores to locations outside of the bounds of the stack
-  result in undefined behaviour (and hence we do not need to handle them),
+  result in undefined behaviour (and hence they do not need to be handled),
 \item that $\mathit{rst}$ and $\mathit{fin}$ are not modified and therefore stay
   at a constant 0 throughout execution, and
 \item that the stack frames match.  As no function calls are performed, as they
@@ -762,7 +762,7 @@ extra state would eliminate the speed advantage of the negative-edge-triggered
 \gls{BRAM}. Another method would be to determine the next state after each load
 or store and disable the \gls{BRAM} in that state, but this could quickly become
 complicated, especially in the case where the next state also contains a memory
-operation, and hence the disable signal should not be added. The method we
+operation, and hence the disable signal should not be added. The method I
 ultimately chose was to have the \gls{BRAM} become enabled not when the enable
 signal is high, but when it \emph{toggles} its value.  This can be arranged by
 keeping track of the old value of the enable signal in \texttt{en} and comparing
@@ -1225,8 +1225,8 @@ first and then replaces the current mapping from register to expression.  As the
 BRAM insertion already removed all the load and store operations in the data
 path, only regular register assignments need to be accounted for.
 
-First, we describe the substitution of expressions in
-\cref{def:substitute-expressions}, and then we describe the substitution of
+First, I describe the substitution of expressions in
+\cref{def:substitute-expressions}, and then I describe the substitution of
 statements in \cref{def:substitute-statements}.
 
 \begin{definition}[Substitute expressions]%
@@ -1517,10 +1517,9 @@ is quite different to that of the case-statement to which it is converted.
 
 %\YH{Maybe want to split this up into two lemmas?  One which states the proof about the map property of uniqueness of keys, and another proving the final theorem?}
 \begin{lemma}[Forward simulation from \htl{} to Verilog]\label{lemma:verilog}
-  In the following, we write $\yhfunction{tr\_verilog}$ for the translation from
-  \htl{} to Verilog. (Note that this translation cannot fail, so we do not need the
-  \yhconstant{OK} constructor here.)
-  {\normalfont
+  In the following, I write $\yhfunction{tr\_verilog}$ for the translation from
+  \htl{} to Verilog. (Note that this translation cannot fail, so we do not need
+  the \yhconstant{OK} constructor here.)  {\normalfont
     \begin{align*}
       \forall h\ V\ B \in \texttt{Safe}\ldotp\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow B \implies V \Downarrow B.
     \end{align*}}

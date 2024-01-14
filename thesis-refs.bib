@@ -103,6 +103,14 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	year = {2011}
 }
 
+@Online{apple22_dtane,
+	urldate = {2024-01-13},
+	url = {https://machinelearning.apple.com/research/neural-engine-transformers},
+	date = {2022-06},
+	title = {Deploying Transformers on the Apple Neural Engine},
+	author = {Apple}
+}
+
 @inproceedings{armand11_modul_integ_sat_smt_solver,
 	doi = {10.1007/978-3-642-25379-9_12},
 	abstract = {We present a way to enjoy the power of SAT and SMT provers in Coq without compromising soundness. This requires these provers to return not only a yes/no answer, but also a proof witness that can be independently rechecked. We present such a checker, written and fully certified in Coq. It is conceived in a modular way, in order to tame the proofs' complexity and to be extendable. It can currently check witnesses from the SAT solver ZChaff and from the SMT solver veriT. Experiments highlight the efficiency of this checker. On top of it, new reflexive Coq tactics have been built that can decide a subset of Coq's logic by calling external provers and carefully checking their answers.},
@@ -452,7 +460,7 @@ and Philippou, Anna",
 
 @inproceedings{canis14_modul_sdc,
 	abstract = {Loop pipelining is a high-level synthesis scheduling technique that overlaps loop iterations to achieve higher performance. However, industrial designs often have resource constraints and other constraints imposed by cross-iteration dependencies. The interaction between multiple constraints can pose a challenge for HLS modulo scheduling algorithms, which, if not handled properly can lead to a loop pipeline schedule that fails to achieve the minimum possible initiation interval. We propose a novel modulo scheduler based on an SDC formulation that includes a backtracking mechanism to properly handle multiple scheduling constraints and still achieve the minimum possible initiation interval. The SDC formulation has the advantage of being a mathematical framework that supports flexible constraints that are useful for more complex loop pipelines. Furthermore, we describe how to specifically apply associative expression transformations during modulo scheduling to restructure recurrences in complex loops to enable better scheduling. We compared our techniques to existing prior work in modulo scheduling in HLS and also compared against a state-of-art commercial tool. Over a suite of benchmarks, we show that our scheduler and proposed optimizations can result in a geomean wall-clock time reduction of 32 \% versus prior work and 29 \% versus a commercial tool.},
-	author = {Canis, Andrew and Brown, Stephen D. and Anderson, Jason H.},
+	author = {Canis, A. and Brown, S. D. and Anderson, J. H.},
 	booktitle = {2014 24th International Conference on Field Programmable Logic and Applications (FPL)},
 	doi = {10.1109/FPL.2014.6927490},
 	issn = {1946-1488},
@@ -771,6 +779,15 @@ and Kun{\v{c}}ak, Viktor",
 	pages = {461--466},
 	title = {SPARK: a high-level synthesis framework for applying parallelizing compiler transformations},
 	year = {2003}
+}
+
+@Online{gupta23_gtg,
+	date = {2023-10-04},
+	title = {Google Tensor G3: The new chip that gives your Pixel an AI upgrade},
+	urldate = {2024-01-13},
+	url = {https://blog.google/products/pixel/google-tensor-g3-pixel-8/},
+	organization = {Google},
+	author = {Monika Gupta}
 }
 
 @ARTICLE{halbwachs91_sdfpll,
@@ -1166,7 +1183,7 @@ and Kun{\v{c}}ak, Viktor",
 	booktitle = {Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
 	doi = {10.1145/3453483.3454097},
 	isbn = {9781450383912},
-	keywords = {compositional compiler, game semantics},
+	keywords = {Compositional Compiler Correctness,Simulation Convention,Language Interface,Game Semantics},
 	pages = {1095--1109},
 	series = {PLDI 2021},
 	title = {CompCertO: Compiling Certified Open C Components},
@@ -1905,7 +1922,7 @@ and Rehof, Jakob",
 	publisher = {Association for Computing Machinery},
 	doi = {10.1145/3428265},
 	journaltitle = {Proc. ACM Program. Lang.},
-	keywords = {compositional compiler},
+	keywords = {Generation of Object Files,Assembler Verification,Verified Separate Compilation},
 	month = nov,
 	number = {OOPSLA},
 	title = {CompCertELF: Verified Separate Compilation of C Programs into ELF Object Files},

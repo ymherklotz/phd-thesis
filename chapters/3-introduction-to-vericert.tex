@@ -19,12 +19,12 @@ Are \gls{HLS} tools reliable? Questions have been raised about the reliability
 of HLS before; for example, Andrew Canis, co-creator of the LegUp HLS tool,
 wrote that \textquote[{\textcite[Section 3.4.6]{canis15_legup}}]{high-level
   synthesis research and development is inherently prone to introducing bugs or
-  regressions in the final circuit functionality}.  In this section, we
+  regressions in the final circuit functionality}.  In this section, I
 investigate whether there is substance to this concern by conducting an
 empirical evaluation of the reliability of several widely used HLS tools.
 
-The approach we take is \emph{fuzzing}.  This is an automated testing method in
-which randomly generated programs are given to compilers to test their
+The approach used is called \emph{fuzzing}.  This is an automated testing method
+in which randomly generated programs are given to compilers to test their
 robustness~\cite{chen13_tcf, sun16_tucbgl, liang18_f, zhang19_fubsmc,
   yang11_findin_under_bugs_c_compil, lidbury15_many_core_compil_fuzzin}.  The
 generated programs are typically large and rather complex, and they often
@@ -41,16 +41,15 @@ Figure~\ref{fig:vivado_bug1} shows a program that produces the wrong result
 during hardware simulation in Xilinx Vivado HLS v2018.3, v2019.1 and
 v2019.2.\footnote{This program, like all the others in this paper, includes a
   \texttt{main} function, which means that it compiles straightforwardly with
-  GCC. To compile it with an HLS tool, we rename \texttt{main} to
+  GCC. To compile it with an HLS tool, I rename \texttt{main} to
   \texttt{result}, synthesise that function, and then add a new \texttt{main}
   function as a testbench that calls \texttt{result}.} The program repeatedly
 shifts a large integer value \texttt{x} right by the values stored in array
 \texttt{arr}.  Vivado HLS returns \texttt{0x006535FF}, but the result returned
 by GCC (and subsequently confirmed manually to be the correct one) is
 \texttt{0x046535FF}. The bug was initially revealed by a randomly generated
-program of around 113 lines, which we were able to reduce to the minimal example
-shown in the figure.  We reported this issue to Xilinx, who confirmed it to be a
-bug.
+program of around 113 lines, which was reduced to the minimal example shown in
+the figure.  I reported this issue to Xilinx, who confirmed it to be a bug.
 \end{example}
 
 \begin{figure}
@@ -81,31 +80,31 @@ v2019.2.]{Miscompilation bug in Xilinx Vivado HLS. The generated hardware
 We wrote a fuzzer that used Csmith to randomly generate C code and modified it
 to make it suitable for HLS tools.  For example, pointers had to be removed
 because some cases, like pointers of other pointers, are explicitly not
-supported by Vivado HLS.  We tested the following \gls{HLS} tools: Intel i++
+supported by Vivado HLS.  I tested the following \gls{HLS} tools: Intel i++
 18.1, LegUp 4.0, Bambu 0.9.7 and Xilinx Vivado HLS v2018.3, v2019.1 and v2019.2.
 \Cref{fig:existing_tools} shows an Euler diagram of our results.  We see that
 918 (13.7\%), 167 (2.5\%), 83 (1.2\%) and 26 (0.4\%) test-cases fail in Bambu,
-LegUp, Vivado HLS and Intel i++ respectively.  The bugs we reported to the Bambu
-developers were fixed during our testing campaign, so we also tested the
+LegUp, Vivado HLS and Intel i++ respectively.  The bugs I reported to the Bambu
+developers were fixed during our testing campaign, so I also tested the
 development branch of Bambu (0.9.7-dev) with the bug fixes, and found only 17
 (0.25\%) failing test-cases remained.  Although i++ has a low failure rate, it
 has the highest time-out rate (540 test-cases) due to its remarkably long
 compilation time. No other tool had more than 20 time-outs.  Note that the
 absolute numbers here do not necessarily correspond to the number of bugs in the
 tools, because a single bug in a language feature that appears frequently in our
-test suite could cause many failures.  Moreover, we are reluctant to draw
+test suite could cause many failures.  Moreover, I am reluctant to draw
 conclusions about the relative reliability of each tool by comparing the number
 of failures, because these numbers are so sensitive to the parameters of the
-randomly generated test suite we used. In other words, we can confirm the
+randomly generated test suite used. In other words, I can confirm the
 \emph{presence} of bugs, but cannot deduce the \emph{number} of them (nor their
 importance).
 
-In total, we found at least \numuniquebugs{} unique bugs across all the tools,
+In total, I found at least \numuniquebugs{} unique bugs across all the tools,
 including both crashes and miscompilations.  Conventional compilers have become
 quite resilient to fuzzing over the last decade, so recent work on fuzzing
 compilers has had to employ increasingly imaginative techniques to keep finding
-new bugs~\cite{even-mendoza20_ce}.  In contrast, we have found that HLS tools
-can be made to exhibit bugs even using the relatively basic fuzzing techniques.
+new bugs~\cite{even-mendoza20_ce}.  In contrast, I have found that HLS tools can
+be made to exhibit bugs even using the relatively basic fuzzing techniques.
 This motivates the need for a verified \gls{HLS} tool.
 
 \definecolor{intel}{HTML}{66c2a5}
@@ -154,8 +153,8 @@ This motivates the need for a verified \gls{HLS} tool.
 \label{sec:itv:main-design-decisions}
 
 Our solution to the verification problem in \gls{HLS} is Vericert, a formally
-verified \gls{HLS} tool.  First, we will describe the main design decisions
-behind Vericert in \cref{sec:itv:main-design-decisions} and we will then give an
+verified \gls{HLS} tool.  First, I will describe the main design decisions
+behind Vericert in \cref{sec:itv:main-design-decisions} and I will then give an
 example of a translation from C code into Verilog through Vericert in
 \cref{sec:itv:translating-c-to-verilog}.
 
@@ -170,10 +169,10 @@ degree of practicality.  The availability of
 \compcert{}~\cite{leroy09_formal_verif_realis_compil} also provides a solid
 basis for formally verified C compilation.  Since a lot of existing code for HLS
 is written in C, supporting C as an input language, rather than a custom
-domain-specific language, means that \vericert{} is more practical.  We
+domain-specific language, means that \vericert{} is more practical.  I
 considered Bluespec~\cite{nikhil04_bsv}, but decided that although it
 \textquote[{\textcite{greaves19_resear_note}}]{can be classed as a high-level
-  language}, it is too hardware-oriented to be suitable for traditional HLS.  We
+  language}, it is too hardware-oriented to be suitable for traditional HLS.  I
 also considered using a language with built-in parallel constructs that map well
 to parallel hardware, such as occam~\cite{page91_compil_occam},
 Spatial~\cite{koeplinger18_s} or Scala~\cite{bachrach12_chisel}.
@@ -202,9 +201,9 @@ language.
 
 \paragraph{Choice of implementation language}
 
-We chose Coq as the implementation language because of its mature support for
+I chose Coq as the implementation language because of its mature support for
 code extraction; that is, its ability to generate OCaml programs directly from
-the definitions used in the theorems.  We note that other authors have had some
+the definitions used in the theorems.  I note that other authors have had some
 success reasoning about the HLS process using other theorem provers such as
 Isabelle~\cite{ellis08_csicgfu}.
 \compcert{}~\cite{leroy09_formal_verif_realis_compil} was chosen as the front
@@ -319,17 +318,16 @@ shows that \vericert{} branches off from \compcert{} at the \rtl{} stage,
 followed by a number of transformations related to the scheduling instructions,
 and finally transformations that generate the final hardware.
 
-We select CompCert's register transfer language (\rtl{}) as the starting
-point. Branching off \emph{before} this point (at CminorSel or earlier) denies
-\compcert{} the opportunity to perform optimisations such as constant
-propagation and dead-code elimination, which, despite being designed for
-software compilers, have been found useful in HLS tools as
-well~\cite{cong11_high_level_synth_fpgas}. And if we branch off \emph{after}
-this point (at LTL or later) then \compcert{} has already performed register
-allocation to reduce the number of registers and spill some variables to the
-stack; this transformation is not required in HLS because there are many more
-registers available, and these should be used instead of \gls{BRAM} whenever
-possible.
+CompCert's \gls{RTL} was selected as the starting point. Branching off
+\emph{before} this point (at CminorSel or earlier) denies \compcert{} the
+opportunity to perform optimisations such as constant propagation and dead-code
+elimination, which, despite being designed for software compilers, have been
+found useful in HLS tools as well~\cite{cong11_high_level_synth_fpgas}. And if
+we branch off \emph{after} this point (at LTL or later) then \compcert{} has
+already performed register allocation to reduce the number of registers and
+spill some variables to the stack; this transformation is not required in HLS
+because there are many more registers available, and these should be used
+instead of \gls{BRAM} whenever possible.
 
 \rtl{} is also attractive because it is the closest intermediate language to
 LLVM \gls{IR}, which is used by several existing HLS compilers.  It has an
@@ -338,7 +336,7 @@ each instruction is a node with links to the instructions that can follow it.
 \rtl{} does not have the SSA property, however, this is not required for the
 translation to hardware and mainly assists the static analysis passes.  One
 difference between LLVM \gls{IR} and \rtl{} is that \rtl{} includes operations
-that are specific to the chosen target architecture; we chose to target the
+that are specific to the chosen target architecture; I chose to target the
 x86\_32 back end because it generally produces relatively dense \rtl{} thanks to
 the availability of complex addressing modes.  The translation from \rtl{} is
 then performed as follows.
@@ -361,10 +359,10 @@ then performed as follows.
 \item \htl{} is generated, which is a language that models an \gls{FSMD}.
 \item \gls{BRAM} insertion, which generates a proper memory interface for any
   interaction with the stack.
-\item To ensure that these assignments are actually performed in parallel, we
-  have a final pass that performs \emph{forward
-    substitution}~\cite[p.~109]{hopwood78_decom} to turn the sequence of Verilog
-  blocking assignments into a sequence of nonblocking assignments. For example:
+\item To ensure that these assignments are actually performed in parallel, a
+  final pass performs \emph{forward substitution}~\cite[p.~109]{hopwood78_decom}
+  to turn the sequence of Verilog blocking assignments into a sequence of
+  nonblocking assignments. For example:
 %
 \begin{center}
 \begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}, bb/.style={align=left, draw=white, fill=black!5},font=\strut\sffamily]
@@ -387,10 +385,10 @@ d <= (b * c) + d;
 \end{tikzpicture}
 \end{center}
 %
-The two versions are semantically equivalent, but we find that the second, in
+The two versions are semantically equivalent, but I find that the second, in
 which both right-hand sides must be evaluated before either assignment is
 performed, makes the downstream logic synthesis tools more likely to produce the
-hardware we intend (which, in this particular example, involves exploiting a
+intended hardware (which, in this particular example, involves exploiting a
 fused multiply--accumulator unit if available).
 \item Finally, syntactic Verilog is generated from \htl{}, which consists of
   translating the \gls{FSMD} into a case statement and implementing the memory
@@ -401,9 +399,8 @@ fused multiply--accumulator unit if available).
 \label{sec:itv:translating-c-to-verilog}
 
 \Cref{fig:accumulator_c_rtl} illustrates the translation of a simple program
-that stores and retrieves values from an array.  In this section, we describe
-the stages of the \vericert{} translation, referring to this program as an
-example.
+that stores and retrieves values from an array.  In this section, I describe the
+stages of the \vericert{} translation, referring to this program as an example.
 
 \subsection{Translating C to \rtl{}}
 
@@ -716,7 +713,7 @@ insertion.
 \paragraph{Translating memory}
 
 Typically, HLS-generated hardware consists of a sea of registers and RAMs.  This
-memory view is very different from the C memory model, so we perform the
+memory view is very different from the C memory model, so I perform the
 following translation from \compcert{}'s abstract memory model to a concrete
 \gls{BRAM}.\@ Variables that do not have their address taken are kept in
 registers, which correspond to the registers in \rtl{}.  All address-taken
@@ -751,10 +748,10 @@ which is discussed further in
 \cref{sec:algorithm:optimisation:oshrximm}. Another is the \texttt{Oshldimm}
 instruction, which is a left rotate instruction that has no Verilog equivalent
 and therefore has to be implemented in terms of other operations and proven to
-be equivalent.  The only 32-bit instructions that we do not translate are
+be equivalent.  The only 32-bit instructions that are not translated are
 case-statements (\texttt{Ijumptable}) and those instructions related to function
-calls (\texttt{Icall}, \texttt{Ibuiltin}, and \texttt{Itailcall}), because we
-enable inlining by default.
+calls (\texttt{Icall}, \texttt{Ibuiltin}, and \texttt{Itailcall}), because
+inlining is enabled by default.
 
 \subsection{Translating \htl{} to Verilog}
 
@@ -777,7 +774,7 @@ in \htl{} need to be translated explicitly to Verilog statements and it needs to
 be shown that these explicit behaviours are equivalent to the assumptions made
 in the \htl{} semantics.  One main example of this is proving that the
 specification of the \gls{BRAM} in \htl{} does indeed behave in the same as its
-Verilog implementation.  We discuss these proofs in upcoming sections.
+Verilog implementation.  I discuss these proofs in upcoming sections.
 
 % In general, the generated Verilog structure has similar to that of the \htl{}
 % code.  The key difference is that the control and datapath maps become Verilog

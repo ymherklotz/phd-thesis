@@ -71,7 +71,7 @@ and Bambu~\cite[line~304]{ferrandi14_panda_bambu}.
 % which is from FPL 1998. Evidence that Vitis uses hyperblock scheduling
 % \cite{}}.
 
-In this chapter, we present:
+In this chapter, I present:
 
 \begin{itemize}
 \item \textbf{the first verified implementation of hyperblock scheduling}, which
@@ -96,7 +96,7 @@ In this chapter, we present:
 \label{sec:hs:overview}
 
 \Cref{fig:compcert_interm} shows the main components of our hyperblock
-scheduler.  First we find the basic blocks in \rtl{} and form \rtlblock{}, which
+scheduler.  First I find the basic blocks in \rtl{} and form \rtlblock{}, which
 structures the basic blocks as lists of instructions.
 
 \begin{figure}
@@ -132,7 +132,7 @@ structures the basic blocks as lists of instructions.
   \label{fig:compcert_interm}
 \end{figure}
 
-We then perform if-conversion~\cite{allen83_conver_contr_depen_data_depen}. This
+I then perform if-conversion~\cite{allen83_conver_contr_depen_data_depen}. This
 is a transformation that merges basic blocks from two sides of a fork in the CFG
 into a single, larger basic block (now called a hyperblock) that uses
 predication to control which instructions are executed.  If-conversion is
@@ -153,10 +153,10 @@ Next the hyperblocks are scheduling in turn. The scheduler takes the list of
 predicated instructions and produces a list of groups of instructions such that
 all the instructions in the same group can be safely executed in parallel.
 Actually, our scheduler produces a list of groups of \emph{lists of}
-instructions.  The idea behind this three-level representation, which we call
+instructions.  The idea behind this three-level representation, which I call
 \rtlpar, is that each inner list is a sequence of instructions that can be
 chained together, then each group contains instruction chains that can be
-executed in parallel. In this way, we support \emph{operation chaining}, a
+executed in parallel. In this way, I support \emph{operation chaining}, a
 long-established optimisation in hardware
 design~\cite[p.~1101]{pangrle87_desig_tools_intel_silic_compil}.  This is shown
 in the third hyperblock in \cref{fig:itv:if-conv-sched-transformation}, where
@@ -232,7 +232,7 @@ operation.]{Example of an if-conversion transformation performed in Vericert,
 
 What remains is to ensure the correctness of each schedule. Following previous
 work on verified scheduling by \textcite{tristan08_formal_verif_trans_valid} and
-\textcite{six22_formal_verif_super_sched}, we use translation validation, but
+\textcite{six22_formal_verif_super_sched}, I use translation validation, but
 dealing with hyperblocks brings additional complexity, as explained below.
 
 \citeauthor{tristan08_formal_verif_trans_valid} implement trace scheduling in
@@ -268,11 +268,11 @@ modified during scheduling. For instance, the sequence %
 and then executes \rtlinline{i} if \rtlinline{p} does \emph{not} hold, may be
 optimised to \rtlinline{i}.
 
-The approach we take is to translate both the \rtlblock{} hyperblock and the
+The approach I take is to translate both the \rtlblock{} hyperblock and the
 \rtlpar{} hyperblock (i.e., before and after scheduling) into their strongest
 postconditions, starting from the same symbolic initial state, and then
 comparing these postconditions for equivalence with the help of a SAT solver
-that we have programmed and verified in Coq. By being able to solve queries like
+that I have programmed and verified in Coq. By being able to solve queries like
 $(\mono{p} \land \mono{!p}) \leftrightarrow \lfalse$, the SAT solver enables
 reasoning about reordering of instructions in a predicate-aware fashion.
 
@@ -425,13 +425,13 @@ comprising an environment $\forestenv{\context}$ that has global information
 about the program, a mapping $\forestregset{\context}$ from registers to values,
 and a mapping $\forestmem{\context}$ from memory addresses to values.
 
-In order to give a semantics for \rtlblock{} and \rtlpar{}, we need to handle
-predicates, so we turn $\context$ into a 4-tuple
+In order to give a semantics for \rtlblock{} and \rtlpar{}, I need to handle
+predicates, so I turn $\context$ into a 4-tuple
 $(\forestenv{\context}, \forestregset{\context}, \forestpredset{\context},
 \forestmem{\context})$, where the additional component
-$\forestpredset{\context}$ maps predicates to Booleans.  Moreover, we need to
+$\forestpredset{\context}$ maps predicates to Booleans.  Moreover, I need to
 deal with CFGs where each node is not just a single instruction, but a
-hyperblock. The semantics, which we provide in
+hyperblock. The semantics, which I provide in
 \cref{fig:semantics-of-rtlblock-and-rtlpar}, is big-step in the sense that it
 executes an entire hyperblock in a single step.  The \nameref{rule:execinstr}
 rule executes an arithmetic instruction if its guard evaluates to true (and
@@ -454,7 +454,7 @@ semantics nonetheless executes them sequentially. This is because although the
 scheduler identifies where parallelism can be profitably extracted, the program
 does not actually become parallel until the final \enquote{forward substitution}
 pass, where Verilog blocking assignments become nonblocking assignments. Hence,
-to avoid unnecessary complexity, we keep the semantics sequential at the
+to avoid unnecessary complexity, the semantics are kept sequential at the
 \rtlpar{} stage. (A parallel \rtlpar{} semantics may allow more optimisations to
 be validated, but we save that for future work.)
 
@@ -562,11 +562,11 @@ be validated, but we save that for future work.)
 
 If-conversion introduces the predicated instructions that form hyperblocks.
 CompCert does have an if-converter already, but it applies only in a few special
-cases. We need a more general algorithm that can handle arbitrary branching
+cases.  We need a more general algorithm that can handle arbitrary branching
 code.
 % Such code can be represented using non-branching instructions due to the
 % predicated instructions introduced in \cref{sec:rtlblockdef}.
-We therefore implement the first formally verified implementation of a general
+I therefore implement the first formally verified implementation of a general
 if-conversion algorithm, with support for heuristics for branch prediction.
 
 To simplify both the implementation of the if-converter and its correctness
@@ -732,7 +732,7 @@ to an external procedure.
 This separation of concerns means that the correctness of the transformation can
 be proven once-and-for-all for a single, general, if-conversion algorithm, which
 can then be extended with various heuristics to change the performance of the
-generated code.  In our implementation, we use simple static heuristics to pick
+generated code.  In my implementation, I use simple static heuristics to pick
 these paths, following \textcite{ball93_branc_predic_free}, such as avoiding
 inlining loop back-edges, or blocks with an instruction count that exceeds a
 threshold (currently
@@ -855,19 +855,18 @@ plus a possibly infinite stream of events emitted by the execution.
     %                 \diaglabel{4} with the rest of the transformed
     %                   \diaglabel{3}.
 
-The block inlining pass is a bit more involved.  To see why, consider how to
-prove a forward simulation for the first transformation in
-\cref{fig:if-conversion-example}. The edges
-$\diaglabel{$1$}\rightarrow\diaglabel{$1^\prime$}$,
-$\diaglabel{$2$}\rightarrow\diaglabel{$2^\prime$}$, and
-$\diaglabel{$4$}\rightarrow\diaglabel{$4^\prime$}$, are straightforward, but
-$\diaglabel{$3$}$ is tricky, because $\diaglabel{$3^\prime$}$ does not
-straightforwardly simulate $\diaglabel{$3$}$ (there is no edge from
-$\diaglabel{$3^\prime$}$ that can mimic the edge from $\diaglabel{$3$}$ to
-$\diaglabel{$4$}$). To resolve this, we make our simulation relation a little
-more fine-grained, so that $\diaglabel{$3$}$ can be mapped to the first `part'
-of $\diaglabel{$3^\prime$}$ and $\diaglabel{$4$}$ can be mapped to the
-second.
+    The block inlining pass is a bit more involved.  To see why, consider how to
+    prove a forward simulation for the first transformation in
+    \cref{fig:if-conversion-example}. The edges
+    $\diaglabel{$1$}\rightarrow\diaglabel{$1^\prime$}$,
+    $\diaglabel{$2$}\rightarrow\diaglabel{$2^\prime$}$, and
+    $\diaglabel{$4$}\rightarrow\diaglabel{$4^\prime$}$, are straightforward, but
+    $\diaglabel{$3$}$ is tricky, because $\diaglabel{$3^\prime$}$ does not
+    straightforwardly simulate $\diaglabel{$3$}$ (there is no edge from
+    $\diaglabel{$3^\prime$}$ that can mimic the edge from $\diaglabel{$3$}$ to
+    $\diaglabel{$4$}$). To resolve this, I make our simulation relation more
+    fine-grained, so that $\diaglabel{$3$}$ can be mapped to the first `part' of
+    $\diaglabel{$3^\prime$}$ and $\diaglabel{$4$}$ can be mapped to the second.
 
                                       % Then, upon exiting the block one has to
                                       % consider two more cases.  If the
@@ -903,15 +902,15 @@ This section discusses our implementation of hyperblock scheduling in Vericert.
 The scheduler takes each hyperblock of an if-converted \rtlblock{} program in
 turn, and schedules it to form an \rtlpar{} hyperblock. The scheduler is
 unverified, but it uses a verified translation validation algorithm to prove
-each output correct, which we will describe in
+each output correct, which I will describe in
 \cref{sec:hs:verifying-scheduling}.
 
 Our scheduler is written in OCaml, and follows the SDC scheduling
 approach~\cite{cong06_sdc}. SDC scheduling is widely used in HLS tools, and it
 has also been extended to support modulo scheduling of loops~\cite{zhang13_sdc},
-which we hope to incorporate into our future work. The SDC scheduler generates a
+which I hope to incorporate into our future work. The SDC scheduler generates a
 function that should be minimised plus a set of constraints that must be
-respected while doing so. In our case, the function we minimise is the overall
+respected while doing so. In my case, the function I minimise is the overall
 latency of the block (i.e. the end time of the last
 operation). %Alternatives include optimising for minimum area or maximum throughput.
 The constraints come from three sources. First, the cumulative latency of all
@@ -919,8 +918,8 @@ the operations in each chain must not exceed a predefined limit; this ensures
 that operation chaining does not reduce the maximum clock frequency of the
 resultant hardware. Second, whenever operation $\instr_1$ has a data dependency
 on $\instr_2$, $\instr_2$'s end time must precede $\instr_1$'s start
-time. Third, since our hardware has only a single \gls{BRAM} controller, no two memory
-operations (loads or stores) may be scheduled for the same cycle.
+time. Third, since our hardware has only a single \gls{BRAM} controller, no two
+memory operations (loads or stores) may be scheduled for the same cycle.
 
 These are all passed to a linear program (LP) solver; we use
 \texttt{lp\_solve}~\cite{berkelaar10}.  The solver outputs a mapping from
