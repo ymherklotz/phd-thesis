@@ -13,28 +13,29 @@ This way, hardware designers can benefit from mature software development tools
 while working on the functionality of the design.  \gls{HLS} tools promise
 designs with comparable performance and energy-efficiency to those hand-written
 in an \gls{HDL}, reducing the time needed to design new accelerators.  Being
-able to reasoning about behaviour at a higher level should also make the process
+able to reason about behaviour at a higher level should also make the process
 less error-prone.  Unfortunately, \gls{HLS} tools have been found to be
 unreliable; Vivado HLS produces incorrect designs in 1.2\% of randomly generated
 C programs, undermining testing that was performed at the higher level of
 abstraction.
 
-I propose a formally verified \gls{HLS} tool called Vericert, providing a
-computer-checked proof that ensures it only generates hardware designs that
-behave the same as the input software program.  Vericert extends CompCert, an
-established formally verified C Compiler, with a hardware back end.  One expects
-a verified tool to produce significantly worse hardware than existing optimising
-\gls{HLS} tools, as each transformation has to be proven correct.  Indeed, an
-initial version of Vericert without optimisations was up to $8\times$ slower
-than a state-of-the-art \gls{HLS} tool called Bambu with many optimisations
-switched off.
+In an attempt to improve this situation, I propose a formally verified \gls{HLS}
+tool called Vericert, providing a computer-checked proof that ensures it only
+generates hardware designs that behave the same as the input software program.
+Vericert extends CompCert, an established formally verified C Compiler, with a
+hardware back end.
 
-However, by verifying hyperblock scheduling in Vericert, a transformation which
-parallelises the instructions in large regions of code without loops, hardware
-produced by Vericert becomes only around $1.6\times$ slower than Bambu without
-optimisations and $3.6\times$ slower than hardware produced by optimised Bambu.
-This is encouraging, showing that a verified \gls{HLS} tool can be compared with
-an existing \gls{HLS} tool with some optimisations turned off, while being
+One expects a verified tool to produce significantly worse hardware than
+existing optimising \gls{HLS} tools, as each transformation has to be simple
+enough to be proven correct.  Indeed, an initial version of Vericert without
+optimisations was up to $8\times$ slower than a state-of-the-art \gls{HLS} tool
+called Bambu even with many optimisations switched off.  However, by verifying
+\emph{hyperblock scheduling} in Vericert, a transformation which parallelises
+the instructions in large regions of code without loops, hardware produced by
+Vericert becomes only around $1.6\times$ slower than Bambu without optimisations
+and $3.6\times$ slower than hardware produced by optimised Bambu.  This is
+encouraging, showing that a verified \gls{HLS} tool can be comparable with an
+existing \gls{HLS} tool with some optimisations turned off, while being
 guaranteed to generate correct hardware designs.
 
 %%% Local Variables:

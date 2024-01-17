@@ -83,14 +83,20 @@ In this chapter, I present:
 \item \textbf{the first verified implementation of general if-conversion} (a
   pre-scheduling pass that turns if-statements into hyperblocks), building on
   CompCert's na\"ive if-converter that only handles simple
-  cases~\cite{absint19_compc},
+  cases~\cite{absint19_compc}, and
 \item \textbf{a novel use of a verified SAT solver during translation
-    validation} in order to reason about predicates, and
-\item \textbf{experiments on the widely used PolyBench/C suite} showing that
-  scheduling makes Vericert generate 2.1$\times$ faster hardware, thus making it
-  competitive with Bambu~\cite{ferrandi21_bambu}, a state-of-the-art
-  open-source HLS tool, when a similar set of optimisations is enabled.
+    validation} in order to reason about predicates.
 \end{itemize}
+
+First, \cref{sec:hs:overview} gives an overview of the scheduling optimisation,
+then \cref{sec:hs:rtlblockdef} introduces the new intermediate languages used
+for the scheduling transformation.  \Cref{sec:hs:if-conversion} then describes
+hyperblock construction using if-conversion followed by
+\cref{sec:hs:implementing-scheduling,sec:hs:verifying-scheduling,sec:hs:overview-validator-correctness-proof}
+describing the implementation, validation and verification of the actual
+hyperblock transformation.  Finally,
+\cref{sec:hs:efficient-smt-solver-validation} describes the use of a validated
+SMT solver as part of the hyperblock scheduling correctness proof.
 
 \section{Overview}
 \label{sec:hs:overview}

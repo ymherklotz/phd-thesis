@@ -38,7 +38,7 @@ set origin 0,0.675
 set ytics (1, 2, 3, 5, 10, 25)
 
 plot sample [x=0:56:1] '+' us (x/2-0.5):(31/(int(x)%4!=1)) with filledcurves x1 fc rgb "#EEEEEE" notitle, \
-     'speed.csv' every ::1 using 0:($2/$6):($0-(1.6*myWidth)-myWidth/2.):($0-(1.6*myWidth)+myWidth/2.):(myOffset):($2/$6):xtic(1) with boxxyerror title "\\small Vericert-original",\
+     'speed.csv' every ::1 using 0:($2/$6):($0-(1.6*myWidth)-myWidth/2.):($0-(1.6*myWidth)+myWidth/2.):(myOffset):($2/$6):xtic(1) with boxxyerror title "\\small Vericert-no-scheduling",\
      '' every ::1 using 0:($3/$6):($0-(0.55*myWidth)-myWidth/2.):($0-(0.55*myWidth)+myWidth/2.):(myOffset):($3/$6):xtic(1) with boxxyerror title "\\small Vericert-list-scheduling", \
      '' every ::1 using 0:($4/$6):($0+(0.55*myWidth)-myWidth/2.):($0+(0.55*myWidth)+myWidth/2.):(myOffset):($4/$6):xtic(1) with boxxyerror title "\\small Vericert-hyperblock-scheduling", \
      '' every ::1 using 0:($5/$6):($0+(1.6*myWidth)-myWidth/2.):($0+(1.6*myWidth)+myWidth/2.):(myOffset):($5/$6):xtic(1) with boxxyerror title "\\small Bambu-no-opt"

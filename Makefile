@@ -2,7 +2,7 @@ GNUPLOT_EXTRA_ARGS=
 
 .PHONY: all clean
 
-all: figures/5-hyperblock-scheduling/bar-plot.pdf
+all: figures/5-hyperblock-scheduling/bar-plot-sideways.pdf
 
 figures/5-hyperblock-scheduling/unhashed-performance.pdf: GNUPLOT_EXTRA_ARGS=size 3,2
 figures/5-hyperblock-scheduling/hashed-performance.pdf: GNUPLOT_EXTRA_ARGS=size 3,2
