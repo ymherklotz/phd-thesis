@@ -403,7 +403,7 @@ translating the control-flow instructions into assignments to the
 \htl{}, because a later control-flow instruction could overwrite a previous
 instruction.  As a remedy, we keep track of the current negated exit condition,
 which accumulates throughout the translation of a block.
-\Cref{fig:hg:htl-generation} demonstrates this on a chain of control-flow
+\Cref{fig:hg:htl-generation:cf} demonstrates this on a chain of control-flow
 operations.  First, the condition of the ternary statement in Verilog
 corresponds to the predicate in the block, however, these quickly diverge.  For
 the next control-flow instruction, the condition of the ternary statement is set
@@ -435,8 +435,10 @@ assigned to the last \veriloginline`state` update.
          \path (initial block) -- node[pass] (fs) {\htl{} generation} (transf block);
    \draw[ed] (initial block) -- (fs) -- (transf block);
   \end{tikzpicture}
-  \caption{Simple translation from an \rtlsubpar{} block into an \htl{} block.}%
-  \label{fig:hg:htl-generation}
+  \caption[Describing the control flow translation from \rtlsubpar{} to
+  \htl{}.]{Describing the control flow translation from \rtlsubpar{} to
+    \htl{}.}%
+  \label{fig:hg:htl-generation:cf}
 \end{figure}
 
 To avoid all side-effects after a gated control-flow instruction, regular

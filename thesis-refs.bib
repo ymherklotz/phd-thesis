@@ -443,6 +443,21 @@ and Philippou, Anna",
 	year = {1993}
 }
 
+@inproceedings{canis11_legup,
+	abstract = {In this paper, we introduce a new open source high-level synthesis tool called LegUp that allows software techniques to be used for hardware design. LegUp accepts a standard C program as input and automatically compiles the program to a hybrid architecture containing an FPGA-based MIPS soft processor and custom hardware accelerators that communicate through a standard bus interface. Results show that the tool produces hardware solutions of comparable quality to a commercial high-level synthesis tool.},
+	author = {Canis, Andrew and Choi, Jongsok and Aldham, Mark and Zhang, Victor and Kammoona, Ahmed and Anderson, Jason H. and Brown, Stephen and Czajkowski, Tomasz},
+	location = {Monterey, CA, USA},
+	publisher = {Association for Computing Machinery},
+	booktitle = {Proceedings of the 19th ACM/SIGDA International Symposium on Field Programmable Gate Arrays},
+	doi = {10.1145/1950413.1950423},
+	isbn = {9781450305549},
+	keywords = {fpgas,hardware/software co-design,field-programmable gate arrays,high-level synthesis},
+	pages = {33--36},
+	series = {FPGA '11},
+	title = {LegUp: High-Level Synthesis for FPGA-Based Processor/Accelerator Systems},
+	year = {2011}
+}
+
 @article{canis13_l,
 	author = {Canis, Andrew and Choi, Jongsok and Aldham, Mark and Zhang, Victor and Kammoona, Ahmed and Czajkowski, Tomasz and Brown, Stephen D. and Anderson, Jason H.},
 	location = {New York, NY, USA},
@@ -523,6 +538,15 @@ and Philippou, Anna",
 	pages = {197--208},
 	year = {2013},
 	doi = {10.1145/2491956.2462173}
+}
+
+@inproceedings{choi18_hbods,
+	author = {Choi, Young{-}kyu and Cong, Jason},
+	booktitle = {2018 IEEE/ACM International Conference on Computer-Aided Design (ICCAD)},
+	doi = {10.1145/3240765.3240815},
+	pages = {1--8},
+	title = {HLS-Based Optimization and Design Space Exploration for Applications with Variable Loop Bounds},
+	year = {2018}
 }
 
 @article{chouksey19_trans_valid_code_motion_trans_invol_loops,
@@ -749,6 +773,25 @@ and Kun{\v{c}}ak, Viktor",
 	note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes}
 }
 
+@article{gourdin23_fvobs,
+	author = {Gourdin, L\'{e}o and Bonneau, Benjamin and Boulm\'{e}, Sylvain and Monniaux, David and B\'{e}rard, Alexandre},
+	title = {Formally Verifying Optimizations with Block Simulations},
+	year = {2023},
+	issue_date = {October 2023},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {7},
+	number = {OOPSLA2},
+	url = {https://doi.org/10.1145/3622799},
+	doi = {10.1145/3622799},
+	abstract = {CompCert (ACM Software System Award 2021) is the first industrial-strength compiler with a mechanically checked proof of correctness. Yet, CompCert remains a moderately optimizing C compiler. Indeed, some optimizations of “gcc ‍-O1” such as Lazy Code Motion (LCM) or Strength Reduction (SR) were still missing: developing these efficient optimizations together with their formal proofs remained a challenge. Cyril Six et al. have developed efficient formally verified translation validators for certifying the results of superblock schedulers and peephole optimizations. We revisit and generalize their approach into a framework (integrated into CompCert) able to validate many more optimizations: an enhanced superblock scheduler, but also Dead Code Elimination (DCE), Constant Propagation (CP), and more noticeably, LCM and SR. In contrast to other approaches to translation validation, we co-design our untrusted optimizations and their validators. Our optimizations provide hints, in the forms of invariants or CFG morphisms, that help keep the formally verified validators both simple and efficient. Such designs seem applicable beyond CompCert.},
+	journal = {Proc. ACM Program. Lang.},
+	month = {oct},
+	articleno = {224},
+	numpages = {30},
+	keywords = {the Coq proof assistant, Translation validation, Symbolic execution, Formal verification of compiler optimizations}
+}
+
 @inproceedings{greaves08_kiwi,
 	author = {Greaves, David J. and Singh, Satnam},
 	publisher = {{IEEE} Computer Society},
@@ -887,6 +930,17 @@ and Kun{\v{c}}ak, Viktor",
 	url = {https://yannherklotz.com/docs/drafts/verified_hyperblock_scheduling.pdf},
 	title = {Hyperblock Scheduling for Verified High-Level Synthesis},
 	note = {Submitted to PLDI 2024}
+}
+
+@software{herklotz24_v,
+	author = {Herklotz, Yann and Pollard, James D. and Ramanathan, Nadesh and Wickerson, John},
+	title = {Vericert v2.0.0-rc1},
+	month = jan,
+	year = 2024,
+	publisher = {Zenodo},
+	version = {v2.0.0-rc1},
+	doi = {10.5281/zenodo.10541391},
+	url = {https://doi.org/10.5281/zenodo.10541391}
 }
 
 @inproceedings{herzog21_price_meltd_spect,
@@ -1463,6 +1517,21 @@ and Voronkov, Andrei",
 	year = {2010}
 }
 
+@InProceedings{monniaux22_tcbcvc,
+	doi = {10.1007/978-3-030-99336-8_8},
+	author = "Monniaux, David
+and Boulm{\'e}, Sylvain",
+	editor = "Sergey, Ilya",
+	title = "The Trusted Computing Base of the CompCert Verified Compiler",
+	booktitle = "Programming Languages and Systems",
+	year = "2022",
+	publisher = "Springer International Publishing",
+	address = "Cham",
+	pages = "204--233",
+	abstract = "CompCert is the first realistic formally verified compiler: it provides a machine-checked mathematical proof that the code it generates matches the source code. Yet, there could be loopholes in this approach. We comprehensively analyze aspects of CompCert where errors could lead to incorrect code being generated. Possible issues range from the modeling of the source and the target languages to some techniques used to call external algorithms from within the compiler.",
+	isbn = "978-3-030-99336-8"
+}
+
 @InProceedings{moura08_z,
 	keywords = {SMT},
 	author = {de Moura, Leonardo and Bj{\o}rner, Nikolaj},
@@ -1645,6 +1714,15 @@ and Rehof, Jakob",
 	year = {1998}
 }
 
+@inproceedings{pouchet13_polyh,
+	author = {Pouchet, Louis-Noel and Zhang, Peng and Sadayappan, Ponnuswamy and Cong, Jason},
+	booktitle = {Proceedings of the ACM/SIGDA international symposium on Field programmable gate arrays},
+	doi = {https://doi.org/10.1145/2435264.2435273},
+	pages = {29--38},
+	title = {Polyhedral-based data reuse optimization for configurable computing},
+	year = {2013}
+}
+
 @misc{pouchet20_polyb_c,
 	author = {Pouchet, Louis-No\"el},
 	title = {PolyBench/C: the Polyhedral Benchmark suite},
@@ -1807,6 +1885,14 @@ and Rehof, Jakob",
 	year = {2022}
 }
 
+@Software{six23_ck,
+	url = {https://www-verimag.imag.fr/the-KVX-CompCert-Compiler.html},
+	organization = {Grenoble-INP, CNRS and Kalray},
+	date = {2023},
+	title = {CompCert KVX},
+	author = {Six, Cyril and Gourdin, Léo and Bonneau, Benjamin and Bérard, Alexandre and Boulmé, Sylvain and Monniaux, David}
+}
+
 @inproceedings{sun16_tucbgl,
 	title = {Toward Understanding Compiler Bugs in {GCC} and {LLVM}},
 	author = {Sun, Chengnian and Le, Vu and Zhang, Qirun and Su, Zhendong},
@@ -1940,6 +2026,14 @@ and Rehof, Jakob",
 	address = {San Francisco, CA}
 }
 
+@Book{weste10_cvd,
+	author = {Weste, Neil H. E. and Harris, David Money},
+	publisher = {Pearson},
+	isbn = {9780321547743},
+	date = {2010},
+	title = {{CMOS} {VLSI} Design: A Circuits and Systems Perspective}
+}
+
 @inproceedings{yang11_findin_under_bugs_c_compil,
 	author = {Yang, Xuejun and Chen, Yang and Eide, Eric and Regehr, John},
 	location = {San Jose, California, USA},
@@ -1990,6 +2084,15 @@ and Rehof, Jakob",
 	year = {2012}
 }
 
+@inproceedings{zhao17_comba,
+	author = {Zhao, Jieru and Feng, Liang and Sinha, Sharad and Zhang, Wei and Liang, Yun and He, Bingsheng},
+	booktitle = {2017 IEEE/ACM International Conference on Computer-Aided Design (ICCAD)},
+	doi = {10.1109/ICCAD.2017.8203809},
+	pages = {430--437},
+	title = {COMBA: A comprehensive model-based analysis framework for high level synthesis of real applications},
+	year = {2017}
+}
+
 @inproceedings{zheng14_fast_effec_placem_routin_direc,
 	author = {Zheng, Hongbin and Gurumani, Swathi T. and Rupnow, Kyle and Chen, Deming},
 	title = {Fast and Effective Placement and Routing Directed High-Level Synthesis for FPGAs},
@@ -2005,6 +2108,18 @@ and Rehof, Jakob",
 	keywords = {high-level synthesis, scheduling, delay prediction},
 	location = {Monterey, California, USA},
 	series = {FPGA '14}
+}
+
+@inproceedings{zuo13_improv,
+	abstract = {High-level synthesis (HLS) tools are now capable of generating high-quality RTL codes for a number of programs. Nevertheless, for best performance aggressive program transformations are still required to exploit data reuse and enable communication/computation overlap. The polyhedral compilation framework has shown great promise in this area with the development of HLS-specific polyhedral transformation techniques and tools. However, all these techniques rely on polyhedral code generation to translate a schedule for the program's operations into an actual C code that is input to the HLS tool. In this work we study the changes to the state-of-the-art polyhedral code generator CLooG which are required to tailor it for HLS purposes. In particular, we develop various techniques to significantly improve resource utilization on the FPGA. We also develop a complete technique geared towards effective code generation of rectangularly tiled code, leading to further improvements in resource utilization. We demonstrate our techniques on a collection of affine benchmarks, reducing by 2x on average (up to 10x) the area used after high-level synthesis.},
+	author = {Zuo, W. and Li, P. and Chen, D. and Pouchet, L. and Zhong, Shunan and Cong, J.},
+	booktitle = {2013 International Conference on Hardware/Software Codesign and System Synthesis (CODES+ISSS)},
+	doi = {10.1109/CODES-ISSS.2013.6659002},
+	keywords = {FPGA,high-level synthesis,polyhedral analysis},
+	month = sep,
+	pages = {1--10},
+	title = {Improving polyhedral code generation for high-level synthesis},
+	year = {2013}
 }
 
 @Comment{

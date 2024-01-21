@@ -323,8 +323,8 @@ CompCert's \gls{RTL} was selected as the starting point. Branching off
 opportunity to perform optimisations such as constant propagation and dead-code
 elimination, which, despite being designed for software compilers, have been
 found useful in HLS tools as well~\cite{cong11_high_level_synth_fpgas}. And if
-we branch off \emph{after} this point (at LTL or later) then \compcert{} has
-already performed register allocation to reduce the number of registers and
+we branch off \emph{after} this point (at \gls{LTL} or later) then \compcert{}
+has already performed register allocation to reduce the number of registers and
 spill some variables to the stack; this transformation is not required in HLS
 because there are many more registers available, and these should be used
 instead of \gls{BRAM} whenever possible.

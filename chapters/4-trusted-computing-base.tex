@@ -98,19 +98,20 @@ compilation would fail on these translation units.
 This section describes the Verilog semantics that was chosen for the target
 language, including the changes that were made to the semantics to make it a
 suitable HLS target.  The Verilog standard is quite
-large~\cite{06_ieee_stand_veril_hardw_descr_languag,05_ieee_stand_veril_regis_trans_level_synth},
-and is split into two standards, sone for synthesis and one for simulation.  The
-simulation semantics are similar to semantics one would expect, assigning
-detailed behaviour to each part of the Verilog language.  However, in contrast
-to programming languages, \textquote[{\textcite[p.~699]{west10_cvd}}]{HDLs are
-  better understood as a shorthand for describing digital hardware}, as
-synthesis tools try to understand what kind of hardware the user wanted to
-describe, which may sometimes behave differently to simulating the original
-Verilog design.  It is therefore important to take that into account in the
-Verilog semantics and ensure that after synthesis the design still behaves
-according to the semantics.  Luckily, the syntax and semantics can be reduced to
-a small subset that \vericert{} can target.  This section also describes how
-\vericert{}'s representation of memory differs from \compcert{}'s memory model.
+large~\cite{06_ieee_stand_veril_hardw_descr_languag,
+  05_ieee_stand_veril_regis_trans_level_synth}, and is split into two standards,
+sone for synthesis and one for simulation.  The simulation semantics are similar
+to semantics one would expect, assigning detailed behaviour to each part of the
+Verilog language.  However, in contrast to programming languages,
+\textquote[{\textcite[p.~699]{weste10_cvd}}]{HDLs are better understood as a
+  shorthand for describing digital hardware}, as synthesis tools try to
+understand what kind of hardware the user wanted to describe, which may
+sometimes behave differently to simulating the original Verilog design.  It is
+therefore important to take that into account in the Verilog semantics and
+ensure that after synthesis the design still behaves according to the semantics.
+Luckily, the syntax and semantics can be reduced to a small subset that
+\vericert{} can target.  This section also describes how \vericert{}'s
+representation of memory differs from \compcert{}'s memory model.
 
 The Verilog semantics I use is ported to Coq from a semantics written in HOL4 by
 \textcite{lööw19_proof_trans_veril_devel_hol} which was used to prove the

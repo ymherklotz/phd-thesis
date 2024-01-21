@@ -985,7 +985,11 @@ Unfortunately, equivalence checkers used to verify designs or formal
 verification tools to prove assertions about hardware normally do not produce a
 proof witness that can be independently checked.  This means that especially
 with the commercial, closed source formal verification tools, one has to trust
-that the result they produce is correct.
+that the result they produce is correct.  Additionally, when automatic
+verification tools cannot prove the equivalence between two designs, for
+example, it is often unclear what additional information the checker needs to
+complete the proof.  Instead one often has to guess where the solver is getting
+stuck, and provide assertions to guide it in the right direction.
 
 %The main advantage of using an automatic theorem prover is that if one is
 %working in its constrained decidable theory, then it will be efficient at
@@ -1731,7 +1735,7 @@ y := M[x];
 scheduling to a verified compiler.  \textcite{six20_certif_effic_instr_sched}
 then optimise the validator and extend it so that it works with the Kalray KVX
 \gls{VLIW} processor as a post-pass scheduling step in their translation and is
-integrated into a fork of CompCert called CompCert KVX~\cite[]{six23_c}.  In
+integrated into a fork of CompCert called CompCert KVX~\cite[]{six23_ck}.  In
 both these cases, the list scheduling algorithm works on the Mach intermediate
 language in CompCert, but in the case of CompCert KVX the list scheduling pass
 is also used to transform the Mach into Assembly.  List scheduling is performed
@@ -1944,7 +1948,7 @@ In contrast to the list scheduling transformation, the superblock transformation
 requires validation of symbolic states at each exit of the superblock with the
 corresponding exit in the scheduled \gls{superblock}.  This is similar to the
 validation of graph of trees, except that traces are still lists instead of
-trees.  \textcite[]{gourdin23_fvopbs} later replaced \textsc{Rtlpath} with
+trees.  \textcite[]{gourdin23_fvobs} later replaced \textsc{Rtlpath} with
 \gls{BTL}, a general intermediate block language shown in
 \cref{fig:block-comparison:btl}, where blocks are either:
 \begin{enumerate*}[label=(\arabic*)]
