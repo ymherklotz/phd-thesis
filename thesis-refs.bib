@@ -89,6 +89,21 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	year = 2023
 }
 
+@INPROCEEDINGS{anderson94_vsa,
+	author = {Anderson, D.P. and Ainscough, J.},
+	booktitle = {IEE Colloquium on Structured Methods for Hardware Systems Design},
+	title = {The Verification of Scheduling Algorithms},
+	year = {1994},
+	volume = {},
+	number = {},
+	pages = {7/1-7/5},
+	abstract = {Scheduling in high-level synthesis consists of assigning the operations contained within a circuit specification to clock cycles. An operational semantics of a simulation model for the design representation enables the semantics preserving properties of transformational algorithms to be established. This semantics and a simple scheduling algorithm have been mechanised in an automated theorem prover. The correctness of this algorithm has been proven.<>},
+	keywords = {Circuit simulation;Theorem proving},
+	doi = {},
+	ISSN = {},
+	month = {May}
+}
+
 @inproceedings{appel11_verif_softw_toolc,
 	doi = {10.1007/978-3-642-19718-5_1},
 	abstract = {The software toolchain includes static analyzers to check assertions about programs; optimizing compilers to translate programs to machine language; operating systems and libraries to supply context for programs. Our Verified Software Toolchain verifies with machine-checked proofs that the assertions claimed at the top of the toolchain really hold in the machine-language program, running in the operating-system context, on a weakly-consistent-shared-memory machine.},
@@ -109,6 +124,13 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 	date = {2022-06},
 	title = {Deploying Transformers on the Apple Neural Engine},
 	author = {Apple}
+}
+
+@TechReport{arm11_aiso,
+	date = {2011-11-11},
+	number = {PRD03-GENC-010197 15.0},
+	title = {{ARMv8} Instruction Set Overview},
+	author = {ARM}
 }
 
 @inproceedings{armand11_modul_integ_sat_smt_solver,
@@ -682,6 +704,21 @@ and Kun{\v{c}}ak, Viktor",
 	location = {undefined}
 }
 
+@ARTICLE{faraboschi01_isilpp,
+	author = {Faraboschi, P. and Fisher, J.A. and Young, C.},
+	journal = {Proceedings of the IEEE},
+	title = {Instruction Scheduling for Instruction Level Parallel Processors},
+	year = {2001},
+	volume = {89},
+	number = {11},
+	pages = {1638-1659},
+	abstract = {Nearly all personal computer and workstation processors, and virtually all high-performance embedded processor cores, now embody instruction level parallel (ILP) processing in the form of superscalar or very long instruction word (VLIW) architectures. ILP processors put much more of a burden on compilers; without "heroic" compiling techniques, most such processors fall far short of their performance goals. Those techniques are largely found in the high-level optimization phase and in the code generation phase; they are also collectively called instruction scheduling. This paper reviews the state of the art in code generation for ILP parallel processors. Modern ILP code generation methods move code across basic block boundaries. These methods grew out of techniques for generating horizontal microcode, so we introduce the problem by describing its history. Most modem approaches can be categorized by the shape of the scheduling "region." Some of these regions are loops, and for those techniques known broadly as "Software Pipelining" are used. Software Pipelining techniques are only considered here when there are issues relevant to the region-based techniques presented. The selection of a type of region to use in this process is one of the most controversial questions in code generation; the paper surveys the best known alternatives. The paper then considers two questions: First, given a type of region, how does one pick specific regions of that type in the intermediate code. In conjunction with region selection, we consider region enlargement techniques such as unrolling and branch target expansion. The second question, how does one construct a schedule once regions have been selected, occupies the next section of the paper. Finally, schedule construction using recent, innovative resource modeling based on finite-state automata is then reexamined. The paper includes an extensive bibliography.},
+	keywords = {Processor scheduling;VLIW;Pipeline processing;Microcomputers;Workstations;Computer architecture;History;Modems;Shape;Automata},
+	doi = {10.1109/5.964443},
+	ISSN = {1558-2256},
+	month = {Nov}
+}
+
 @misc{ferrandi14_panda_bambu,
 	author = {Ferrandi, Fabrizio},
 	title = {PandA-Bambu release notes},
@@ -1226,6 +1263,29 @@ and Kun{\v{c}}ak, Viktor",
 	pages = {110--115},
 	title = {Automated formal verification of scheduling process using finite state machines with datapath (FSMD)},
 	year = {2004}
+}
+
+@INPROCEEDINGS{koelbl09_sr,
+	author = {Koelbl, Alfred and Jacoby, Reily and Jain, Himanshu and Pixley, Carl},
+	booktitle = {2009 Design, Automation & Test in Europe Conference & Exhibition},
+	title = {Solver technology for system-level to RTL equivalence checking},
+	year = {2009},
+	volume = {},
+	number = {},
+	pages = {196-201},
+	abstract = {Checking the equivalence of a system-level model against an RTL design is a major challenge. The reason is that usually the system-level model is written by a system architect, whereas the RTL implementation is created by a hardware designer. This approach leads to two models that are significantly different. Checking the equivalence of real-life designs requires strong solver technology. The challenges can only be overcome with a combination of bit-level and word-level reasoning techniques, combined with the right orchestration. In this paper, we discuss solver technology that has shown to be effective on many real-life equivalence checking problems.},
+	keywords = {Hardware;Integrated circuit modeling;Engines;Jacobian matrices;Binary decision diagrams;Surface-mount technology;Computer languages;Computer bugs;Production systems;Timing},
+	doi = {10.1109/DATE.2009.5090657},
+	ISSN = {1558-1101},
+	month = {April}
+}
+
+@Software{koelbl21_vcddh,
+	organization = {Synopsys},
+	url = {https://www.synopsys.com/blogs/chip-design/verifying-complex-datapath-designs-with-hector.html},
+	date = {2021-02-23},
+	title = {Verifying Complex Datapath Designs with {HECTOR}},
+	author = { Koelbl, Alfred and Vittal, Kiran and Mahajan, Pratik}
 }
 
 @inproceedings{koenig21_compc,
@@ -2046,6 +2106,21 @@ and Rehof, Jakob",
 	series = {PLDI '11},
 	title = {Finding and Understanding Bugs in C Compilers},
 	year = {2011}
+}
+
+@Software{yosyshq23_symbiyosys,
+	urldate = {2023-12-20},
+	year = {2023},
+	title = {SymbiYosys (sby)},
+	author = {YosysHQ},
+	url = {https://github.com/YosysHQ/SymbiYosys}
+}
+
+@Software{yosyshq23_y,
+	url = {https://yosyshq.net/yosys/},
+	year = {2023},
+	title = {Yosys},
+	author = {YosysHQ}
 }
 
 @inproceedings{zhang13_sdc,

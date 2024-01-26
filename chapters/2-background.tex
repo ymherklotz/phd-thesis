@@ -607,7 +607,13 @@ This \namecref{sec:bg:intermediate-language} describes the representation of
 intermediate languages that are often used within an \gls{HLS} tool.  In
 particular, we will base our intermediate language on a \gls{CFG}, but will
 describe various ways to group blocks of instructions together and describe the
-advantages and drawbacks that they provide.
+advantages and drawbacks that they provide.  Especially for compiler targets
+that allow for instruction-level parallelism, such as \gls{VLIW} processors or
+custom hardware, it is important to schedule instructions so that the
+parallelism can be exploited.  Various ways in which instructions can be grouped
+affect the size of the regions of instructions that can be scheduled together,
+and therefore affect the performance that can be
+achieved~\cite{faraboschi01_isilpp}.
 
 \begin{figure}
   \begin{subfigure}[c]{0.3\linewidth}
@@ -723,55 +729,82 @@ advantages and drawbacks that they provide.
 
 To build a bit more structure in the \gls{CFG}, it is useful to group
 non-branching instructions without any incoming edges together forming
-\glspl{basic block}.  An example of the \gls{CFG} segmented into
-\glspl{basic block} is shown in \cref{fig:block-comparison:basicblocks}.
-Instructions within a \gls{basic block} can then be represented as a list of
-instructions, as there cannot be any branches, and these lists of instructions
-can then be safely manipulated because there is a guarantee that there is no
-incoming control flow into the middle of a \gls{basic block}.  For example, as
-long as two instructions in a \gls{basic block} are independent, they can be
-safely reordered.  This would have otherwise not been a case, because incoming
-control flow may mean that reordering the instructions now leads to the
-unintended execution of an instruction.
+\glspl{basic block}.  An example of the \gls{CFG} segmented into \glspl{basic
+  block} is shown in \cref{fig:block-comparison:basicblocks}.  Instructions
+within a \gls{basic block} can then be represented as a list of instructions, as
+there cannot be any branches, and these lists of instructions can then be safely
+manipulated because there is a guarantee that there is no incoming control flow
+into the middle of a \gls{basic block}.  For example, as long as two
+instructions in a \gls{basic block} are independent, they can be safely
+reordered.  This would have otherwise not been a case, because incoming control
+flow may mean that reordering the instructions now leads to the unintended
+execution of an instruction.  \Glspl{basic block} are used by \glspl{IR} in real
+compilers such as Gimple in GCC or LLVM IR in clang as the default grouping of
+sequential instructions.  They are a useful representation for various
+optimisations and transformations, because the \gls{CFG} can be viewed as being
+coarser grained when manipulating control flow, as one does not have to modify
+any control flow within basic blocks, and provides useful assumptions that can
+be made when performing intra-block transformations.
 
 \subsubsection{Superblocks}
 
-As \cref{fig:block-comparison:basicblocks} shows, one issue with
-\glspl{basic block} is that they are often quite small, therefore limiting the
-benefits that they can provide. One extension to \glspl{basic block} is
+As \cref{fig:block-comparison:basicblocks} shows, one issue with \glspl{basic
+  block} is that they are often quite small, therefore limiting the benefits
+that they can provide. One extension to \glspl{basic block} is
 \glspl{superblock}~\cite[]{hwu93_super}, shown in
 \cref{fig:block-comparison:superblocks}.  \Glspl{superblock} extend the notion
-of \glspl{basic block} to contiguous regions without any incoming control flow,
-however, they allow for multiple exits out of the \gls{superblock}.  The main
-benefit of this is that due to the extra flexibility of allowing multiple exits,
-the \glspl{basic block} can now contain arbitrary linear traces through regions
-without any incoming edges.  This means that one can, for example, group the
-\enquote{hot path} of the loop body into a single \gls{superblock}, which can
-then be heavily optimised.  Various other important paths through the program
-can then also be grouped and optimised together.  If different paths through the
-program reuse nodes from another path, as is shown with the pink and yellow
-nodes in \cref{fig:block-comparison:superblocks}, then these nodes will have to
-be duplicated so that they can be included in a different path.  As long as any
-optimisation takes into account the arbitrary exits that are possible in
+of \glspl{basic block} to contiguous regions without multiple incoming
+control-flow edges, but with multiple control-flow edges out of the
+\gls{superblock}.  The main benefit of this is that due to the extra flexibility
+of the multiple exits, the \glspl{basic block} can now contain arbitrary linear
+traces through regions without incoming control-flow edges.  The \enquote{hot
+  path} of the loop body can be grouped into a single \gls{superblock}, which
+can then be heavily optimised.  Various other important paths through the
+program can then also be grouped and optimised together.  If different paths
+through the program reuse nodes from another path, as is shown with the pink and
+yellow nodes in \cref{fig:block-comparison:superblocks}, then these nodes will
+have to be duplicated so that they can be included in a different path.  As long
+as any optimisation takes into account the arbitrary exits that are possible in
 \glspl{superblock}, the nodes within a \glspl{superblock} can then be optimised
 independently from the rest of the code.
 
+Unlike \glspl{basic block}, \glspl{superblock} are not generally used to
+represent the \gls{IR} itself, and they are mainly used to perform superblock
+scheduling.  GCC, for example, implements a superblock scheduling optimisations,
+but does not use the superblock representation for other transformations passes.
+
 \subsubsection{Hyperblocks}
 
-One downside of \glspl{superblock} is that they cannot represent a whole section
-of code without back edges as a single block.  For example, the block present in
+One downside of \glspl{superblock} is that they cannot represent branching and
+joining control flow within a single block.  For example, the block present in
 the \gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg} could not be
 represented by a \gls{superblock}.  \Glspl{hyperblock} are defined as
 \glspl{basic block} of \glspl{predicated instruction} with arbitrary outgoing
 edges~\cite[]{mahlke92_effec_compil_suppor_predic_execut_using_hyper}.  They can
-represent arbitrary branching code without incoming edges, and are therefore an
-extension to \glspl{superblock}.  This means that they could represent the
-\gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg}, and an example of
-a hyperblock is shown in \cref{fig:block-comparison:hyperblocks}, where code
-within the \gls{hyperblock} has been linearised instead of containing a
-\gls{DFG}.  This leads to possibly more complex control flow than in both of the
-previous cases, however, it can be reasoned with using a \gls{SAT} or \gls{SMT}
-solver.
+represent arbitrary branching and joining control flow without multiple incoming
+edges, and are therefore an extension to \glspl{superblock}.  This means that
+they could represent the \gls{CDFG} shown in
+\cref{fig:data-structure-comparison:cdfg}, and an example of a hyperblock is
+shown in \cref{fig:block-comparison:hyperblocks}, where code within the
+\gls{hyperblock} has been linearised using predicated instructions.  This leads
+to possibly more complex control flow than in both of the previous cases,
+however, it can be reasoned with using a \gls{SAT} or \gls{SMT} solver as the
+path information is part of the predicates.
+
+Superblocks may require many blocks to be duplicated to group all the wanted
+instructions together.  However, with predicated instructions, hyperblocks can
+represent joining control flow without having to duplicate any blocks because
+predicates can be selected so that the block is executed when either incoming
+edge is taken.  Because of this, hyperblock scheduling has been a popular
+intermediate language for \gls{HLS}~\cite{budiu02_compil_applic_specif_hardw,
+  callahan98_instr_level_paral_recon_comput}, because the flexibility of
+targeting hardware directly means that predication can be implemented
+efficiently.  However, recently Arm removed most conditionally executed
+instructions from their A64 ARMv8 ISA, because \textquote[{\textcite[sec~3.2,
+  p.~10]{arm11_aiso}}]{predicated execution of instructions does not offer
+  sufficient benefit to justify its [...] implementation cost in advanced
+  implementations}, meaning hyperblocks are less useful when targeting common
+CPU architectures.
 
 \section{Scheduling}%
 \label{sec:bg:scheduling}
@@ -940,26 +973,42 @@ verification tools.
 \label{sec:bg:automatic-theorem-provers}
 
 Automatic theorem provers are tools that can reason about logic automatically,
-and answer whether a theorem about some variables is true or whether there is a
-counter example.  Most automatic theorem provers are implemented around
+and answer whether a theorem about some variables is true or whether there
+exists a counter example.  Most automatic theorem provers are implemented around
 \gls{SAT} or \gls{SMT} solvers, which can be characterised as deciding if a
-formula is satisfiable or not.  In \gls{SAT}, the formula is purely boolean, but
-in \gls{SMT} the boolean formula may include arbitrary theories that extend the
-logic, for example by including linear integer arithmetic or a theory of arrays.
-This is powerful, and means that \gls{SMT} solvers such as
-Z3~\cite[]{moura08_z}, cvc5~\cite[]{barbosa22_cvc5},
-Boolector~\cite[]{brummayer09_b} or veriT~\cite{bouton09} are used by
-higher level automatic verification tools such as bounded model checkers like
+formula is satisfiable or not by finding an assignment that satisfies the
+formula.  These solvers can also be used to used to prove that a theorem holds
+by showing that the negation of the theorem is unsatisfiable, in which case
+there is no assignment that satisfies the negation of the theorem, which implies
+that the theorem must hold for all assignments.  In \gls{SAT}, the formula is
+purely boolean, but in \gls{SMT} the boolean formula may include arbitrary
+theories that extend the logic, for example by including linear integer
+arithmetic or a theory of arrays that may have specialised solvers for the
+theory.  This widens the space of problem that can be efficiently encoded in the
+logic by making use of specialised solvers for different domains, as opposed to
+encoding the problem using boolean logic, which quickly becomes infeasible due
+to the exponential growth of the formulas.  Furthermore, \gls{SMT} solvers such
+as Z3~\cite[]{moura08_z}, cvc5~\cite[]{barbosa22_cvc5},
+Boolector~\cite[]{brummayer09_b} or veriT~\cite{bouton09} can be used by higher
+level automatic verification tools such as bounded model checkers like
 CBMC~\cite[]{kroening14_c} or verification aware programming languages like
 Dafny~\cite[]{leino10_d}.
 
-Automatic theorem provers are also the basis for formal hardware verification in
-general, providing ways to prove the equivalence between hardware designs as
-well as between hardware designs and their specifications using commercial
-verification tools like Cadence Conformal~\cite[]{cadence23_c} and Synopsys VC
-Formal~\cite[]{synopsys23_v}.  More details about current hardware verification
-methodologies are given in \cref{sec:bg:unmechanised-verification-of-hls},
-especially as they apply to \gls{HLS}.
+Automatic theorem provers are also the basis for formal hardware verification
+and equivalence checking, because the formal properties that need to be proven,
+as well as the hardware design itself, can be encoded in \gls{SMT}.
+Symbiyosys~\cite{yosyshq23_symbiyosys}, an open source formal verification for
+hardware, does exactly this by synthesising the hardware design including its
+assertions to SMT-LIB2~\cite{barrett17_sls}, a standard input language to
+\gls{SMT} solvers.  If the \gls{SMT} solver can show that the the assertions are
+unsatisfiable, this implies that the properties in the hardware will always
+hold.  Commercial verification tools like Cadence Conformal~\cite[]{cadence23_c}
+and Synopsys VC Formal~\cite[]{synopsys23_v} use similar techniques, but provide
+use more complex solver orchestration to enable larger scale automatic
+verification of formal properties~\cite{koelbl09_sr}.  More details about
+current hardware verification methodologies are given in
+\cref{sec:bg:unmechanised-verification-of-hls}, especially as they apply to
+\gls{HLS}.
 
 How can one trust the answer of such automatic theorem provers?  From a
 high-level, they are running an opaque, highly optimised algorithm and return an
@@ -1013,24 +1062,35 @@ Interactive theorem provers like
 Coq~\cite[]{bertot04_inter_theor_provin_progr_devel},
 Isabelle~\cite[]{paulson94_i} or Lean~\cite[]{moura15_l}, on the other hand,
 focus on checking proofs that are provided to them, instead of automatically
-trying to check theorems.  These proofs can either be written manually by the
+trying to prove theorems.  These proofs can either be written manually by the
 user in a tactic language provided by the theorem prover, or automatically
 generated by external decision procedures, such as an automatic theorem prover
 that produces a witness.  One benefit of using an interactive theorem prover is
-that the proof is checked by a small, trusted kernel.  This kernel together with
-the statements of the theorems in the theorem prover are the only parts that
-need to be trusted, as the proofs of the theorems are untrusted.
+that the proof is checked by a small, trusted kernel.
 
-Interactive theorem provers can therefore help with verifying complex theorems,
-such as proving the correctness of a C Compiler, as is the case with CompCert,
-or prove the correctness of an operating system kernel like sel4 or the four
-colour theorem proof~\cite[]{gonthier08_fp}.
+Interactive theorem provers can help with verifying complex theorems, such as
+proving the correctness of a C Compiler, as is the case with CompCert, or prove
+the correctness of an operating system kernel like sel4~\cite{klein09_sel4} or
+the four colour theorem proof~\cite[]{gonthier08_fp}.  Interactive theorem
+provers are more suited to large scale verification projects compared to pure
+automatic theorem provers because they often combine the benefits of automation
+provide by automatic theorem provers, and the more granular manipulation of
+proofs provided by the interactive theorem prover itself as the tactic language,
+while having a small trusted computing base.  Proofs can be developed by
+witnesses produced using automated solvers when the problem is small enough to
+be tractable, and they can then be stitched together to prove more difficult
+theorems that could not have been proven automatically.
+
+In practice, formalising projects in an interactive theorem prover leads to the
+formalisation of a lot of technical detail which may not have been present in
+the paper formalisation.  One has to be precise when describing the behaviour of
+a system, and these details will have to be reasoned about in all proofs.  It is
+therefore important to design abstractions carefully so that proofs can be
+reused, and so that proofs can be modified if definitions are tweaked.
 
 More details on how an interactive theorem prover is used to develop verified
 programs is described in
 \cref{sec:bg:mechanised-compiler-proofs,sec:bg:compcert}.
-
-\YH{TODO: Maybe expand on section.}
 
 \section{Verification of High-Level Synthesis}
 
@@ -1047,8 +1107,8 @@ language as input, whether it has a correctness proof, and finally whether that
 proof is mechanised.  The goal of \vericert{} is to cover all of these
 categories.
 
-Most practical \gls{HLS}
-tools~\cite{canis13_l,amd23_vitis_high_synth,intel20_sdk_openc_applic,nigam20_predic_accel_desig_time_sensit_affin_types}
+Most practical \gls{HLS} tools~\cite{canis13_l, amd23_vitis_high_synth,
+  intel20_sdk_openc_applic, nigam20_predic_accel_desig_time_sensit_affin_types}
 fit into the category of usable tools that take high-level inputs.  On the other
 end of the spectrum, there are tools such as
 BEDROC~\cite{chapman92_verif_bedroc} for which there is no practical tool, and
@@ -1061,14 +1121,15 @@ behavioural description in C.  An example of a tool that implements this is
 Mentor's Catapult~\cite{mentor20_catap_high_level_synth}, which tries to match
 the states in the hardware description to states in the original C code after an
 unverified translation.  Using translation validation is quite effective for
-verifying complex optimisations such as
-scheduling~\cite{kim04_autom_fsmd,karfa06_formal_verif_method_sched_high_synth,chouksey20_verif_sched_condit_behav_high_level_synth}
-or code
-motion~\cite{banerjee14_verif_code_motion_techn_using_value_propag,chouksey19_trans_valid_code_motion_trans_invol_loops},
-but the validation has to be run every time the HLS is performed.  In addition
-to that, the proofs are often not mechanised or directly related to the actual
-implementation, meaning the verifying algorithm might be wrong and hence could
-give false positives or false negatives.
+verifying complex optimisations such as scheduling~\cite{kim04_autom_fsmd,
+  karfa06_formal_verif_method_sched_high_synth,
+  chouksey20_verif_sched_condit_behav_high_level_synth} or code
+motion~\cite{banerjee14_verif_code_motion_techn_using_value_propag,
+  chouksey19_trans_valid_code_motion_trans_invol_loops}, but the validation has
+to be run every time the HLS is performed.  In addition to that, the proofs are
+often not mechanised or directly related to the actual implementation, meaning
+the verifying algorithm might be wrong and hence could give false positives or
+false negatives.
 
 Finally, there are a few relevant mechanically verified tools.  First, K\^{o}ika
 is a formally verified translator from a core fragment of Bluespec into a
@@ -1143,35 +1204,52 @@ implemented in hardware and the correctness could still be shown.
 \subsection{Unmechanised verification of HLS}%
 \label{sec:bg:unmechanised-verification-of-hls}
 
-This section describes how \gls{HLS} designs are typically verified and also
+This section describes how \gls{HLS} designs are typically verified and
 describes the current state-of-the-art in verification of \gls{HLS}
 transformations.  The standard way to test designs in \gls{HLS} is either using
 hardware test benches, testing the final hardware design like any other hardware
 design, or by using C/Verilog co-simulation, which is a feature some \gls{HLS}
 tools support, whereby the same test code that drove the C code can also be used
-to drive the hardware design.
+to drive the hardware design.  Metrics such as code coverage or functional
+coverage can be gathered to check which parts or behaviours of the design were
+exercised, however, these coverage metrics generally do not imply full
+correctness of the design.  Functional coverage is especially interesting, as
+the verification engineer defines how much of the design should be tested.  If
+the behaviour that needs to be covered is too large, testing will not be able to
+achieve full coverage of the entire design.  On the other hand, if the specified
+behaviour to be tested is quickly saturated, it is likely that many behaviours
+will remain untested.
 
-Proving the equivalence between the generated hardware and the original
-behavioural description in C is an ongoing research problem.  There are
-commercial tools that support such an equivalence checks, such as Siemens'
-SLEC~\cite[]{chauhan20_formal_ensur_equiv_c_rtl} or Cadence's
-C2RTL~\cite[]{cadence23_j}, which try to match the states in the
-register-transfer level description to states in the original C code after an
-unverified translation.
+\subsubsection{Translation Validation}
+
+Instead, the equivalence between the higher-level input code and the hardware
+design can be proven automatically.  There are commercial tools that claim to
+support such an equivalence checks, such as Siemens'
+SLEC~\cite[]{chauhan20_formal_ensur_equiv_c_rtl}, Cadence's
+C2RTL~\cite[]{cadence23_j} or Synopsys' HECTOR~\cite{koelbl21_vcddh}, which try
+to match the states in the register-transfer level description to states in the
+original C code after an unverified translation.  However, in general this does
+not scale to large designs because of the explosion in the size of the state and
+the gap between the software model and the hardware design, leading to various
+ways in which the equivalence checking problems needs to be partitioned to be
+tractable, which may not always succeed automatically.  This leads to manual
+proof engineering work that is required to reduce the size of the equivalence
+checking problem, leading to the same issues that were discussed in
+\cref{sec:bg:automatic-theorem-provers}, such as having to guess where the
+solver is getting stuck.
 
 This technique is called translation validation~\cite{pnueli98_trans}, whereby
 the translation that the HLS tool performed is proven to have been correct for
 that input, by showing that they behave in the same way for all possible inputs.
-Using translation validation is quite effective for proving complex
-optimisations such as scheduling~\cite{kim04_autom_fsmd,
-  karfa06_formal_verif_method_sched_high_synth,
+In addition to the commercial tools mentioned previously, there has been
+research on verifying specific \gls{HLS} optimisations correct as well, such as
+scheduling~\cite{kim04_autom_fsmd, karfa06_formal_verif_method_sched_high_synth,
   chouksey20_verif_sched_condit_behav_high_level_synth} or code
 motion~\cite{banerjee14_verif_code_motion_techn_using_value_propag,
-  chouksey19_trans_valid_code_motion_trans_invol_loops}, however, the validation
-has to be run every time the high-level synthesis is performed.  In addition to
-that, the proofs are often not mechanised or directly related to the actual
-implementation, meaning the verifying algorithm might be wrong and could give
-false positives or false negatives.
+  chouksey19_trans_valid_code_motion_trans_invol_loops}.  Even though many of
+these papers are accompanied by proofs of correctness, these proofs are often
+not mechanised or directly related to the actual implementation, meaning the
+verifying algorithm might give false positives.
 
 More examples of translation validation for proofs about HLS
 algorithms~\cite{karfa06_formal_verif_method_sched_high_synth,
@@ -1182,16 +1260,34 @@ algorithms~\cite{karfa06_formal_verif_method_sched_high_synth,
   chouksey20_verif_sched_condit_behav_high_level_synth} are performed using a
 HLS tool called SPARK~\cite{gupta03_spark}.  These translation validation
 algorithms can check the correctness of complicated optimisations such as code
-motion or loop inversions.  However, even though the correctness of the verifier
-is proven in the papers, the proof does translate directly to the algorithm that
-was implemented for the verifier.  It is therefore possible that output is
-accepted even though it is not equivalent to the input.  In addition to that,
-these papers reason about the correctness of the algorithms in terms of the
-intermediate language of SPARK, and does not extend to the high-level input
-language that SPARK takes in, or the hardware description language that SPARK
-outputs.
+motion or loop inversions.  These transformations are all verified as
+transformations on the SPARK \gls{IR}.  In general, these validation algorithms
+work by constructing the \gls{FSMD} representation, then partition the states
+and match them up using cut points.  Finally, symbolic expressions are
+constructed for paths between cut points and are checked to be equivalent
+between the original and transformed design.
 
-Finally there has also been work proving HLS correct without using translation
+Even though the correctness of the verifier is proven in the papers, the
+algorithm implementing the verifier might still include bugs.  It is therefore
+possible that output is accepted even though it is not equivalent to the input.
+In the case of SPARK, there are not validation checks for the translation from C
+to the internal \gls{IR}, as well as checkes for the final translation from the
+\gls{IR} to Verilog.  In addition to that, using translation validation to prove
+the correctness of the complete \gls{HLS} translation either means that one
+needs an algorithm that verifies all transformations at once, or, like it is the
+case in SPARK, describes separate translation validation algorithms for each
+individual translation.  The former means that the proof of correctness about
+the validator will be the proof of correctness of the entire translation,
+however, in practice, writing such an algorithm and verifying it is not
+possible, as the difference between the structure of the input and output will
+be too great, and unpredictable.  Instead, translation validation passes are
+composed with each other, however, this requires that one trusts that the
+composition of different validation algorithms, with different formulations of
+their respective soundness criteria, is itself sound.
+
+\subsubsection{Direct Unmechanised Proofs}
+
+There has also been work proving HLS correct without using translation
 validation, but by directly showing that the translation is correct.  The first
 instance of this is proving the BEDROC~\cite{chapman92_verif_bedroc} HLS tool is
 correct.  This HLS tool converts a high-level description of an algorithm,
