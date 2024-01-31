@@ -243,21 +243,21 @@ dealing with hyperblocks brings additional complexity, as explained below.
 
 \citeauthor{tristan08_formal_verif_trans_valid} implement trace scheduling in
 its full generality. They use a tree to represent all the possible control-flow
-paths through a block. These trees can be ``exponentially larger than the
-original code''~\cite[p.~25]{tristan08_formal_verif_trans_valid}, which makes it
-prohibitively expensive to construct and compare the trees before and after
-scheduling, and thus undermines the usefulness of their scheduler.
+paths through a block. These trees can be
+\textquote[{\textcite[p.~25]{tristan08_formal_verif_trans_valid}}]{exponentially
+  larger than the original code}, which makes it prohibitively expensive to
+construct and compare the trees before and after scheduling, and thus undermines
+the usefulness of their scheduler.
 
 \citeauthor{six22_formal_verif_super_sched} restrict their scheduler to
 superblocks. Since a superblock has only a single control-flow path (with early
 exits), the need for trees is avoided. This allows their validator to be
-``efficient even for large
-superblocks''~\cite[p.~53]{six22_formal_verif_super_sched}. However, superblocks
-are less general than hyperblocks, and there are code patterns where superblock
-scheduling can lead to considerable code duplication that hyperblocks would
-avoid. Moreover, superblock scheduling is reliant on profiling and
-branch-prediction heuristics to pick a hot path through the program -- should
-such a hot path even exist.
+\textcite[{\textcite[p.~53]{six22_formal_verif_super_sched}}]{efficient even for
+  large superblocks}.  However, superblocks are less general than hyperblocks,
+and there are code patterns where superblock scheduling can lead to considerable
+code duplication that hyperblocks would avoid. Moreover, superblock scheduling
+is reliant on profiling and branch-prediction heuristics to pick a hot path
+through the program -- should such a hot path even exist.
 
 Hyperblocks can branch and merge control flow using predicated execution, and
 hence a single hyperblock can capture many control-flow paths without the
@@ -407,7 +407,7 @@ These instructions are used in both \rtlblock{} and \rtlpar.  The main
 difference between these two languages is how these instructions are arranged
 within the hyperblock and the execution semantics of the hyperblock. An
 \rtlblock{} hyperblock is a list of instructions, with a straightforward
-sequential semantics. An \rtlpar{} hyperblock is list of lists of lists of
+sequential semantics. An \rtlpar{} hyperblock is a list of lists of lists of
 instructions, with nested blocks corresponding to where instructions should be
 placed in hardware.  Each innermost list contains a chain of instructions that
 can be executed sequentially within a single clock cycle; each middle list
@@ -736,7 +736,7 @@ to an external procedure.
 % decision procedure to describe which paths should be combined into a single
 % code block.
 This separation of concerns means that the correctness of the transformation can
-be proven once-and-for-all for a single, general, if-conversion algorithm, which
+be proven once-and-for-all for a single, general if-conversion algorithm, which
 can then be extended with various heuristics to change the performance of the
 generated code.  In my implementation, I use simple static heuristics to pick
 these paths, following \textcite{ball93_branc_predic_free}, such as avoiding
@@ -1187,8 +1187,8 @@ equal, but reasoning about the equivalence of the two expressions for
 $\synite{\neg \avar{p1}}{1}{\avar{r2}}$ is equivalent to $\avar{r2}$ in any
 context where $\avar{p1}$ is true. Such reasoning could be performed by an SMT
 solver, encoding each arithmetic operator as an uninterpreted function, but
-formalising an SMT solver would be a lot of additional proof, and would be slow
-at run time.
+formalising an \gls{SMT} solver involves a lot of additional proof, and would be
+slow at run time.
 
 \subsection{Second attempt: using value summaries}
 \label{sec:value_summaries}
@@ -1301,14 +1301,14 @@ value can be assigned to each of the atoms in a formula. This might not actually
 be the case -- for instance, \rtlinline|r1/r2| is not evaluable if
 \rtlinline|r2| is zero, and \rtlinline|r1 == r2| is not evaluable if either
 \rtlinline|r1| or \rtlinline|r2| is an invalid pointer.  So, to compare the two
-expressions for \rtlinline|p2|, we actually need to use \emph{3-valued logic}.
+expressions for \rtlinline|p2|, we actually need to use \emph{three-valued logic}.
 That means all the SAT variables in \eqref{eq:sat1} and \eqref{eq:2} actually
 need to be \emph{pairs} of binary variables,
 %or integer variables.
-and the $\land$ and $\lor$ operations need to be 3-valued analogues of
+and the $\land$ and $\lor$ operations need to be three-valued analogues of
 conjunction and disjunction. This is a problem because we have seen already that
 these formulas, particularly those for comparing register expressions, become
-quite large even for toy examples.  Indeed, when we tried this 3-valued approach
+quite large even for toy examples.  Indeed, when we tried this three-valued approach
 on the test cases in our evaluation (\cref{sec:performance-comparison}), most
 ran out of memory during validation.
 
@@ -1317,10 +1317,10 @@ ran out of memory during validation.
 % generate and solve all the SAT queries needed to verify the equivalence of
 % seven pairs of increasingly complicated hyperblocks. We see that about ten
 % seconds is required for the most complicated of the test cases. And when this
-% 3-valued approach is used on the more realistic test cases in our evaluation
+% three-valued approach is used on the more realistic test cases in our evaluation
 % (\cref{sec:performance-comparison}), most run out of memory during validation.
 
-Hence, in the next subsection we describe how we manage to avoid 3-valued logic
+Hence, in the next subsection we describe how we manage to avoid three-valued logic
 where possible.
 
 % need to be reimplemented so that they support these three-valued variables,
@@ -1346,12 +1346,12 @@ where possible.
 Although it was not the case in our worked example, it turns out that when
 comparing the predicate expressions that arise in realistic examples, syntactic
 equality or near-equality usually suffices. This means that we only need to
-resort to solving 3-valued SAT queries as an occasional fallback, so its
+resort to solving three-valued SAT queries as an occasional fallback, so its
 performance impact is limited in practice.
 
 Where syntactic methods usually do \emph{not} suffice is for comparing the
 guards of register expressions. However, here we can actually avoid the need for
-3-valued logic altogether.  We observe that the guards in the \rtlinline|r1|
+three-valued logic altogether.  We observe that the guards in the \rtlinline|r1|
 expressions are simply copied from the expressions for \rtlinline|p2| (which we
 abbreviated as $\formY$ in \cref{tab:symbex2}), so rather than writing out the
 full expressions in the guards, we can write $\afvar{p2}$ as a shorthand (the
@@ -1378,13 +1378,13 @@ three queries for validating \rtlinline|r1| become:
 \end{aligned}
 \end{equation}
 
-What is less obvious is that we no longer need 3-valued logic either. This is
+What is less obvious is that we no longer need three-valued logic either. This is
 because:
 \begin{itemize}
 \item We can assume that all predicate expressions in the pre-scheduling
   symbolic state are evaluable, because if any were not, the input program would
   fail at run time and we do not need to prove anything about our scheduler.
-\item We have already proven, either using syntactic comparison or 3-valued
+\item We have already proven, either using syntactic comparison or three-valued
   logic, that the predicate expressions in the post-scheduling symbolic state
   are equivalent to those in the pre-scheduling state, which means that they too
   must be evaluable.
@@ -1472,10 +1472,10 @@ invalid because the post-scheduling block only executes correctly when
 expressions that are evaluated into a register or memory location. We shall call
 this the \emph{encountered expression
   set}.\footnote{\citeauthor{tristan08_formal_verif_trans_valid} simply called
-  them `constraints'.} For example, the encountered expressions of the
+  them `constraints'.} For example, the encountered expressions set of the
 pre-scheduling block above includes only $\avar{r2} + 4$, but the
-post-scheduling block's also includes $5/\avar{r1}$. Because the encountered set
-has grown, we deem the schedule invalid.
+post-scheduling block's set also includes $5/\avar{r1}$. Because the encountered
+set has grown, we deem the schedule invalid.
 
 % \begin{figure}
 % \centering
@@ -1703,7 +1703,7 @@ predicate, and an expression $\forestmem{\symbstate}$ for the contents of memory
 control exits the block (to make sure that it does so in the same way after
 scheduling), so $\forestexit{\symbstate}$ stores a value summary that evaluates
 to the instruction that is executed to exit the block (or to \enquote{None} if
-the block hasn't finished yet). Finally, $\constraints{\symbstate}$ tracks the
+the block has not finished yet). Finally, $\constraints{\symbstate}$ tracks the
 set of encountered expressions, as motivated in
 \cref{sec:handling-discarded-expressions}.
 
@@ -1921,7 +1921,7 @@ the exit expressions
 ($\compare{}{\forestexit{\symbstate}}{\forestexit{\symbstate}'}$). For the
 predicate maps, we first attempt to show syntactic equality
 (${\forestpredset{\symbstate}} = {\forestpredset{\symbstate}'}$). If this fails,
-we fall back to using a slow but reliable equivalence check with a 3-valued
+we fall back to using a slow but reliable equivalence check with a three-valued
 solver
 (${\forestpredset{\symbstate}} \approx_{\mathrm{3v}}
 {\forestpredset{\symbstate}'}$). Finally, for the encounted expressions sets, we
@@ -2503,7 +2503,7 @@ First, we need to show that symbolic execution is sound and complete, meaning
 that a behaviour is a valid behaviour of the input program if and only if it is
 also a valid behaviour of the symbolic state.  Both directions are needed,
 because we need to show that any behaviour of the pre-scheduling hyperblock
-$\rtlbb$ is a behaviour its symbolic state $\symbolic{\rtlbb}$, but also that
+$\rtlbb$ is a behaviour of its symbolic state $\symbolic{\rtlbb}$, and also that
 once we have a behaviour of the symbolic state $\symbolic{\rtlpb}$ associated
 with the scheduled hyperblock $\rtlpb$, that this will also be the behaviour of
 $\rtlpb$ itself.  The former is a soundness property, whereas the latter is a
@@ -2572,7 +2572,7 @@ three steps of that chain are captured by the following three lemmas.
 
   \begin{proof}[Proof Sketch]
     Completeness requires a bit more work, because we are given the final
-    symbolic state and needs to show that the whole block that generated it
+    symbolic state and need to show that the whole block that generated it
     produces the same result.  First we show that any instruction in the
     original block necessarily produces a value, which follows from the
     semantics of encountered expressions.  From this, we can show that the
@@ -2682,8 +2682,8 @@ any value summary.
     \evalop[P^{\mathrm{f}}]{\guard}{\booleantrue}
     }{ \sem{\mathcal{I}}{P^{\mathrm{f}}}{s}{e} }
 \]
-It achieves this by making no attempt to \emph{evaluate} the expression $e$ that
-it selects from the value summary, and instead simply returning it. (In
+This rule achieves this by making no attempt to \emph{evaluate} the expression
+$e$ that it selects from the value summary, and instead simply returns it. (In
 contrast, \nameref{rule:predexpr} demands that $e$ can be evaluated to a value
 $v$.) Hence we call this the \emph{identity semantics} for the value summary. By
 using identity semantics, it becomes possible to formulate lemmas that capture
@@ -2794,7 +2794,7 @@ was simply unworkable.
 %   \end{proof}
 % \end{lemma}
 
-\section{Validated 3-Valued Logic Using an SMT Solver}%
+\section{Validated three-valued Logic Using an SMT Solver}%
 \label{sec:hs:efficient-smt-solver-validation}
 
 \begin{figure}
@@ -2802,7 +2802,7 @@ was simply unworkable.
   \begin{tikzpicture}[font=\strut\sffamily]
     \node[ir] (predexpr) {predicate\\expression};
     \node[pass,right=of predexpr] (hashing) {expression\\hashing};
-    \node[ir,right=of hashing] (threeval) {3-valued\\predicate};
+    \node[ir,right=of hashing] (threeval) {three-valued\\predicate};
     \node[pass,right=of threeval] (atomisation) {atomisation};
     \node[ir,below=of predexpr] (arraysmt) {array-based\\SMT formula};
     \node[pass,below=of arraysmt,dashed] (smtsolver) {SMT solver \\ veriT};
@@ -2820,18 +2820,18 @@ was simply unworkable.
       \node[fit={(predexpr)(atomisation)(arraysmt)},bgbox,fill=bgbox6,inner sep=5mm]{};
     \end{pgfonlayer}
   \end{tikzpicture}
-  \caption[Validation of predicate expressions using 3-valued logic.]{Validation
-    of predicate expressions using 3-valued logic.  An external SMT solver is
+  \caption[Validation of predicate expressions using three-valued logic.]{Validation
+    of predicate expressions using three-valued logic.  An external SMT solver is
     used to generate a proof witness, which is then given to a formally verified
     proof witness checker by SMTCoq.  The result is then \enquote{yes} if the
     formula always holds, and \enquote{no} otherwise.}%
   \label{fig:hs:validated-three-valued-logic}
 \end{figure}
 
-This section describes the implementation and proof of the validated 3-valued
+This section describes the implementation and proof of the validated three-valued
 logic solver using an external proof-generating SMT solver.  The goal of this
 validator is to be able to prove the equivalence of predicate expressions, which
-as noted in \cref{sec:hs:verifying-scheduling} requires 3-valued logic.
+as noted in \cref{sec:hs:verifying-scheduling} requires three-valued logic.
 \Cref{fig:hs:validated-three-valued-logic} shows the steps performed by the
 equivalence checker, assuming that the predicate expression that is given as
 input is encoding the equivalence.  We use an SMT solver to generate a proof
@@ -2850,7 +2850,7 @@ where $\formY$ abbreviates
 $\syniteformulans{\avar{p1}}{\left(\syniteformulans{\neg\avar{p1}}{1 \aeq
       0}{\avar{r2} \aeq 0}\right)}{\avar{p2}}$.  First, this predicate
 expression is hashed so that it is only composed of variables, and produces a
-proper 3-valued predicate.  In this case, all the atoms of the formula could be
+proper three-valued predicate.  In this case, all the atoms of the formula could be
 hashed and only referred to as variables, for example $c_1 \mapsto \avar{p1}$,
 $c_2 \mapsto \avar{r2} \aeq 0$ and $c_3 \mapsto \avar{p2}$.  The same is done to
 $\formY$ producing the hashed formula $h(\formY)$.  We are then left with the
@@ -2860,19 +2860,19 @@ following formula:
   \syniteformulanslk{c_1}{c_2}{c_3} \leftrightarrow_{\text{\L{}}} h(\formY).
 \end{equation*}
 %
-This is a pure 3-valued logic formula using \L{}ukasiewicz three-valued logic
-semantics~\cite{borowski70_swj} described in \cref{fig:evalpred}.  This
-interpretation of 3-valued logic is chosen because it allows for tautologies in
-the logic.  The standard interpretation of 3-valued logic where implication is
-defined in terms of $\predand$ and $\predor$, every expressable formula will
-evaluate to $\boolundef$ if all the variables are set to $\boolundef$ because
-$\boolundef \rightarrow \boolundef \equiv \boolundef$.  \L{}ukasiewicz
-three-valued logic, on the other hand, has the following behaviour for
-implication $\boolundef \rightarrow \boolundef \equiv \bvrai$, meaning there may
-be formulas that are tautologies and are always true.  This allows us to express
-the equivalence between two formulas and prove that if the negation of that
-statement is unsatisfiable, that the original statement always needs to hold,
-meaning the expressions are equivalent.
+This is a pure three-valued logic formula using \L{}ukasiewicz three-valued
+logic semantics~\cite{borowski70_swj} described in \cref{fig:evalpred}.  This
+interpretation of three-valued logic is chosen because it allows for tautologies
+in the logic.  In the standard interpretation of three-valued logic where
+implication is defined in terms of $\predand$ and $\predor$, every expressable
+formula will evaluate to $\boolundef$ if all the variables are set to
+$\boolundef$ because $\boolundef \rightarrow \boolundef \equiv \boolundef$.
+\L{}ukasiewicz three-valued logic, on the other hand, has the following
+behaviour for implication $\boolundef \rightarrow \boolundef \equiv \bvrai$,
+meaning there may be formulas that are tautologies and are always true.  This
+allows us to express the equivalence between two formulas and prove that if the
+negation of that statement is unsatisfiable, that the original statement always
+needs to hold, meaning the expressions are equivalent.
 
 \begin{figure}
 \begin{mathpar}
@@ -2911,20 +2911,20 @@ meaning the expressions are equivalent.
           {\evalpred{\rs}{\varpred_1 \predimp \varpred_2}{1 \booland
               (1 - \varbool_1 + \varbool_2)}}
 \end{mathpar}
-\caption[Evaluation of 3-valued logic predicates.]{Evaluation of 3-valued logic
+\caption[Evaluation of three-valued logic predicates.]{Evaluation of three-valued logic
   predicates, where $\rs$ is a valuation from predicate variables $c$ to
   $\set{\bvrai,\bfalse,\boolundef}$.}%
 \label{fig:evalpred}
 \end{figure}
 
-The final steps of the validation are therefore to translate the 3-valued logic
-equation into a form that is accepted by SMTCoq.  SMTCoq uses an efficient and
-compact array structure to represent the formula, which is split into three main
-parts, the array for the atoms of the formula, the array for the formula itself,
-and finally the array containing the formula itself, called the roots.  Let us
-try to prove that the following formula always holds:
+The final steps of the validation are therefore to translate the three-valued
+logic equation into a form that is accepted by SMTCoq.  SMTCoq uses an efficient
+and compact array structure to represent the formula, which is split into three
+main parts, the array for the atoms of the formula, the array for formula
+components, and finally the array containing the formula itself, called the
+roots.  Let us try to prove that the following formula always holds:
 $\syniteformulanslk{c_1}{\predtrue}{\predtrue}$.  The first conceptual step is
-to translate this 3-valued formula into an SMT formula that implements
+to translate this three-valued formula into an SMT formula that implements
 \L{}ukasiewicz three-valued logic using linear arithmetic, following the rules
 from \cref{fig:evalpred}.  This would give the following SMT formula, where all
 the variables are constrained to be between $\bfalse$ and $\bvrai$, i.e.
@@ -2962,12 +2962,12 @@ contains a reference to the formula that should be checked by the SMT solver.
 The original SMT formula can then be passed to an SMT solver to check for
 unsatisfiability.  This is done using veriT~\cite{bouton09}, which is well
 supported by SMTCoq.  The witness, together with the array representation of the
-formula are then read by the SMTCoq proof checker, which then emits
-\enquote{yes} or \enquote{no} depending on if checking the witness succeeded, in
-which case the formula that was checked was unsatisfiable or not.  This result
-can be used to check the equivalence between two predicate expressions at run
-time and assume that if the check succeeds, that the predicate expressions can
-be assumed to be equivalent.
+formula are then read by the SMTCoq proof checker, which emits \enquote{yes} or
+\enquote{no} depending on if checking the witness succeeded, in which case the
+formula that was checked was unsatisfiable or not.  This result can be used to
+check the equivalence between two predicate expressions at run time and assume
+that if the check succeeds, that the predicate expressions can be assumed to be
+equivalent.
 
 \section{Summary}
 

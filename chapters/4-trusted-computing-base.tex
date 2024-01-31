@@ -11,14 +11,14 @@ the code that is not verified, and therefore needs to be trusted by the user
 when using the tool or the correctness theorem.  This is in contrast to the
 untrusted code that has been verified, and therefore cannot introduce bugs.  It
 is important to understand the trusted computing base of verified software such
-as CompCert and Vericert to understand where bugs could still be introduced.
-One example in CompCert is when \textcite{yang11_findin_under_bugs_c_compil}
-fuzz tested C compilers, finding a variety of bugs in all the compilers that
-were tested.  However, far fewer bugs were found in CompCert compared to
-unverified C compilers, and all the bugs that were found in CompCert were in the
-unverified, trusted parts of the compiler.  For example, there were bugs in the
-unverified front end of CompCert, which was then addressed by reducing the
-trusted computing base by verifying the correctness of the C
+as CompCert and Vericert to recognise where bugs could still be introduced.  One
+example in CompCert is when \textcite{yang11_findin_under_bugs_c_compil} fuzz
+tested C compilers, finding a variety of bugs in all the compilers that were
+tested.  However, far fewer bugs were found in CompCert compared to unverified C
+compilers, and all the bugs that were found in CompCert were in the unverified,
+trusted parts of the compiler.  For example, there were bugs in the unverified
+front end of CompCert, which was then addressed by reducing the trusted
+computing base by verifying the correctness of the C
 parser~\cite{jourdan12_valid_lr_parser}.  Another bug was found because of a
 missing constraint in the semantics of the PowerPC.
 
@@ -77,13 +77,13 @@ fail and not produce any output; the correctness theorem only applies when the
 translation succeeds.
 
 How can we prove this theorem?  Note that like in CompCert, this theorem can be
-proven using a backwards simulation.  The same proof technique can be used to
+proven using a backward simulation.  The same proof technique can be used to
 verify the correctness of \vericert{}, extending the forward simulation from
 \rtl{} to Verilog.  Then, by proving that the Verilog semantics are
 \emph{deterministic}, the composition of forward simulation in CompCert, as well
-ase the simulations in Vericert imply the backwards simulation needed to prove
-the theorem.  For each transformation this dissertation will therefore describe
-how the forward simulations are proven.
+as the simulations in Vericert imply the backward simulation needed to prove the
+theorem.  For each transformation this dissertation will therefore describe how
+the forward simulations are proven.
 
 Because the correctness theorem is unchanged except for the target language
 semantics, it means that all the corollaries proven using the top-level CompCert
@@ -100,7 +100,7 @@ language, including the changes that were made to the semantics to make it a
 suitable HLS target.  The Verilog standard is quite
 large~\cite{06_ieee_stand_veril_hardw_descr_languag,
   05_ieee_stand_veril_regis_trans_level_synth}, and is split into two standards,
-sone for synthesis and one for simulation.  The simulation semantics are similar
+one for synthesis and one for simulation.  The simulation semantics are similar
 to semantics one would expect, assigning detailed behaviour to each part of the
 Verilog language.  However, in contrast to programming languages,
 \textquote[{\textcite[p.~699]{weste10_cvd}}]{HDLs are better understood as a
@@ -287,7 +287,7 @@ and internal variables was added to the semantics to make sure that the
 generated Verilog also contains the correct declarations.  This adds some
 guarantees to the generated Verilog and ensures that it synthesises and
 simulates correctly.  Otherwise, if there are bugs in the insertion of
-declarations, the Verilog would fail to synthesis or simulate.  This is done by
+declarations, the Verilog would fail to synthesise or simulate.  This is done by
 adding a declaration entry for each register that is used.
 
 \paragraph{Removing support for external inputs to modules} Support for
@@ -296,7 +296,7 @@ Verilog models the main function in C, and since the inputs to a C function
 should not change during its execution, there is no need for external inputs for
 Verilog modules.  In addition to that, this external inputs function was also
 used to model memory in the original semantics, which is not needed as arrays
-are fully supported.  This means that the \gls{BRAM} can faithfully be modelled
+are fully supported.  This means that the \gls{BRAM} can be faithfully modelled
 as Verilog and it can be reasoned about.
 
 \paragraph{Simplifying representation of bitvectors} Finally, I use 32-bit
@@ -390,9 +390,9 @@ the module is not being reset, that the finish state has not been reached yet,
 that the current and next state are $v$ and $v'$, and that the module runs from
 state $\Gamma$ to $\Gamma'$ using the \nameref{infer:stepstate} rule.  This rule
 also ensures that the state register contains the value of the current state, by
-checking the value of $\Gamma_r[\sigma]$.  It is then also ensured that the
-resulting state is also the value of the $\sigma$ register in the updated
-association map  $\Gamma'_r[\sigma]$.
+checking the value of $\Gamma_r[\sigma]$.  It is then ensured that the resulting
+state is also the value of the $\sigma$ register in the updated association map
+$\Gamma'_r[\sigma]$.
 
 The \nameref{infer:finishstate} rule returns the final value of running the
 module and is applied when the $\mathit{fin}$ register is set; the return value
@@ -403,9 +403,9 @@ because function calls are not supported, and it is therefore impossible in our
 semantics ever to reach a \texttt{Callstate} except for the initial call to
 main. So the \nameref{infer:callstate} rule is only used at the very beginning
 of execution; likewise, the \nameref{infer:finishstate} rule is only matched for
-the final return value from the main function.  The final rule called
-\nameref{infer:returnstate} is never reached in practice because of this, as the
-stack frame will always be empty.  This rule could ideally therefore be removed,
+the final return value from the main function.  As a result, the final rule
+called \nameref{infer:returnstate} is never reached in practice, as the stack
+frame will always be empty.  This rule could ideally therefore be removed,
 however it is still present to match the state transitions used in CompCert.  To
 remove this rule, one would have to show that the stack frame remains empty by
 induction over the semantics.
@@ -535,8 +535,9 @@ hardware itself.
   \end{tikzpicture}
   \caption[Change in the memory model during the translation of \textsc{Rtl}
   into \textsc{Htl}.]{Change in the memory model during the translation of
-    \rtl{} into \htl{}.  The state of the memories in each case is right after
-    the execution of the store to memory.}\label{fig:memory_model_transl}
+    \rtl{} into \htl{}.  The state of the memories in each case is recorded
+    straight after the execution of the store to
+    memory.}\label{fig:memory_model_transl}
 \end{figure}
 
 This translation is represented in \cref{fig:memory_model_transl}.
@@ -544,8 +545,9 @@ This translation is represented in \cref{fig:memory_model_transl}.
 memory addresses to memory contents.  Each block represents an area in memory;
 for example, a block can represent a global variable or a stack for a function.
 CompCert also includes permissions that are associated with each block, which
-are lost in the translation to arrays.  Instead, the array has a static size,
-which has to be the same size as the writable addresses in \compcert{}'s memory.
+are lost in the translation to arrays.  In contrast, the array has a static
+size, which has to be the same size as the writable addresses in \compcert{}'s
+memory.
 
 Because there are no global variables in the C code, only the stack of the main
 function will be allocated in the memory.  Our Verilog semantics defines two
@@ -560,8 +562,8 @@ and $\Delta_{\mathrm{a}}$ maps.
 
 In particular, note that the Verilog arrays are word-addressable instead of the
 CompCert memory model which is byte-addressable.  The instruction set
-architectures of \glspl{CPU} usually specify memory as being byte-addressable,
-however, the implementation of the memory is not usually that straightforward.
+architectures of \glspl{CPU} typically specify memory as being byte-addressable,
+however, the implementation of the memory is not that straightforward.
 \Glspl{CPU} usually implement multiple levels of caching as well as converting
 virtual addresses to physical addresses and may operate on byte- or
 word-addressable memories behind the byte-addressable interface.  Often, the

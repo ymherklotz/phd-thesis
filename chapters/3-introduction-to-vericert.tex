@@ -339,7 +339,7 @@ difference between LLVM \gls{IR} and \rtl{} is that \rtl{} includes operations
 that are specific to the chosen target architecture; I chose to target the
 x86\_32 back end because it generally produces relatively dense \rtl{} thanks to
 the availability of complex addressing modes.  The translation from \rtl{} is
-then performed as follows.
+then performed as follows:
 
 \begin{enumerate}[label=\protect\blacknum{\arabic*}]
 \item Basic block generation creates basic blocks from the pure \rtl{}
@@ -477,7 +477,7 @@ the coarse-grained structure of hyperblocks, so this structure is destroyed to
 produce \rtlsubpar{}, shown in \cref{fig:accumulator_par}.  The representation
 is still hardware agnostic even if the current implementation of the scheduler
 is specific to an \gls{FPGA} target, and therefore supports all \rtl{}
-instructions.  Details about the scheduler and proof of correctness is given in
+instructions.  Details about the scheduler and proof of correctness are given in
 \cref{sec:hyperblock-scheduling}.  This representation is then ready to be
 translated into hardware.
 
@@ -564,17 +564,17 @@ is the control logic that computes the next state, while the left-hand block
 updates all the registers and \gls{BRAM} based on the current program state.
 However, in general the state machine cannot be separated from the data path
 completely, because state updates may depend on computations in the data path
-and may depend on the value of registers.  Hence, an \htl{} program consists a
-map from states to Verilog statements, which update both the state register as
+and may depend on the value of registers.  Hence, an \htl{} program consists of
+a map from states to Verilog statements, which update both the state register as
 well as other registers and interact with memory.
 
 The \htl{} language was mainly introduced to simplify the proof of translation
 from \rtl{} to Verilog, as these languages have very different semantics.  It
 serves as an intermediate language with similar semantics to \rtl{} at the top
-level, using maps to represents what to execute at every state, and similar
+level, using maps to represent what to execute at every state, and similar
 semantics to Verilog at the lower level by already using Verilog statements
 instead of more abstract instructions to perform computations.  The next state
-is also computed explicitly in each state by modifying the state register.XS
+is also computed explicitly in each state by modifying the state register.
 Compared to plain Verilog and due to using maps to represent the Verilog
 statement that should execute at every state, \htl{} is simpler to manipulate
 and analyse, thereby making it easier to prove optimisations like \gls{BRAM}
@@ -773,8 +773,8 @@ translation is correct is complex.  All the implicit assumptions that were made
 in \htl{} need to be translated explicitly to Verilog statements and it needs to
 be shown that these explicit behaviours are equivalent to the assumptions made
 in the \htl{} semantics.  One main example of this is proving that the
-specification of the \gls{BRAM} in \htl{} does indeed behave in the same as its
-Verilog implementation.  I discuss these proofs in upcoming sections.
+specification of the \gls{BRAM} in \htl{} does indeed behave in the same way as
+its Verilog implementation.  I discuss these proofs in upcoming sections.
 
 % In general, the generated Verilog structure has similar to that of the \htl{}
 % code.  The key difference is that the control and datapath maps become Verilog

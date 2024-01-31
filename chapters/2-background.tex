@@ -232,10 +232,10 @@ endmodule
 %  \alt{Verilog code of a state machine, and its equivalent state machine diagram.}
   \caption[A simple Verilog implementation of a finite-state machine.]{A simple
     state machine implemented in Verilog, with its diagrammatic representation
-    on the right. The \texttt{x} stands for ``don't care'' and each transition
-    is labelled with the values of the inputs \texttt{rst} and \texttt{y} that
-    trigger the transition.  The output that will be produced is shown in each
-    state.}%
+    on the right. The \texttt{x} stands for \enquote{don't care} and each
+    transition is labelled with the values of the inputs \texttt{rst} and
+    \texttt{y} that trigger the transition.  The output that will be produced is
+    shown in each state.}%
   \label{fig:tutorial:state_machine}
 \end{figure}
 
@@ -249,7 +249,7 @@ state machine should go to.  When the \texttt{state} is 0, \texttt{tmp} will be
 assigned to the input \texttt{y} using nonblocking assignment, denoted by
 \texttt{<=}.  Nonblocking assignment assigns registers in parallel at the end of
 the clock cycle, rather than sequentially throughout the always-block. In the
-second always-block, the input \texttt{y} will be checked, and if it's high it
+second always-block, the input \texttt{y} will be checked, and if it is high it
 will move on to the next state, otherwise it will stay in the current state.
 When \texttt{state} is 1, the first always-block will reset the value of
 \texttt{tmp} and then set \texttt{z} to the original value of \texttt{tmp},
@@ -543,10 +543,13 @@ Instead, a \gls{CFG} representation of the code is a graph instead of a list,
 and allows any instruction to be connected to any other instruction explicitly
 by a control-flow edge.  This signifies that after executing an instruction, the
 execution will then move to one of the successors of the current node.  This
-turns control-flow analysis into a graph problem~\cite[]{allen70_cfa}.  Because
-of this, it is natural to represent code as a \gls{CFG}.
+turns control-flow analysis into a graph problem~\cite[]{allen70_cfa},
+simplifying many program analysis passes and making it more natural to traverse
+the program with algorithms such as depth-first search.
 \Cref{fig:data-structure-comparison:cfg} shows how the list representation of
-the code would be represented as a \gls{CFG}.
+the code would be represented as a \gls{CFG}, where nodes can now have multiple
+outgoing or incoming edges.  Because the edges represent \gls{control flow},
+only one edge will be taken at a time as the program executes.
 
 \subsubsection{\Glsfmtlongpl{DFG}}
 
@@ -581,9 +584,9 @@ not executing, but while it is executing the node should only allow data through
 from the back edge of the loop.  The example shown in
 \cref{fig:data-structure-comparison:dfg} is similar to the concepts of
 $\mu$-nodes in gated static single assignment form and the program dependence
-web~\cite{ottenstein90_progr_depen_web,campbell93_refin,havlak94_const,tu95_effic_build_placin_gatin_funct},
-which are intermediate languages that can be interpreted in a data flow oriented
-context.
+web~\cite{ottenstein90_progr_depen_web, campbell93_refin,havlak94_const,
+  tu95_effic_build_placin_gatin_funct}, which are intermediate languages that
+can be interpreted in a data flow oriented context.
 
 \subsubsection{\Glsfmtlongpl{CDFG}}
 
@@ -647,7 +650,7 @@ achieved~\cite{faraboschi01_isilpp}.
     \end{tikzpicture}
     \caption{Basic blocks}\label{fig:block-comparison:basicblocks}
   \end{subfigure}\hfill%
-  \begin{subfigure}[c]{0.3\linewidth}
+  \begin{subfigure}[c]{0.35\linewidth}
     \centering
     \begin{tikzpicture}[shorten >=1pt,>=Latex,node distance=0.75cm and 0.5cm]
       \node[instrnode,fill=nodea] (a) {};
@@ -929,18 +932,18 @@ without any extensions.
 \label{sec:bg:dynamic-scheduling}
 
 On the other hand, \gls{dynamic
-  scheduling}~\cite{josipović18_dynam_sched_high_synth} does not require
-the schedule to be known at compile time and instead it generates circuits using
-tokens to schedule the operations in parallel at run time.  Whenever the data
-for an operation is available, it sends a token to the next operation,
-signalling that the data is ready to be read.  The next operation does not start
-until all the required inputs to the operation are available, and once that is
-the case, it computes the result and then sends another token declaring that the
-result of that operation is also ready.  The benefit of this approach is that
-only basic data-flow analysis is needed to connect the tokens correctly,
-however, the scheduling is then done dynamically at run time, depending on how
-long each primitive takes to finish and when the tokens activate the next
-operations.
+  scheduling}~\cite{josipović18_dynam_sched_high_synth} does not require the
+schedule to be known at compile time and instead it generates latency
+insensitive circuits~\cite{carloni01_tlid}, that use tokens to schedule
+operations at runtime.  Whenever the data for an operation is available, it
+sends a token to the next operation, signalling that the data is ready to be
+read.  The next operation does not start until all the required inputs to the
+operation are available, and once that is the case, it computes the result and
+then sends a token declaring that the result of that operation is also ready.
+The benefit of this approach is that only basic data-flow analysis is needed to
+connect the tokens correctly, however, the scheduling is done dynamically at run
+time, depending on how long each primitive takes to finish and when the tokens
+activate the next operations.
 
 The benefit of this approach over static scheduling is that the latency of these
 circuits is normally significantly lower than the latency of static scheduled
@@ -1224,9 +1227,9 @@ will remain untested.
 
 Instead, the equivalence between the higher-level input code and the hardware
 design can be proven automatically.  There are commercial tools that claim to
-support such an equivalence checks, such as Siemens'
+support such an equivalence checks, such as Siemens's
 SLEC~\cite[]{chauhan20_formal_ensur_equiv_c_rtl}, Cadence's
-C2RTL~\cite[]{cadence23_j} or Synopsys' HECTOR~\cite{koelbl21_vcddh}, which try
+C2RTL~\cite[]{cadence23_j} or Synopsys's HECTOR~\cite{koelbl21_vcddh}, which try
 to match the states in the register-transfer level description to states in the
 original C code after an unverified translation.  However, in general this does
 not scale to large designs because of the explosion in the size of the state and
@@ -1239,17 +1242,18 @@ checking problem, leading to the same issues that were discussed in
 solver is getting stuck.
 
 This technique is called translation validation~\cite{pnueli98_trans}, whereby
-the translation that the HLS tool performed is proven to have been correct for
-that input, by showing that they behave in the same way for all possible inputs.
-In addition to the commercial tools mentioned previously, there has been
-research on verifying specific \gls{HLS} optimisations correct as well, such as
+the translation that the \gls{HLS} tool performed is proven to have been correct
+for that specific input by implementing a validator that decides if the input
+and output of the transformation are equivalent.  In addition to the commercial
+tools mentioned previously, there has been research on verifying specific
+\gls{HLS} optimisations correct using translation validation as well, such as
 scheduling~\cite{kim04_autom_fsmd, karfa06_formal_verif_method_sched_high_synth,
   chouksey20_verif_sched_condit_behav_high_level_synth} or code
 motion~\cite{banerjee14_verif_code_motion_techn_using_value_propag,
   chouksey19_trans_valid_code_motion_trans_invol_loops}.  Even though many of
 these papers are accompanied by proofs of correctness, these proofs are often
 not mechanised or directly related to the actual implementation, meaning the
-verifying algorithm might give false positives.
+verifying algorithm might result in false positives.
 
 More examples of translation validation for proofs about HLS
 algorithms~\cite{karfa06_formal_verif_method_sched_high_synth,
@@ -1271,7 +1275,7 @@ Even though the correctness of the verifier is proven in the papers, the
 algorithm implementing the verifier might still include bugs.  It is therefore
 possible that output is accepted even though it is not equivalent to the input.
 In the case of SPARK, there are not validation checks for the translation from C
-to the internal \gls{IR}, as well as checkes for the final translation from the
+to the internal \gls{IR}, as well as checks for the final translation from the
 \gls{IR} to Verilog.  In addition to that, using translation validation to prove
 the correctness of the complete \gls{HLS} translation either means that one
 needs an algorithm that verifies all transformations at once, or, like it is the
@@ -1287,36 +1291,36 @@ their respective soundness criteria, is itself sound.
 
 \subsubsection{Direct Unmechanised Proofs}
 
-There has also been work proving HLS correct without using translation
+There has also been work proving \gls{HLS} correct without using translation
 validation, but by directly showing that the translation is correct.  The first
 instance of this is proving the BEDROC~\cite{chapman92_verif_bedroc} HLS tool is
 correct.  This HLS tool converts a high-level description of an algorithm,
 supporting loops and conditional statements, to a netlist and proves that the
-output is correct.  It works in two stages, first generating a DFG from the
-input language, HardwarePal.  It then optimises the DFG to improve the routing
-of the design and also improving the scheduling of operations.  Finally, the
-netlist is generated from the DFG by placing all the operations that do not
-depend on each other into the same clock cycle.  Data path and register
-allocation is performed by an unverified clique partitioning algorithm.  The
-equivalence proof between the DFG and HardwarePal is done by proof by
-simulation, where it is proven that, given a valid input configuration, that
-applying a translation or optimisation rule will result in a valid DFG with the
-same behaviour as the input.
+output is correct.  It works in two stages, first generating a \gls{DFG} from
+the input language, HardwarePal.  It then optimises the \gls{DFG} to improve the
+routing of the design and the schedule of the operations.  Finally, the netlist
+is generated from the \gls{DFG} by placing all the operations that do not depend
+on each other into the same clock cycle.  Data path and register allocation is
+performed by an unverified clique partitioning algorithm.  The equivalence proof
+between the \gls{DFG} and HardwarePal is done by proof by simulation, where it
+is proven that, given a valid input configuration, applying a translation or
+optimisation rule will result in a valid \gls{DFG} with the same behaviour as
+the input.
 
 There has also been work on proving the translation from occam to
-gates~\cite{page91_compil_occam} correct using algebraic
+gates~\cite{page91_compil_occam} correctly using algebraic
 proofs~\cite{jifeng93_towar}.  This translation resembles dynamic scheduling as
 tokens are used to start the next operations.  To take advantage of the parallel
 nature of hardware, occam has explicit concurrency using the PAR constructs with
 channels to share state.  Handel-C, a version of occam with many more features
 such as memory and pointers, and is described further in
 \cref{sec:bg:mechanised-compiler-proofs} as there is mechanised translation from
-Handel-C into a netlist.  One thing to note about these translations from occam
+Handel-C into a netlist.  One aspect to note about these translations from occam
 and Handel-C into netlists is that they are essentially timed languages in SEQ
-blocks.  This is because every assignment takes one cycle to complete and
-expressions are assumed to finish evaluation within that cycle.  No automatic
-scheduling is performed by the translation, and the designer has full control
-over the design and can manually pipeline and parallelise the design.
+blocks, because every assignment takes one cycle to complete and expressions are
+assumed to finish evaluation within that cycle.  No automatic scheduling is
+performed by the translation, and the designer has full control over the design
+and can manually pipeline and parallelise it.
 
 \subsection{Mechanised compiler proofs in high-level hardware design}%
 \label{sec:bg:mechanised-compiler-proofs}
@@ -1362,8 +1366,8 @@ defining the algorithm to perform the compilation, chaining operations together
 with start and end signals that determine the next construct which will be
 executed.  The circuits themselves are treated as black boxes by the compilation
 algorithm and are chosen based on the current statement in Handel-C which is
-being translated.  One interesting property about these circuits is that
-control-signal is propagated correctly through the circuit, and that it ensures
+being translated.  One interesting property about these circuits is that the
+control signal is propagated correctly through the circuit, and that it ensures
 that only one hardware construct is active at a time.  This is the property that
 is mechanised in the work for the translation of Handel-C to netlists.  However,
 the final semantic equivalence of the translation was not mechanised.
@@ -1373,7 +1377,7 @@ of Bluespec that focuses on providing control over the scheduling of the rules.
 Rule based hardware design in Kôika is therefore similar to Bluespec and
 provides a useful abstraction to design hardware over using Verilog directly.
 Kôika also provides a mechanised compilation from the collection of rules with a
-schedule into an equivalent circuit.  This circuit can then be pretty printed as
+schedule into an equivalent circuit.  This circuit can then be pretty-printed as
 a Verilog design.  This is a fundamentally different approach to increasing the
 abstraction level of hardware design compared to translating software into
 hardware.  This mainly comes down to Kôika giving fine-grained control over the
@@ -1405,8 +1409,8 @@ netlist format is written in Isabelle, which is a theorem prover comparable to
 Coq.
 
 As both the input IR and output netlist format have been designed from scratch,
-there is no description of a translation from a higher level languages into the
-\gls{SSA} form, as well as no description on how to map the netlist language
+there is neither a description of a translation from a higher level languages
+into the \gls{SSA} form, nor a description on how to map the netlist language
 onto an \gls{FPGA}.  These translations would likely remain unverified.  A
 custom IR and netlist was used to describe how the correctness between the two
 languages could be stated and explores how the software language can interact
@@ -1432,17 +1436,18 @@ is a formally verified C compiler written in
 Coq~\cite{bertot04_inter_theor_provin_progr_devel}.  The verified compiler in
 Coq is extracted to OCaml code and can then be used.  CompCert comprises eleven
 intermediate languages, which are used to gradually translate C code into
-assembly that has the same behaviour.  Proving the translation directly without
+assembly preserving the behaviour.  Proving the translation directly without
 going through the intermediate languages would be infeasible, especially with
 the many optimisations that are performed during the translation, as there is a
-large semantic gap between the semantics of Assembly and the semantics of
-Clight.  The first three intermediate languages (C\#minor, C\#minorgen, Cminor)
-are used to transform Clight, a deterministic subset of C, into a more assembly
-like language called \gls{RTL}.  This language consist of a \gls{CFG} of
-instructions, and is therefore well suited for various compiler optimisations
-such as constant propagation, dead-code elimination or function inlining.  After
-\gls{RTL}, each intermediate language is used to get closer to the assembly
-language of the architecture, performing operations such as register allocation.
+large semantic gap between the semantics of \gls{Asm} and the semantics of
+\gls{Clight}.  The first three intermediate languages (\gls{CSminor},
+\gls{Cminor}, \gls{CminorSel}) are used to transform \gls{Clight}, a
+deterministic subset of C, into a more assembly-like language called \gls{RTL}.
+This language consist of a \gls{CFG} of instructions, and is therefore well
+suited for various compiler optimisations such as constant propagation,
+dead-code elimination or function inlining.  After \gls{RTL}, each intermediate
+language is used to get closer to the assembly language of the architecture,
+performing operations such as register allocation.
 \Cref{fig:bg:compcert-languages} gives a summary of each transformation that
 takes place in CompCert, from the input C language to the final native code that
 is run on the \gls{CPU}.
@@ -1463,30 +1468,30 @@ is run on the \gls{CPU}.
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}[node distance=1cm and 0.75cm,>=Latex,shorten >=1pt,font=\sffamily]
+  \begin{tikzpicture}[node distance=1cm and 6.8mm,>=Latex,shorten >=1pt,font=\sffamily]
     \node[ir] (compcertc) {CompCert C};
     \node[pass,below=of compcertc] (evalorder) {specify evaluation\\order};
     \node[left=of evalorder] (paddingfirst) {};
-    \node[ir,right=of evalorder] (cstrategy) {Cstrategy};
+    \node[ir,right=of evalorder] (cstrategy) {\textsc{Cstrategy}};
     \node[pass,right=of cstrategy] (sideeffect) {remove\\side-effects};
-    \node[ir,right=of sideeffect] (clight) {Clight};
+    \node[ir,right=of sideeffect] (clight) {\textsc{Clight}};
     \node[pass,right=of clight] (simplify) {simplify};
-    \node[ir,below=of simplify] (csharpminor) {C\#minor};
+    \node[ir,below=of simplify] (csharpminor) {\textsc{C\#minor}};
     \node[pass,left=of csharpminor] (stackallocation) {stack\\allocation};
-    \node[ir,left=of stackallocation] (cminor) {Cminor};
+    \node[ir,left=of stackallocation] (cminor) {\textsc{Cminor}};
     \node[pass,left=of cminor] (instrselection) {instruction\\selection};
-    \node[ir,left=of instrselection] (cminorsel) {CminorSel};
+    \node[ir,left=of instrselection] (cminorsel) {\textsc{CminorSel}};
     \node[pass,below=of cminorsel] (cfgconstr) {CFG\\construction};
     \node[ir,right=of cfgconstr] (rtl) {\rtl{}};
     \node[pass,right=of rtl] (regalloc) {register\\allocation};
     \node[pass,below=of rtl] (opts) {optimisations};
     \node[ir,right=of regalloc] (ltl) {\textsc{Ltl}};
     \node[pass,right=of ltl] (linearisation) {linearisation};
-    \node[ir,below=of linearisation] (linear) {Linear};
+    \node[ir,below=of linearisation] (linear) {\textsc{Linear}};
     \node[pass,below=of linear] (stackframe) {stack frame\\layout};
-    \node[ir,left=of stackframe] (mach) {Mach};
+    \node[ir,left=of stackframe] (mach) {\textsc{Mach}};
     \node[pass,left=of mach] (assemblygen) {assembly\\generation};
-    \node[ir,below left=of assemblygen] (assembly) {Assembly};
+    \node[ir,below left=of assemblygen] (assembly) {\textsc{Asm}};
     \node[pass,right=of assembly] (nativegen) {native code\\generation};
     \node[ir,right=of nativegen] (nativecode) {Native Code};
     \path (paddingfirst) |- node (paddingsecond) {} (cfgconstr);
@@ -1526,12 +1531,12 @@ types of proofs do not carry any run time cost, because they reason purely about
 the algorithm that was implemented and they can be erased when the C compiler is
 extracted to OCaml code.  The translation algorithm itself is proven correct, so
 no additional code that is associated with the proof is needed when one is using
-the compiler.  On the other hand, some transformations are easier to build a
-validator for that checks the result of the transformation instead of proving
-that the transformation algorithm always produces correct results.  This is
-called \emph{\gls{translation validation}}, and CompCert uses this technique to
-prove the correctness of the register allocation transformation, for example.
-Register allocation reduces to the graph colouring problem, where every register
+the compiler.  However, some transformations are easier to build a validator for
+that checks the result of the transformation instead of proving that the
+transformation algorithm always produces correct results.  This is called
+\emph{\gls{translation validation}}, and CompCert uses this technique to prove
+the correctness of the register allocation transformation, for example.
+Register allocation reduces to the graph colouring problem, where all registers
 with overlapping liveness properties are connected by edges.  The algorithm is
 then tasked to colour the graph with the fewest colours so that connected nodes
 have different colours.  It is therefore clear that checking the colouring of
@@ -1546,18 +1551,17 @@ register allocation in Coq.  This still produces a verified translation, as
 CompCert is allowed to fail on inputs, in which case the correctness theorem
 holds trivially.  For translation validation, that means that as long as
 compilation only proceeds when the validator succeeds, it is equivalent to
-having verified the transformation correct.  However, unlike verifying
-transformations correct directly, using a validator means that it needs to check
-the correctness criterion every time the compiler is run, meaning the efficiency
-of the validator is also important to take into account.
+having verified the transformation correct.  However, using a validator means
+that it needs to check the correctness criterion every time the compiler is run,
+meaning the efficiency of the validator is also important to take into account.
 
 \subsection{CompCert correctness theorem}%
 \label{sec:bg:compcert-correctness-theorem}
 
 The correctness theorem of CompCert should ensure that the compiler does not
-introduce bugs into the program as it is translated from C into Assembly.  To do
-so, one must first define the execution of programs written in C, as well as
-programs written in Assembly.
+introduce bugs into the program as it is translated from C into \gls{Asm}.  To
+do so, one must first define the execution of programs written in C, as well as
+programs written in \gls{Asm}.
 
 \paragraph{Small-step semantics}
 
@@ -1585,8 +1589,8 @@ will contain the return-value of the main function in addition to a finite
 stream of events.  If the program diverges, then the program is executing
 indefinitely, in which case it will emit a possibly infinite stream of events
 but no return value.  Finally, if the program goes wrong, for example when
-undefined behaviour is encountered, then that means that there is no more valid
-step defined in the semantics from the current state.
+undefined behaviour is encountered, it means that there is no more valid step
+defined in the semantics from the current state.
 
 \subsubsection{Correctness theorem}%
 \label{sec:bg:correctness-theorem}
@@ -1641,13 +1645,13 @@ represented as a \emph{simulation diagram} and shown in
 \cref{fig:bg:backwards-simulation}.  \Cref{fig:bg:backwards-simulation-diagram}
 shows the main two types of simulation diagrams that may hold for a specific
 transition, where the solid lines represent what can be assumed, and the dashed
-lines have to be shown to hold or exists.  First, for a step in the compiled
-program from state $c_1$ to state $c_2$ that emits trace $t$ and a state $s_1$
-that matches with the state $c_1$ using the $\approx$ relation, there must exist
-one or more steps in the source program that also emit the same trace $t$ and
-produces a state $s_2$ that matches with state $c_2$.  If the state transition
-in the compiled program does not emit a trace, but some measure on the state has
-a well-founded order that decreases, then the source semantics may stall as long
+lines have to be shown to hold.  First, for a step in the compiled program from
+state $c_1$ to state $c_2$ that emits trace $t$ and a state $s_1$ which matches
+with the state $c_1$ using the $\approx$ relation, there must exist one or more
+steps in the source program that also emit the same trace $t$ and produce a
+state $s_2$ that matches with state $c_2$.  If the state transition in the
+compiled program does not emit a trace, but some measure on the state has a
+well-founded order that decreases, then the source semantics may stall as long
 as $s_1$ matches with both $c_1$ and $c_2$.  In addition to that, to be able to
 show semantic preservation from the backward simulation, one also needs to prove
 that the compiled program makes progress if there exist transitions in the
@@ -1705,8 +1709,8 @@ source program from two matching states $s_1$ and $c_1$.  This is shown in
 \end{figure}
 
 Backward simulations are hard to prove by induction on the semantics of the
-compiled program.  This is because the matching relation requires that one
-define a decompilation of the compiled program into the source program to match
+compiled program, because the matching relation requires that one define a
+decompilation of the compiled program into the source program to match
 individual instructions with individual sections of the code.  This may not be
 possible for many constructs, as statements generally compile to a group of
 instructions.  Instead, a forward simulation, shown in
@@ -1723,12 +1727,12 @@ deterministic, then the forward simulation implies the backward simulation.
 %\footnote{In practice, one can be more precise and have properties on
 %  the source and compiled program, such that one can show that the source
 %  program is \emph{receptive} and the target program \emph{determinate}.}
-In addition to that, forward simulations as well as backward simulations can be
+In addition, forward simulations as well as backward simulations can be
 composed.  This means that one can prove a forward simulation for each
-transformation shown in \cref{fig:bg:compcert-languages} from Clight to Assembly
-which implies a forward simulation from Clight to Assembly.  After showing that
-the semantics of Assembly is deterministic, one can then prove a backward
-simulation from Assembly to Clight.
+transformation shown in \cref{fig:bg:compcert-languages} from \gls{Clight} to
+\gls{Asm} which implies a forward simulation from Clight to \gls{Asm}.  After
+showing that the semantics of \gls{Asm} is deterministic, one can then prove a
+backward simulation from \gls{Asm} to \gls{Clight}.
 
 \begin{figure}
   \centering
@@ -1792,12 +1796,12 @@ transformation only relies on data dependencies, which is naturally encoded in
 the symbolic state.  As long as one can show that the symbolic expressions of
 two registers are structurally equivalent, then this means that the reordering
 of instructions did not violate any data dependencies, and this should imply
-that the behaviour of the original block and the reordered block are the same as
-well.
+that the behaviours of the original block and the reordered block are identical
+as well.
 
 \begin{figure}
   \centering
-  \hfill\begin{subfigure}[t]{2cm}
+  \hfill\begin{subfigure}[t]{2.5cm}
     \centering
 \begin{rtllisting}
 z := x + y;
@@ -1834,11 +1838,11 @@ then optimise the validator and extend it so that it works with the Kalray KVX
 integrated into a fork of CompCert called CompCert KVX~\cite[]{six23_ck}.  In
 both these cases, the list scheduling algorithm works on the Mach intermediate
 language in CompCert, but in the case of CompCert KVX the list scheduling pass
-is also used to transform the Mach into Assembly.  List scheduling is performed
-on \glspl{basic block}.  These are implicitly represented in
+is also used to transform the \gls{Mach} into \gls{Asm}.  List scheduling is
+performed on \glspl{basic block}.  These are implicitly represented in
 \textcite{tristan08_formal_verif_trans_valid}, but are explicitly constructed in
-\textcite{six20_certif_effic_instr_sched} as an \textsc{AsmBlock} language,
-making it easier to reason about transformations in individual blocks.
+\textcite{six20_certif_effic_instr_sched} as an \gls{AsmBlock} language, making
+it easier to reason about transformations in individual blocks.
 
 The schedule is validated after the fact by running symbolic execution before
 and after scheduling.  The symbolic execution of both blocks starts with the
@@ -1849,19 +1853,19 @@ and after scheduling can then be compared.  If the scheduler only
 symbolic expressions, as an instruction is only reordered if it does not break
 any data-dependencies.  In that case, the symbolic expressions for the reordered
 instruction would be identical as they were independent.  However, the scheduler
-is unverified, and it could therefore introduce new instructions.  This means
-that the comparison of the symbolic state is not enough to show equivalent
-behaviour.  Consider the following example:
+is unverified, and it could therefore introduce new instructions.  As a result,
+the comparison of the symbolic state is not enough to show equivalent behaviour.
+Consider the following example:
 
 \begin{center}
 \begin{tikzpicture}
-\node[] (initial) {\begin{minipage}{2.6cm}
+\node[] (initial) {\begin{minipage}{2.7cm}
 \begin{rtllisting}
 r3 := r2 + 4;
 \end{rtllisting}
 \end{minipage}};
 \node[right=3.5cm of initial] (scheduled) {
-  \begin{minipage}{2.6cm}
+  \begin{minipage}{2.7cm}
 \begin{rtllisting}
 r3 := 5 / r1;
 r3 := r2 + 4;
@@ -1985,15 +1989,15 @@ cases.  The first part of the trace scheduling algorithm is to transform the
 \gls{CFG} into a graph of trees representation, shown in
 \cref{fig:block-comparison:graph-of-trees}.  This representation is similar to
 the superblock representation shown in \cref{fig:block-comparison:superblocks}
-in that tail duplication is needed to represent any internal joining control
-flow.  However, this tail duplication then means that the whole block can be
-represented as a single tree.  Instructions can then be reordered by the
-scheduler within a tree.  In general, tail duplication should be avoided as it
-can result in an exponential increase in the number of nodes.  The boundaries of
-the trees are chosen by calculating possible cut points in the \gls{CFG}, which
-correspond to labels that are the target of back edges, or function calls.
+where tail duplication is needed to represent any internal joining control flow.
+However, this tail duplication then means that the whole block can be
+represented as a single tree.  Instructions can be reordered by the scheduler
+within a tree.  In general, tail duplication should be avoided as it can result
+in an exponential increase in the number of nodes.  The boundaries of the trees
+are chosen by calculating possible cut points in the \gls{CFG}, which correspond
+to labels that are the target of back edges, or function calls.
 
-Validation can then be done by running the symbolic execution over the tree and
+Validation is performed by running the symbolic execution over the tree and
 comparing symbolic states in the same way as was done for list scheduling when
 one reaches the leaves of the tree (i.e. the exit nodes).  While traversing the
 tree, one must also ensure that the same conditions are encountered and
@@ -2057,7 +2061,7 @@ trees.  \textcite[]{gourdin23_fvobs} later replaced \textsc{Rtlpath} with
   exiting the block and pointing to a new external block.
 \end{enumerate*}
 \textsc{Btl} is defined as a nested structure of blocks with conditionals, and
-are therefore general enough to represent \glspl{hyperblock}.  The main
+is therefore general enough to represent \glspl{hyperblock}.  The main
 difference between the graph of trees representation and \textsc{Btl} is that
 graph of trees cannot represent a sequence of two trees, which is representable
 in \textsc{Btl}.  As the language is not restricted to superblocks anymore, the
@@ -2129,7 +2133,7 @@ designs and the low-level hardware design.  Further testing in then purely
 performed on the low-level hardware design at the register-transfer level, where
 it can be difficult to verify behaviour compared to using the high-level design.
 
-I then gave an overview of CompCert, describing the correctness theorem and
+I gave an overview of CompCert, describing the correctness theorem and
 describing existing attempts at formally verifying instruction scheduling, which
 is the main optimisation and transformation that \gls{HLS} tools perform to
 generate hardware.  The current formalised scheduling passes are mainly

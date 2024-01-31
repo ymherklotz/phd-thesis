@@ -10,8 +10,8 @@
 of a software program, with virtual, infinite registers, a program counter, as
 well as a rich but abstract memory model.  This representation needs to be
 transformed into a more suitable representation on which hardware specific
-transformations can applied, and which is closer to th structure of the final
-Verilog design.  The main transformation that takes place is converting a
+transformations can be applied, and which is closer to the structure of the
+final Verilog design.  The main transformation that takes place is converting a
 control-flow graph into a state machine with data-path representation, which is
 also the structure of the final design.  There are various steps involved in
 this refinement because of the large gap between control-flow graph semantics
@@ -29,18 +29,18 @@ transformations and in which section the transformation is described.
 \Cref{sec:hg:hyperblock-destruction} describes the first step in the
 transformation which separates each sequential block within a state in \rtlpar{}
 into separate states that can be addressed using the program counter.  This
-matches addressing that the state register would have to do in the hardware
+matches the addressing that the state register would have to do in the hardware
 design. Next, \cref{sec:hg:htl-generation} describes the generation of \htl{},
 an intermediate language representing the execution of a state machine.  This
 performs the main transformation from a software representation of the program
 into hardware, making the execution of the program more explicit in the design
-itself instead of as part of the semantics.  \Cref{sec:hg:bram-insertion} then
+itself rather than as part of the semantics.  \Cref{sec:hg:bram-insertion} then
 describes the first hardware-specific optimisation on the state-machine
 representation of the hardware by adding a specification of a \gls{BRAM} to the
 \htl{} semantics and replacing any explicit reads and writes to the array
 representing memory by properly formed reads and writes to the \gls{BRAM}.
 Until now, updates to registers have been specified sequentially, so a forward
-substitution transformation is describe in
+substitution transformation is described in
 \cref{sec:hg:register-forward-substitution} to parallelise the updates to
 registers.  Finally, \cref{sec:hg:verilog-generation} describes the generation
 of the final Verilog design, which implements the state-machine that was
@@ -141,7 +141,7 @@ function.
 \subsection{Proof of hyperblock destruction}
 
 The proof of hyperblock destruction is relatively simple using a
-\gls{plus-forward-simulation}.  Then, for each input states, there are one or
+\gls{plus-forward-simulation}.  Then, for each input state, there are one or
 more output states returned by the hyperblock destruction algorithm that should
 be equivalent to the execution of the input state when executed sequentially.
 
@@ -172,7 +172,7 @@ containing a map from program locations to Verilog statements.  The syntax of
 \htl{} is shown in \cref{fig:hg:htl-syntax}.  First, \htl{} contains a list of
 parameters, which are additional input registers to the current module.  Next,
 the $\mathit{datapath}$ contains the code for the state machine, as well as the
-main data path associated with the data path.  This is done by mapping program
+data path associated with each state.  This is done by mapping program
 locations, or states, to Verilog statements $\verilogstmnttype$, which updates
 registers as part of the data path, but also updates to the state.  The
 computation of the next state often relies on the state of registers, which is
@@ -349,15 +349,15 @@ However, the memory model that \compcert{} uses for its intermediate languages
 is byte\?addressable~\cite{blazy05_formal_verif_memor_model_c}.  If a
 byte\?addressable memory was used in the target hardware, which is closer to
 \compcert{}'s memory model, then a load and store would instead take four clock
-cycles, the \gls{BRAM} implemented in hardware can only perform one read and
-write per clock cycle.  It therefore has to be proven that the byte-addressable
-memory behaves in the same way as the word-addressable memory in hardware.  Any
-modifications of the bytes in the \compcert{} memory model also have to be shown
-to modify the word-addressable memory in the same way.  Since only integer loads
-and stores are currently supported in \vericert{}, it follows that the addresses
-given to the loads and stores will be multiples of four.  Translating from
-byte-addressed memory to word-addressed memory can then be done by dividing the
-address by four.
+cycles, because the \gls{BRAM} implemented in hardware can only perform one read
+and write per clock cycle.  It therefore has to be proven that the
+byte-addressable memory behaves in the same way as the word-addressable memory
+in hardware.  Any modifications of the bytes in the \compcert{} memory model
+also have to be shown to modify the word-addressable memory in the same way.
+Since only integer loads and stores are currently supported in \vericert{}, it
+follows that the addresses given to the loads and stores will be multiples of
+four.  Translating from byte-addressed memory to word-addressed memory can then
+be done by dividing the address by four.
 
 As shown in \cref{fig:hg:htl-generation}, predicated instructions are translated
 into blocking assignments of a ternary expression in Verilog.  This is the case
@@ -407,11 +407,11 @@ which accumulates throughout the translation of a block.
 operations.  First, the condition of the ternary statement in Verilog
 corresponds to the predicate in the block, however, these quickly diverge.  For
 the next control-flow instruction, the condition of the ternary statement is set
-to be the the translated predicate associated with \rtlinline`p2`, anded
-together with the current negated exit condition which is \veriloginline`~r3`.
-The current negated exit condition is then updated to be
-\veriloginline`~r3 & ~r5`, which is then the ternary expression condition
-assigned to the last \veriloginline`state` update.
+to be the translated predicate associated with \rtlinline`p2`, anded together
+with the current negated exit condition which is \veriloginline`~r3`.  The
+current negated exit condition is then updated to be \veriloginline`~r3 & ~r5`,
+which is then the ternary expression condition assigned to the last
+\veriloginline`state` update.
 
 \begin{figure}
   \centering
@@ -455,10 +455,10 @@ and the result that should be returned is assigned to the return register.
 Each \rtlsubpar{} function is translated separately, and within each function,
 each block is translated to a Verilog statement.  In addition to that, new
 registers are created for the various control signals and registers in \htl{},
-ensuring that they follow the ordering present in the \htl{} specification.  In
-addition to that, the top-level translation also needs to ensure that it is
-compiling a translation unit with the \texttt{main} function, as linking with
-other translation units is not supported by the Verilog semantics.
+ensuring that they follow the ordering present in the \htl{} specification.  The
+top-level translation also needs to ensure that it is compiling a translation
+unit with the \texttt{main} function, as linking with other translation units is
+not supported by the Verilog semantics.
 
 \subsection{\htl{} generation correctness proof}%
 \label{sec:hg:htl-generation-correctness-proof}
@@ -602,13 +602,13 @@ We also define the following set $\mathcal{I}$ of invariants that must hold for
 the current state to be valid:
 
 \begin{itemize}
-\item that all pointers in the program use the stack as a base pointer,
-\item that any loads or stores to locations outside of the bounds of the stack
-  result in undefined behaviour (and hence they do not need to be handled),
-\item that $\mathit{rst}$ and $\mathit{fin}$ are not modified and therefore stay
-  at a constant 0 throughout execution, and
-\item that the stack frames match.  As no function calls are performed, as they
-  are all inlined, the stack frames will always be empty.
+\item all pointers in the program use the stack as a base pointer,
+\item any loads or stores to locations outside of the bounds of the stack result
+  in undefined behaviour (and hence they do not need to be handled),
+\item $\mathit{rst}$ and $\mathit{fin}$ are not modified and therefore stay at a
+  constant 0 throughout execution, and
+\item the stack frames match.  As no function calls are performed, as they are
+  all inlined, the stack frames will always be empty.
 \end{itemize}
 
 We can now define the simulation diagram for the translation. The \rtlsubpar{} state can
@@ -665,7 +665,7 @@ The simplest way to implement loads and stores in \vericert{} would be to access
 the Verilog array directly from within the data path as is currently the case
 after the \htl{} generation. This would be correct, but when a Verilog array is
 accessed at several program points, the synthesis tool is unlikely to detect
-that it can be implemented as an \gls{BRAM}, and will resort to using registers
+that it can be implemented as a \gls{BRAM}, and will resort to using registers
 instead, increasing the circuit's area and affecting performance.  This is
 because reads and writes to a \gls{BRAM} need to follow a certain pattern to be
 suitable to be replaced by \gls{BRAM} reads and writes.  For example, the
@@ -745,11 +745,11 @@ cycles respectively, they only take two clock cycles and one clock cycle
 instead, greatly improving their performance.  Ideally, this translation would
 take advantage of the scheduler, which can already ensure that the clock cycle
 after a load remains free to wait for the data from the \gls{BRAM}, however,
-this would require additional checking by this transformation to double check
-that the read result is not used until it is ready.  Using the negative edge of
-the clock is supported by synthesis tools and FPGAs, but in general it does
-reduces the time that's available for arithmetic operations in the positive edge
-of the clock, making it harder to schedule operations.
+this would require additional checking by this transformation to ensure that the
+read result is not used until it is ready.  Using the negative edge of the clock
+is supported by synthesis tools and FPGAs, but in general it reduces the time
+that is available for arithmetic operations in the positive edge of the clock,
+making it harder to schedule operations.
 
 Secondly, the logic in the enable signal of the \gls{BRAM} (\texttt{en !=
   u\_en}) is also atypical in hardware designs.  Enable signals are normally
@@ -866,7 +866,7 @@ defines how the \gls{BRAM} $r$ will behave for all the possible combinations of
 the input signals.  This specification is part of the \htl{} semantics and runs
 in parallel to the state machine.  However, as the \gls{BRAM} is triggered by
 the falling edge of the clock, it will execute in between standard clock cycles,
-and a merge of the association maps is performed in between each.
+and a merge of the association maps is performed in between each one.
 
 \subsubsection{From implementation to specification}
 
@@ -1010,7 +1010,7 @@ registers introduced by the \gls{BRAM}.
 \label{sec:hg:register-forward-substitution}
 
 Until now, only blocking assignment has been used to assign variables
-sequentially, being more faithful to the instructions provided as the input
+sequentially, being more faithful to the instructions provided by the input
 language.  The transformation is shown in \cref{fig:hg:forward-substitution},
 and it turns sequential, blocking assignment into parallel, nonblocking
 assignment by substituting register definitions within a state.  Each assignment

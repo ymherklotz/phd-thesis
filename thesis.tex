@@ -167,45 +167,50 @@ Imperial College London.}
 % https://tex.stackexchange.com/a/474336
 \pdfvariable omitcidset=1
 
-\newacronym{SSA}{SSA}{static single assignment}
-\newacronym{GSA}{GSA}{gated-SSA}
+\newacronym{SSA}{SSA}{static single assignment} \newacronym{GSA}{GSA}{gated-SSA}
 \newacronym{HDL}{HDL}{hardware description language}
 \newacronym{HLS}{HLS}{high-level synthesis}
 \newacronym{FPGA}{FPGA}{field-programmable gate array}
-\newacronym{DFG}{DFG}{data-flow graph}
-\newacronym{CFG}{CFG}{control-flow graph}
+\newacronym{DFG}{DFG}{data-flow graph} \newacronym{CFG}{CFG}{control-flow graph}
 \newacronym{CDFG}{CDFG}{control- and data-flow graph}
 \newacronym{SDC}{SDC}{system of difference constraints}
 \newacronym{CNF}{CNF}{conjunctive normal form}
-\newacronym{SAT}{SAT}{satisfiability}
-\newacronym{SMT}{SMT}{satisfiability modulo theories}
-\newacronym{DSP}{DSP}{digital signal processor}
+\newacronym{SAT}{SAT}{satisfiability} \newacronym{SMT}{SMT}{satisfiability
+  modulo theories} \newacronym{DSP}{DSP}{digital signal processor}
 \newacronym{ITP}{ITP}{interactive theorem prover}
 \newacronym{FSMD}{FSMD}{finite-state machine with data path}
-\newacronym{II}{II}{initiation interval}
-\newacronym{ASAP}{ASAP}{as soon as possible}
-\newacronym{ALAP}{ALAP}{as late as possible}
-\newacronym{LUT}{LUT}{look-up table}
-\newacronym{MRT}{MRT}{modulo reservation table}
-\newacronym{LSQ}{LSQ}{load-store queue}
-\newacronym{BRAM}{BRAM}{block random-access memory}
-\newacronym{ASIC}{ASIC}{application-specific integrated circuit}
-\newacronym{IR}{IR}{intermediate representation}
-\newacronym{DSL}{DSL}{domain-specific language}
-\newacronym{CPU}{CPU}{central processing unit}
-\newacronym{GPU}{GPU}{graphics processing unit}
+\newacronym{II}{II}{initiation interval} \newacronym{ASAP}{ASAP}{as soon as
+  possible} \newacronym{ALAP}{ALAP}{as late as possible}
+\newacronym{LUT}{LUT}{look-up table} \newacronym{MRT}{MRT}{modulo reservation
+  table} \newacronym{LSQ}{LSQ}{load-store queue} \newacronym{BRAM}{BRAM}{block
+  random-access memory} \newacronym{ASIC}{ASIC}{application-specific integrated
+  circuit} \newacronym{IR}{IR}{intermediate representation}
+\newacronym{DSL}{DSL}{domain-specific language} \newacronym{CPU}{CPU}{central
+  processing unit} \newacronym{GPU}{GPU}{graphics processing unit}
 \newacronym{IPcore}{IP core}{intellectual property core}
-\newacronym{AST}{AST}{abstract syntax tree}
-\newacronym{ILP}{ILP}{integer linear programming}
-\newacronym{LP}{LP}{linear programming}
+\newacronym{AST}{AST}{abstract syntax tree} \newacronym{ILP}{ILP}{integer linear
+  programming} \newacronym{LP}{LP}{linear programming}
 \newacronym{VLIW}{VLIW}{very large instruction word}
 \newacronym{DRAM}{DRAM}{dynamic random-access memory}
 \newacronym{FSM}{FSM}{finite-state machine}
-\newcommand\newlanguageentry[3]{\newglossaryentry{#1}{type=\acronymtype, name={\textsc{#2}},%
-  description={#3}, first={#3 (\textsc{#2})}}}
-\newlanguageentry{RTL}{Rtl}{register transfer language}
-\newlanguageentry{LTL}{Ltl}{linear transfer language}
+\newcommand\newlanguageentry[3]{\newglossaryentry{#1}{type=\acronymtype,
+    name={\textsc{#2}},%
+    description={#3}, first={#3 (\textsc{#2})}}}
+\newcommand\newlanguageentrynofirst[3]{\newglossaryentry{#1}{type=\acronymtype,
+    name={\textsc{#2}},%
+    description={#3}, first={\textsc{#2}}}} \newlanguageentry{RTL}{Rtl}{register
+  transfer language} \newlanguageentry{LTL}{Ltl}{linear transfer language}
 \newlanguageentry{BTL}{Btl}{block transfer language}
+\newlanguageentrynofirst{Clight}{Clight}{CompCert intermediate language}
+\newlanguageentrynofirst{CSminor}{C\#minor}{CompCert intermediate language}
+\newlanguageentrynofirst{Cminor}{Cminor}{CompCert intermediate language}
+\newlanguageentrynofirst{Mach}{Mach}{CompCert intermediate language}
+\newlanguageentrynofirst{Linear}{Linear}{CompCert intermediate language}
+\newlanguageentrynofirst{CminorSel}{CminorSel}{CompCert intermediate language}
+\newlanguageentrynofirst{Cstrategy}{Cstrategy}{CompCert intermediate language}
+\newlanguageentrynofirst{Asm}{Asm}{CompCert assembly language}
+\newlanguageentrynofirst{AsmBlock}{AsmBlock}{CompCert KVX assembly block
+  language}
 
 \newterm[name={\enquote{plus} forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
 \newterm[name={\enquote{star} forward simulation},sort=starforwardsimulation]{star-forward-simulation}
@@ -232,23 +237,23 @@ Imperial College London.}
 
 %\newterm
 
-\includeonly{%
- % titlepage,
- % copyright-assignment,
- % declaration,
- % abstract,
- % acknowledgements,
- % lists,
- % chapters/1-introduction,
- chapters/2-background,
- % chapters/3-introduction-to-vericert,
- % chapters/4-trusted-computing-base,
- % chapters/5-hyperblock-scheduling,
- % chapters/6-hardware-generation,
- % chapters/7-evaluation,
- % chapters/8-conclusion,
- % bibliography,
-}
+% \includeonly{%
+%  % titlepage,
+%  % copyright-assignment,
+%  % declaration,
+%  % abstract,
+%  % acknowledgements,
+%  % lists,
+%  % chapters/1-introduction,
+%  chapters/2-background,
+%  % chapters/3-introduction-to-vericert,
+%  % chapters/4-trusted-computing-base,
+%  % chapters/5-hyperblock-scheduling,
+%  % chapters/6-hardware-generation,
+%  % chapters/7-evaluation,
+%  % chapters/8-conclusion,
+%  bibliography,
+% }
 
 \setcapindent{1em}
 

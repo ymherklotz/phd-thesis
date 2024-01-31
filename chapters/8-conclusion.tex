@@ -29,7 +29,7 @@
     % GiblePargenproofForward.v Sat.v
     {Hyperblock scheduling}               & 1083 & 3939 & 5597 & 10619 \\
     % Common.v Coqlib.v Errors.v HashTree.v Maps.v Predicate.v Smtpredicate.v
-    {3-valued logic validator}            & 1276 & 4054 & 5040 & 10370 \\
+    {three-valued logic validator}            & 1276 & 4054 & 5040 & 10370 \\
     % DHTL.v
     {\htl{} semantics}                    &  --- &  249 &   31 &   280 \\
     % DHTLgen.v DHTLgenproof.v DHTLgenproof0.v GibleSubPargen.v GibleSubPar.v
@@ -54,32 +54,33 @@
 The lines of code for the implementation and proof of \vericert{} can be found
 in \cref{tab:proof_statistics}.  Overall, it took about 3 person-years to build
 \vericert{} -- about 6 person-months on implementation and 30 person-months on
-proofs.  The largest proofs were by far the scheduling proof and the 3-valued
-logic validator.  The scheduling proof was difficult, and different attempts
-with different proof styles were needed to complete it.  The main difficulty was
-minimising the need for the 3-valued validator, as initially it seemed like it
-may not be needed at all.  In the end, it was needed to prove the equivalence of
-predicates in the absence of structural equality.  This lead to the proof of the
-3-valued logic validator.  Even though it looks like a very large proof, it was
-mainly quite straight-forward and purely technical, taking roughly 1.5 months to
-complete.  The next hardest proof was the correctness proof for the \htl{}
-generation, which required equivalence proofs between all integer operations
-supported by \compcert{} and those supported in hardware.  A large percentage of
-the proof is dedicated to the load and store instruction translation.  These
-were tedious to prove correct because of the substantial difference between the
-memory models used, and the need to prove properties such as stores outside of
-the allocated memory being undefined, so that a finite array could be used. In
-addition to that, since pointers in \htl{} and Verilog are represented as
-integers, instead of as a separate \enquote{pointer} type like in the
-\compcert{} semantics, one had to show that the integer arithmetic was correct
-with respect to the pointer arithmetic in CompCert.  Many new theorems had to be
-proven about them in \vericert{} to prove the conversion from pointer to
-integer.  Moreover, the second-largest proof in the back end describing the
-correct \gls{BRAM} generation includes many proofs about the extensional
+proofs.  The largest proofs were by far the scheduling proof and the
+three-valued logic validator.  The scheduling proof was difficult, and different
+attempts with different proof styles were needed to complete it.  The main
+difficulty was minimising the need for the three-valued validator, as initially
+it appeared to be unnecessary.  In the end, it was needed to prove the
+equivalence of predicates in the absence of structural equality.  This led to
+the proof of the three-valued logic validator.  Even though it looks like a very
+large proof, it was mainly quite straight-forward and purely technical, taking
+roughly 1.5 months to complete.  The second hardest proof was the correctness
+proof for the \htl{} generation, which required equivalence proofs between all
+integer operations supported by \compcert{} and those supported in hardware.  A
+large percentage of the proof is dedicated to the load and store instruction
+translation.  These were tedious to prove correct because of the substantial
+difference between the memory models used, and the need to prove properties such
+as stores outside of the allocated memory being undefined, so that a finite
+array could be used. In addition to that, since pointers in \htl{} and Verilog
+are represented as integers, instead of as a separate \enquote{pointer} type
+like in the \compcert{} semantics, one had to show that the integer arithmetic
+was correct with respect to the pointer arithmetic in CompCert.  Many new
+theorems had to be proven about them in \vericert{} to prove the conversion from
+pointer to integer.  Moreover, another large proof in the back end describing
+the correct \gls{BRAM} generation includes many proofs about the extensional
 equality of array operations, such as merging arrays with different assignments.
-As the negative edge implies that two merges take place every clock cycle, the
-proofs about the equality of the contents in memory and in the merged arrays
-quickly become tedious, as arrays are merged twice in a clock cycle.
+Due to the negative edge implying that two merges take place every clock cycle,
+it can become tedious to handle merges of changes performed during each of the
+clock edges, as the extensional equality over merges needs to be specified for
+each possible place the register assignment could have taken place.
 
 \section{Limitations and Future Work}
 
@@ -94,13 +95,13 @@ the software input that \vericert{} accepts.
 
 \subsubsection{Lack of support for external \glsfmtshort{IPcore}}
 
-\glspl{IPcore} and other external hardware cores are often used by \gls{HLS}
+\Glspl{IPcore} and other external hardware cores are often used by \gls{HLS}
 tools to implement specific operations efficiently.  One example would be the
 implementation of a division core, which can be designed as a fully pipelined
 hardware design, executing different stages of an operation in parallel.  This
 is in contrast to using the default division operation that generates the
 division circuit in a single clock cycle.  This means that the otherwise
-long-running division operation can be performed over multiple, shorter, cycles,
+long-running division operation can be performed over multiple, shorter cycles,
 leaving the overall maximum frequency of the design unchanged.  In \htl{},
 \glspl{IPcore} could be represented in a similar fashion to load and store
 instructions, by using wires to communicate with an abstract computation block
@@ -218,7 +219,7 @@ verified hardware designs.
 
 \section{Summary}
 
-In conclusion, the need for a correct high-level synthesis lead to the design of
+In conclusion, the need for a correct high-level synthesis led to the design of
 Vericert, a verified \gls{HLS} tool based on CompCert.  We showed that with the
 implementation of hyperblock scheduling, the performance of Vericert was around
 $1.6\times$ performance of the unoptimised version of Bambu HLS, which is
@@ -227,9 +228,8 @@ hope that Vericert will enable \gls{HLS} to be used in spaces where the
 correctness of the hardware is paramount, for example for compiling
 cryptographic algorithms from C, where performance might only be a secondary
 concern.  This should still allow for efficient application-specific
-accelerators, and together with a proof between the correctness of the netlist
-and the hardware design, a near end-to-end correctness theorem for the
-accelerator.
+accelerators, and together with a proof of correctness between the netlist and
+the hardware design, a near end-to-end correctness theorem for the accelerator.
 
 %%% Local Variables:
 %%% mode: latex
