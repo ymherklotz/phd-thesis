@@ -199,8 +199,9 @@ Imperial College London.}
 \newcommand\newlanguageentrynofirst[3]{\newglossaryentry{#1}{type=\acronymtype,
     name={\textsc{#2}},%
     description={#3}, first={\textsc{#2}}}} \newlanguageentry{RTL}{Rtl}{register
-  transfer language} \newlanguageentry{LTL}{Ltl}{linear transfer language}
+  transfer language}
 \newlanguageentry{BTL}{Btl}{block transfer language}
+\newlanguageentrynofirst{LTL}{Ltl}{linear transfer language}
 \newlanguageentrynofirst{Clight}{Clight}{CompCert intermediate language}
 \newlanguageentrynofirst{CSminor}{C\#minor}{CompCert intermediate language}
 \newlanguageentrynofirst{Cminor}{Cminor}{CompCert intermediate language}
@@ -237,23 +238,23 @@ Imperial College London.}
 
 %\newterm
 
-% \includeonly{%
-%  % titlepage,
-%  % copyright-assignment,
-%  % declaration,
-%  % abstract,
-%  % acknowledgements,
-%  % lists,
-%  % chapters/1-introduction,
-%  chapters/2-background,
-%  % chapters/3-introduction-to-vericert,
-%  % chapters/4-trusted-computing-base,
-%  % chapters/5-hyperblock-scheduling,
-%  % chapters/6-hardware-generation,
-%  % chapters/7-evaluation,
-%  % chapters/8-conclusion,
-%  bibliography,
-% }
+\includeonly{%
+ % titlepage,
+ % copyright-assignment,
+ % declaration,
+ % abstract,
+ % acknowledgements,
+ % lists,
+ % chapters/1-introduction,
+ % chapters/2-background,
+ chapters/3-introduction-to-vericert,
+ % chapters/4-trusted-computing-base,
+ % chapters/5-hyperblock-scheduling,
+ % chapters/6-hardware-generation,
+ % chapters/7-evaluation,
+ % chapters/8-conclusion,
+ % bibliography,
+}
 
 \setcapindent{1em}
 

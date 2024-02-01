@@ -49,7 +49,8 @@ shifts a large integer value \texttt{x} right by the values stored in array
 by GCC (and subsequently confirmed manually to be the correct one) is
 \texttt{0x046535FF}. The bug was initially revealed by a randomly generated
 program of around 113 lines, which was reduced to the minimal example shown in
-the figure.  I reported this issue to Xilinx, who confirmed it to be a bug.
+the figure.  I reported this issue to Xilinx, who confirmed it to be a
+bug.\footnote{\url{https://web.archive.org/web/20210419185153/https://forums.xilinx.com/t5/High-Level-Synthesis-HLS/Issue-with-shift-in-for-loop/m-p/1170197}}
 \end{example}
 
 \begin{figure}
@@ -77,11 +78,11 @@ v2019.2.]{Miscompilation bug in Xilinx Vivado HLS. The generated hardware
 \def\numuniquebugs{8}
 \def\vivadotestcases{3645}
 
-We wrote a fuzzer that used Csmith to randomly generate C code and modified it
-to make it suitable for HLS tools.  For example, pointers had to be removed
-because some cases, like pointers of other pointers, are explicitly not
-supported by Vivado HLS.  I tested the following \gls{HLS} tools: Intel i++
-18.1, LegUp 4.0, Bambu 0.9.7 and Xilinx Vivado HLS v2018.3, v2019.1 and v2019.2.
+The fuzzer used Csmith to randomly generate C code and modified it to make it
+suitable for HLS tools.  For example, pointers had to be removed because some
+cases, like pointers of other pointers, are explicitly not supported by Vivado
+HLS.  I tested the following \gls{HLS} tools: Intel i++ 18.1, LegUp 4.0, Bambu
+0.9.7 and Xilinx Vivado HLS v2018.3, v2019.1 and v2019.2.
 \Cref{fig:existing_tools} shows an Euler diagram of our results.  We see that
 918 (13.7\%), 167 (2.5\%), 83 (1.2\%) and 26 (0.4\%) test-cases fail in Bambu,
 LegUp, Vivado HLS and Intel i++ respectively.  The bugs I reported to the Bambu
@@ -152,7 +153,7 @@ This motivates the need for a verified \gls{HLS} tool.
 \section{Main Design Decisions of Vericert}%
 \label{sec:itv:main-design-decisions}
 
-Our solution to the verification problem in \gls{HLS} is Vericert, a formally
+Our solution to the reliability problem in \gls{HLS} is Vericert, a formally
 verified \gls{HLS} tool.  First, I will describe the main design decisions
 behind Vericert in \cref{sec:itv:main-design-decisions} and I will then give an
 example of a translation from C code into Verilog through Vericert in
@@ -179,17 +180,14 @@ Spatial~\cite{koeplinger18_s} or Scala~\cite{bachrach12_chisel}.
 
 \paragraph{Choice of target language}
 
-Verilog~\cite{06_ieee_stand_veril_hardw_descr_languag} is an \gls{HDL} that can
-be synthesised into logic cells which can either be placed onto an \gls{FPGA} or
-turned into an \gls{ASIC}.  Verilog was chosen as the output language for
-\vericert{} because it is one of the most popular HDLs and there already exist a
-few formal semantics for it that could be used as a
-target~\cite{lööw19_verif_compil_verif_proces, meredith10_veril}.  Bluespec,
-previously ruled out as a source language, is another possible target and there
-exists a formally verified translation to circuits of variants of Bluespec using
-K\^{o}ika~\cite{bourgeat20_essen_blues} or
-Fe-Si~\cite{braibant13_formal_verif_hardw_synth}.  However, Bluespec is mainly
-targeted at being a source language for hardware design and would present
+Verilog was chosen as the output language for \vericert{} because it is one of
+the most popular HDLs and there already exist a few formal semantics for it that
+could be used as a target~\cite{lööw19_verif_compil_verif_proces,
+  meredith10_veril}.  Bluespec, previously ruled out as a source language, is
+another possible target and there exists a formally verified translation to
+circuits of variants of Bluespec using K\^{o}ika~\cite{bourgeat20_essen_blues}
+or Fe-Si~\cite{braibant13_formal_verif_hardw_synth}.  However, Bluespec is
+mainly targeted at being a source language for hardware design and would present
 similar challenges to targeting a language like Verilog from a software
 language.
 
@@ -203,9 +201,7 @@ language.
 
 I chose Coq as the implementation language because of its mature support for
 code extraction; that is, its ability to generate OCaml programs directly from
-the definitions used in the theorems.  I note that other authors have had some
-success reasoning about the HLS process using other theorem provers such as
-Isabelle~\cite{ellis08_csicgfu}.
+the definitions used in the theorems.
 \compcert{}~\cite{leroy09_formal_verif_realis_compil} was chosen as the front
 end because it has a well established framework for simulation proofs about
 intermediate languages, and it already provides a validated C
@@ -344,20 +340,23 @@ then performed as follows:
 \begin{enumerate}[label=\protect\blacknum{\arabic*}]
 \item Basic block generation creates basic blocks from the pure \rtl{}
   \gls{CFG}.
-\item If-conversion combine basic blocks into a single hyperblock based on
+\item If-conversion combines basic blocks into a single hyperblock based on
   heuristics on the \gls{CFG} layout.  The hyperblock is represented as a basic
   block of predicated instructions with an exit instruction to leave the basic
   block prematurely.
 \item The scheduler itself is written in unverified OCaml, and works similarly
   to those in existing HLS tools~\cite[]{canis13_l}: it takes a set of
   scheduling constraints that capture the clock period, available hardware
-  resources, and dependencies between operations, encodes them all as a system
-  of difference constraints (SDC)~\cite[]{cong06_sdc}, and then hands them off
-  to a linear program solver.
-\item Next, the hyperblocks are destroyed again to explicitly place instructions
-  into individual states.
-\item \htl{} is generated, which is a language that models an \gls{FSMD}.
-\item \gls{BRAM} insertion, which generates a proper memory interface for any
+  resources, and dependencies between operations, encodes them as a
+  \glsfirst{SDC}~\cite[]{cong06_sdc}, and then hands them off to a linear
+  program solver.
+\item Next, the hyperblocks are destroyed to explicitly place instructions into
+  individual states.
+\item \htl{} is generated, which is a language that models an \gls{FSMD}, which
+  is used as an intermediate language that is simpler to manipulate than Verilog
+  but is still close enough to a hardware description so that hardware-specific
+  optimisations can be performed on it.
+\item \gls{BRAM} insertion generates a proper memory interface for any
   interaction with the stack.
 \item To ensure that these assignments are actually performed in parallel, a
   final pass performs \emph{forward substitution}~\cite[p.~109]{hopwood78_decom}
@@ -385,11 +384,11 @@ d <= (b * c) + d;
 \end{tikzpicture}
 \end{center}
 %
-The two versions are semantically equivalent, but I find that the second, in
-which both right-hand sides must be evaluated before either assignment is
-performed, makes the downstream logic synthesis tools more likely to produce the
-intended hardware (which, in this particular example, involves exploiting a
-fused multiply--accumulator unit if available).
+The two versions are semantically equivalent, but the second, in which both
+right-hand sides must be evaluated before either assignment is performed, makes
+the downstream logic synthesis tools more likely to produce the intended
+hardware (which, in this particular example, involves exploiting a fused
+multiply--accumulator unit if available).
 \item Finally, syntactic Verilog is generated from \htl{}, which consists of
   translating the \gls{FSMD} into a case statement and implementing the memory
   interface in Verilog.
@@ -399,13 +398,13 @@ fused multiply--accumulator unit if available).
 \label{sec:itv:translating-c-to-verilog}
 
 \Cref{fig:accumulator_c_rtl} illustrates the translation of a simple program
-that stores and retrieves values from an array.  In this section, I describe the
+that stores and retrieves a value from an array.  This section describes the
 stages of the \vericert{} translation, referring to this program as an example.
 
 \subsection{Translating C to \rtl{}}
 
 The first stage of the translation uses unmodified \compcert{} to transform the
-C input, shown in \cref{fig:accumulator_c}, into a \rtl{} intermediate
+C input, shown in \cref{fig:accumulator_c}, into an \rtl{} intermediate
 representation, shown in \cref{fig:accumulator_rtl}.  As part of this
 translation, function inlining is performed on all functions, which allows us to
 support function calls without having to support the \texttt{Icall} \rtl{}
@@ -462,18 +461,18 @@ This is shown in \cref{fig:accumulator_seq}, where all the instructions can fit
 into a single basic block.  Each hyperblock can then be scheduled individually
 using \gls{SDC} scheduling by specifying any necessary constraints, the result
 of which is shown in \cref{fig:accumulator_par}, where one can see that
-instructions have been separated into separate states and instructions that can
-execute in parallel are placed into the same state.  Each memory operation is
-placed into its own state.  The instructions are placed into additional bundles,
-designated by parentheses, which could contain additional operations that are
-chained sequentially within one clock cycle.
+instructions with dependencies have been separated into different states and
+instructions that can execute in parallel are placed into the same state.  Each
+memory operation is placed into its own state.  The instructions are placed into
+additional bundles, designated by parentheses, which could contain additional
+operations that are chained sequentially within one clock cycle.
 
 The \gls{SDC} scheduling algorithm itself is unverified but a verified validator
 checks the resulting schedule against the unscheduled program.  This makes it
-possible to change heuristics in the scheduler simply without it affecting the
-proof.  The scheduled program language is called \rtlpar{} and specifies in
-which cycle each instruction will be executed.  \rtlpar{} however still contains
-the coarse-grained structure of hyperblocks, so this structure is destroyed to
+possible to change heuristics in the scheduler without it affecting the proof.
+The scheduled program language is called \rtlpar{} and specifies in which cycle
+each instruction will be executed.  \rtlpar{} however still contains the
+coarse-grained structure of hyperblocks, so this structure is destroyed to
 produce \rtlsubpar{}, shown in \cref{fig:accumulator_par}.  The representation
 is still hardware agnostic even if the current implementation of the scheduler
 is specific to an \gls{FPGA} target, and therefore supports all \rtl{}
@@ -518,7 +517,8 @@ main() {
 \end{minted}
       \caption{\rtlsubpar{} code produced after scheduling and hyperblock destruction.}\label{fig:accumulator_par}
     \end{subfigure}
-    \caption{Translating a simple program from C to \rtl{}.}\label{fig:accumulator_gblseqpar}
+    \caption{Scheduling a simple program from \rtlblock{} to
+      \rtlpar{}.}\label{fig:accumulator_gblseqpar}
 \end{figure}
 
 % + TODO Explain the main mapping in a short simple way
@@ -558,15 +558,15 @@ hyperblocks, to an intermediate hardware translation language (\htl{}).  This
 translation involves going from a \gls{CFG} representation of the computation to
 an \gls{FSMD} representation~\cite{hwang99_ffplp}. An \gls{FSMD} is a
 generalised state machine where the state is supplemented by registers and
-memory that can store computations.  \Cref{fig:accumulator_diagram} shows the
-resulting \gls{FSMD} architecture for the running example. The right-hand block
-is the control logic that computes the next state, while the left-hand block
-updates all the registers and \gls{BRAM} based on the current program state.
-However, in general the state machine cannot be separated from the data path
-completely, because state updates may depend on computations in the data path
-and may depend on the value of registers.  Hence, an \htl{} program consists of
-a map from states to Verilog statements, which update both the state register as
-well as other registers and interact with memory.
+memory that can store results of computations.  \Cref{fig:accumulator_diagram}
+shows the resulting \gls{FSMD} architecture for the running example. The
+right-hand block is the control logic that computes the next state, while the
+left-hand block updates all the registers and \gls{BRAM} based on the current
+program state.  However, in general the state machine cannot be separated from
+the data path completely, because state updates may depend on computations in
+the data path and on the value of registers.  Hence, an \htl{} program consists
+of a map from states to Verilog statements, which describe updates done to both
+the state register as well as other registers and interact with memory.
 
 The \htl{} language was mainly introduced to simplify the proof of translation
 from \rtl{} to Verilog, as these languages have very different semantics.  It

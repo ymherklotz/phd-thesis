@@ -33,32 +33,32 @@ specialised hardware accelerators designed for
 it~\cite{reuther20_survey_machin_learn_accel}.
 
 Alas, designing these accelerators can be a tedious and error-prone process.
-Designing hardware is normally done using a \gls{HDL} such as Verilog or VHDL,
-which operate at the register-transfer level where the hardware needs to be
-described manually.  As the complexity of these hardware designs increases,
-designing hardware at this level becomes increasingly difficult, because the
-low-level description of the hardware makes it time-consuming and expensive to
-thoroughly test to ensure that it behaves as expected.  An attractive
-alternative is \emph{\gls{HLS}}, where hardware designs are automatically
-compiled from software written in a high-level language like C.  This way,
-hardware design can benefit from mature software development tools while working
-on the general functionality of the hardware design, and then use a modern
-\gls{HLS} tools such as \legup{}~\cite{canis13_l}, Vitis
-HLS~\cite{amd23_vitis_high_synth}, Intel i++~\cite{intel20_hsc}, Stratus
-HLS~\cite{roane23_autom_hw_sw_co_desig} and Bambu HLS~\cite{pilato13_bambu} to
-produce the hardware design at the register-transfer level.  These \gls{HLS}
-tools promise designs with comparable performance and energy-efficiency to those
-hand-written in an \gls{HDL}~\cite{homsirikamol14_can,
-  gauthier20_high_level_synth, pelcat16_desig_hdl}.  This reduces the time
-needed to design new hardware accelerators and as the design is performed at a
-higher level, the process should also be less error-prone.
+Hardware is normally designed using a \gls{HDL} such as Verilog or VHDL, which
+operates at the register-transfer level where the hardware needs to be described
+manually.  As the complexity of hardware designs increases, designing hardware
+at this level becomes increasingly difficult, because the low-level description
+of the hardware makes it time-consuming and expensive to thoroughly test to
+ensure that it behaves as expected.  An attractive alternative is
+\emph{\gls{HLS}}, where hardware designs are automatically compiled from
+software written in a high-level language like C.  This way, hardware design can
+benefit from mature software development tools while working on the general
+functionality of the hardware, and then use a modern \gls{HLS} tools such as
+\legup{}~\cite{canis13_l}, Vitis HLS~\cite{amd23_vitis_high_synth}, Intel
+i++~\cite{intel20_hsc}, Stratus HLS~\cite{roane23_autom_hw_sw_co_desig} or Bambu
+HLS~\cite{pilato13_bambu} to produce the register-transfer level description.
+These \gls{HLS} tools promise designs with comparable performance and
+energy-efficiency to those hand-written in an
+\gls{HDL}~\cite{homsirikamol14_can, gauthier20_high_level_synth,
+  pelcat16_desig_hdl}.  This reduces the time needed to design new hardware
+accelerators and as the design is performed at a higher level, the process
+should also be less error-prone.
 
 \paragraph{Verifying the functionality of HLS designs} Compared to software, it
-is even more necessary to ensure that hardware functions as it is supposed to,
+is even more important to ensure that hardware functions as it is supposed to,
 because once the hardware has been taped-out into an \gls{ASIC}, it becomes
-impossible to properly fix the issue except to work around it in software.  This
-may come at a great cost in terms of energy usage and the performance of the
-system compared to fixing the issue in hardware
+impossible to properly fix the issue except through workarounds in software.
+This may come at a great cost in terms of energy usage and the performance of
+the system compared to fixing the issue in hardware
 itself~\cite{herzog21_price_meltd_spect,
   bowen20_perfor_cost_softw_based_secur_mitig}.  These hardware faults can also
 often be exploited and can be hard to detect, even using state-of-the-art
@@ -79,25 +79,24 @@ describes that verification remains a time-consuming part of the design process
 even with the use of \gls{HLS}, it finds that in general it still reduced the
 verification effort by half.
 
-Unfortunately, there are reasons to doubt that \gls{HLS} tools actually
-\emph{do} always preserve equivalence, increasing the chance of there being
-exploitable hardware faults in the resulting accelerator, and making
-verification at the level of the high-level language less effective.  Some of
-these reasons are general: \gls{HLS} tools are large pieces of software, they
-perform a series of complex analyses and transformations, and the \gls{HDL}
-output they produce has superficial syntactic similarities to a software
-language but a subtly different semantics.  Other reasons are more specific: for
-instance, Vivado HLS has been shown to apply pipelining optimisations
-incorrectly%
-\footnote{\url{https://forums.xilinx.com/t5/High-Level-Synthesis-HLS/BUG-report-HLS-chooses-the-wrong-II-and-the-result-is-wrong/m-p/1070935}
-  (this report may have conveniently been removed from the forum).}  or to
-silently generate wrong code should the programmer stray outside the fragment of
-C that it supports.%
+Unfortunately, there are reasons to doubt that \gls{HLS} tools actually preserve
+the behaviour of the design, increasing the chance of there being exploitable
+hardware faults in the resulting accelerator, and making verification at the
+level of the high-level language less useful.  Some of these reasons are
+general: \gls{HLS} tools are large pieces of software, they perform a series of
+complex analyses and transformations, and the \gls{HDL} output they produce has
+superficial syntactic similarities to a software language but a subtly different
+semantics.  Other reasons are more specific: for instance, Vivado HLS has been
+shown to apply pipelining optimisations incorrectly%
+\footnote{\url{https://support.xilinx.com/s/question/0D52E00006jt7LfSAI/crtl-cosimulation-failed-caused-by-pragma-hls-pipeline}} %
+%\url{https://forums.xilinx.com/t5/High-Level-Synthesis-HLS/BUG-report-HLS-chooses-the-wrong-II-and-the-result-is-wrong/m-p/1070935 (this report may have conveniently been removed from the forum).
+or to silently generate wrong code should the programmer stray outside the
+fragment of C that it supports.%
 \footnote{\url{https://support.xilinx.com/s/question/0D52E00006hpMZSSA2/pointer-synthesis-in-vivado-hls-v201}}%
 \textsuperscript{,}%
 \footnote{\url{https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/Pointer-Limitations}}
 Meanwhile, \textcite{lidbury15_many_core_compil_fuzzin} had to abandon their
-attempt to fuzz-test Altera's (now Intel's) OpenCL compiler since it
+attempt to fuzz-test Altera's (now Intel's) OpenCL to hardware compiler since it
 \enquote{either crashed or emitted an internal compiler error} on many of their
 test inputs.  More recently, \textcite{herklotz21_esrhlst} fuzz-tested three
 commercial \gls{HLS} tools using
@@ -137,7 +136,7 @@ tool can simply be trusted to work correctly.  This dissertation explores the
 implementation of a mechanically verified and optimising \gls{HLS} tool built on
 the \compcert{} verified C compiler~\cite{leroy06_formal_certif_compil_back_end,
   leroy09_formal_verif_realis_compil, leroy16_cfvoc}.  The main thesis of this
-dissertation is therefore the following.
+dissertation is therefore the following:
 
 \begin{samepage}
   \begin{quote}
@@ -171,23 +170,24 @@ contributions of \vericert{} are the following:
   The key challenge here involved integrating the hardware semantics within
   CompCert's model of computation and calling convention.  This required
   specifying the external module interface used to interact with the final
-  hardware produced by Vericert, for example how the hardware can be reset and
-  started, and how the final return value is extracted.  Another challenge was
-  extending the Verilog semantics with support for arrays, which can be used to
+  hardware produced by Vericert, for example specifying how the hardware can be
+  reset, and how the final return value is extracted.  Another challenge was
+  extending the Verilog semantics with support for arrays, which is necessary to
   model hardware memory interfaces.  Lastly, one particular difficulty that had
   to be overcome is proving that the function stack could be modelled by this
   finite Verilog array.
 
 \item[First mechanisation of general if-conversion] CompCert does already
   perform limited if-conversion, removing branches that contain a single
-  instruction and replace them with a conditional move instruction, as
+  instruction and replacing them with a conditional move instruction, because
   predicated instructions are unsupported.  I describe the formalisation of a
   general if-conversion transformation in CompCert used to generate hyperblocks,
-  which are sequences of possibly branching instructions without back edges.
-  The key challenge was to generalise the if-conversion pass so that any
-  external unverified heuristic could be used to inline blocks, while keeping
-  the correctness proof conceptually simple.  It is also flexible enough to
-  allow for light loop transformations like loop unrolling and loop peeling.
+  which are sequences of possibly branching predicated instructions, where the
+  only incoming edges are to the start of the block.  The key challenge was to
+  generalise the if-conversion pass so that any external unverified heuristic
+  could be used to inline blocks, while keeping the correctness proof
+  conceptually simple.  It is also flexible enough to allow for light loop
+  transformations like loop unrolling and loop peeling.
 
 \item[Formal verification of hyperblock scheduling] Next, I present a verified
   implementation of hyperblock scheduling, a critical optimisation for any
@@ -208,11 +208,11 @@ contributions of \vericert{} are the following:
   using an \gls{SMT} solver, during translation validation to reason about the
   equivalence of functions before and after the scheduling transformations.  The
   key challenge here is integrating an existing \gls{SMT} proof checker, meant
-  for assisting with interactive Coq proofs, and use it as a checker that can be
-  used at runtime of the compiler to check that, for example, a three-valued
+  for assisting with interactive Coq proofs, and using it as a checker that can
+  be used by the compiler at runtime to check that, for example, a three-valued
   predicate always holds.  This can be used as a general validator for any
   transformation pass where the correctness depends on dynamically generated
-  properties that need to be checked.
+  properties expressible in three-valued logic that need to be checked.
 
 %\item We also describe how the scheduled instructions are then converted into
 %  Verilog through a number of verified transformations, by first destroying the
@@ -266,7 +266,7 @@ This dissertation is organised into the following chapters.
   number of ways on certain metrics comparing it against Bambu.
 \item[\Cref{sec:conclusion}] finally gives a description of the limitations of
   Vericert as well as a discussion of the formalisation.  In addition to that,
-  many possible future directions are explored.
+  many possible future directions are discussed.
 \end{description}
 
 \section{Publications}
