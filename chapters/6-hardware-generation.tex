@@ -185,34 +185,34 @@ why it needs to be performed as part of the data path.
   \llabel{CFG node labels} & $\location \in \locationtype$ & $::=$ & $\mathbb{N}$ & \\
   \llabel{Verilog statements} & $\verilogstmnt \in \verilogstmnttype$ & & & \\
   \llabel{Code} & $\htlcode \in \locationtype \rightarrow \verilogstmnttype$ & & & \\
-  \llabel{\htl{}} & $\htlmodule$ & $::=$ & $\{\ \mathrm{params} : \regtype\
+  \llabel{\htl{}} & $\htlmodule$ & $::=$ & $\{\ \mathit{params} : \regtype\
                                         \texttt{list}; $ \\
-  & & & $\ \ \mathrm{datapath} : \locationtype \rightarrow \verilogstmnttype; $ \\
-  & & & $\ \ \mathrm{entrypoint} : \mathbb{N};$ & \\
-  & & & $\ \ \mathrm{state} : \regtype;$ & \\
-  & & & $\ \ \mathrm{stack} : \regtype;$ & \\
-  & & & $\ \ \mathrm{stack\_size} : \mathbb{N};$ & \\
-  & & & $\ \ \mathrm{finish},\mathrm{return},\mathrm{reset},\mathrm{clk} :
+  & & & $\ \ \mathit{datapath} : \locationtype \rightarrow \verilogstmnttype; $ \\
+  & & & $\ \ \mathit{entrypoint} : \mathbb{N};$ & \\
+  & & & $\ \ \statereg : \regtype;$ & \\
+  & & & $\ \ \stackreg : \regtype;$ & \\
+  & & & $\ \ \mathit{stack\_size} : \mathbb{N};$ & \\
+  & & & $\ \ \finishreg,\returnreg,\resetreg,\clkreg :
         \regtype;$ & \\
-  & & & $\ \ \mathrm{ram} : \optiontype{\mathrm{\gls{BRAM}}};$ & \\
-  & & & $\ \ \mathrm{order\_wf} : \mathrm{state} < \mathrm{finish} < \mathrm{return}
-        < \mathrm{stack}$ & \\
-  & & & $\qquad\qquad{}\land \mathrm{stack} < \mathrm{reset} < \mathrm{clk};$ & \\
-  & & & $\ \ \mathrm{ram\_wf} : \forall r\ldotp \mathrm{ram} = \some{r} \implies
-        \mathrm{clk} < r.\mathrm{raddr}; $ & \\
-  & & & $\ \ \mathrm{params\_wf} : \forall r \in \mathrm{params}\ldotp
-        r < \mathrm{state} \ \}$
+  & & & $\ \ \mathit{ram} : \optiontype{\mathrm{\gls{BRAM}}};$ & \\
+  & & & $\ \ \mathit{order\_wf} : \statereg < \finishreg < \returnreg
+        < \stackreg$ & \\
+  & & & $\qquad\qquad{}\land \stackreg < \resetreg < \clkreg;$ & \\
+  & & & $\ \ \mathit{ram\_wf} : \forall r\ldotp \mathit{ram} = \some{r} \implies
+        \clkreg < r.\mathit{raddr}; $ & \\
+  & & & $\ \ \mathit{params\_wf} : \forall r \in \mathit{params}\ldotp
+        r < \statereg \ \}$
 \end{tabular}
 \caption{Syntax of \htl{}.}
 \label{fig:hg:htl-syntax}
 \end{figure}
 
 Next, the \htl{} module contains an entry point, which is the initial starting
-state of the $\mathit{state}$ register.  After the reset input wire is asserted,
-the $\mathit{state}$ register will be reset to that value.  The $\mathit{state}$
+state of the $\statereg$ register.  After the reset input wire is asserted,
+the $\statereg$ register will be reset to that value.  The $\statereg$
 register is read at every clock tick and determines the next statement that
 should be executed from the $\mathit{datapath}$.  As mentioned before, the
-$\mathit{state}$ register is a physical representation of the virtual program
+$\statereg$ register is a physical representation of the virtual program
 counter from \rtlsubpar{} and other intermediate instruction languages.  We then
 also have $\mathit{stack}$ register and an associated $\mathit{stack\_size}$,
 which is a Verilog array storing the contents of the stack.  Initially, this
@@ -221,10 +221,10 @@ array will be accessed directly by operations in the data path, however,
 are instead turned into accesses to a \gls{BRAM}.
 
 We then have a list of input and output control signals, which are used to
-return a result by setting the $\mathit{finish}$ flag and assigning the
-$\mathit{return}$ register to the result.  Next, the $\mathit{reset}$ signal
+return a result by setting the $\finishreg$ flag and assigning the
+$\returnreg$ register to the result.  Next, the $\resetreg$ signal
 provides a way to reset the state of the internal state machine.  Finally, there
-is a $\mathit{clk}$ input to provide the clock to the design.  This input is not
+is a $\clkreg$ input to provide the clock to the design.  This input is not
 yet used by the \htl{} design, as execution is still performed using state
 transitions in the semantics, however, a register is already allocated for the
 clock which will be needed by the final Verilog design.  The module then also
@@ -503,7 +503,7 @@ in this subsection.
   Writing \texttt{tr\_htl} for the translation from \rtlsubpar{} to \htl{}, we
   have:
   \begin{equation*}
-    \forall c, h, \mathcal{B} \not\in \texttt{Wrong},\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK} (h) \land c \Downarrow \mathcal{B} \implies h \Downarrow \mathcal{B}.
+    \forall c, h, \mathcal{B} \not\in \texttt{Wrong},\quad \yhfunction{tr\_htl} (c) = \ccok{h} \land c \Downarrow \mathcal{B} \implies h \Downarrow \mathcal{B}.
   \end{equation*}
 \end{lemma}
 
@@ -533,7 +533,7 @@ in this subsection.
 %control logic can be defined by the following predicate:
 %
 %\begin{equation*}
-%  \yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ i\ \mathit{data}
+%  \yhfunction{spec\_instr}\ \finishreg\ \returnreg\ \sigma\ \stackreg\ i\ \mathit{data}
 %\end{equation*}
 %
 %\noindent Here, the $\mathit{data}$ parameter is the statement that the current
@@ -543,7 +543,7 @@ in this subsection.
 %\rtlsubpar{} is the following:
 %
 %\begin{equation*}
-%  \inferrule[Iop]{\yhfunction{tr\_op}\ \mathit{op}\ \vec{a} = \yhconstant{OK}\ e}{\yhfunction{spec\_instr}\ \mathit{fin}\ \mathit{ret}\ \sigma\ \mathit{stk}\ (\yhconstant{Iop}\ \mathit{op}\ \vec{a}\ d\ n)\ (d\ \yhkeyword{<=}\ e)\ (\sigma\ \yhkeyword{<=}\ n)}
+%  \inferrule[Iop]{\yhfunction{tr\_op}\ \mathit{op}\ \vec{a} = \yhconstant{OK}\ e}{\yhfunction{spec\_instr}\ \finishreg\ \returnreg\ \sigma\ \stackreg\ (\yhconstant{Iop}\ \mathit{op}\ \vec{a}\ d\ n)\ (d\ \yhkeyword{<=}\ e)\ (\sigma\ \yhkeyword{<=}\ n)}
 %\end{equation*}
 %
 %\noindent Assuming that the translation of the operator $\mathit{op}$ with
@@ -605,7 +605,7 @@ the current state to be valid:
 \item all pointers in the program use the stack as a base pointer,
 \item any loads or stores to locations outside of the bounds of the stack result
   in undefined behaviour (and hence they do not need to be handled),
-\item $\mathit{rst}$ and $\mathit{fin}$ are not modified and therefore stay at a
+\item $\resetreg$ and $\finishreg$ are not modified and therefore stay at a
   constant 0 throughout execution, and
 \item the stack frames match.  As no function calls are performed, as they are
   all inlined, the stack frames will always be empty.
@@ -914,7 +914,7 @@ translation of loads.)
   {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d[i \mapsto t]\ i\ n}
   \and
   \inferrule[Load Transl]{ d[i] = \left(\begin{array}{l}
-    d \blockasgn r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \arcr
+    r_{\mathrm{d}} \blockasgn r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \arcr
     \statereg \blockasgn e_2\msemi
   \end{array}\right) \\
   \begin{array}{l}
@@ -926,14 +926,14 @@ translation of loads.)
     \statereg \blockasgn n \msemi
   \end{array}\right) \arcr
   t_2 = \left(\begin{array}{l}
-    d \blockasgn r.\mathrm{d\_out} \msemi \arcr
+    r_{\mathrm{d}} \blockasgn r.\mathrm{d\_out} \msemi \arcr
     \statereg \blockasgn e_2 \msemi
   \end{array}\right)
   \end{array}}%
   {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
   \and
   \inferrule[Predicated Load Transl]{ d[i] = \left(\begin{array}{l}
-    d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \arcr
+    r_{\mathrm{d}} \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{r_{\mathrm{d}}}\msemi \arcr
     \statereg \blockasgn e_2\msemi
   \end{array}\right) \\
   \begin{array}{l}
@@ -944,7 +944,7 @@ translation of loads.)
     \statereg \blockasgn n \msemi
   \end{array}\right) \arcr
   t_2 = \left(\begin{array}{l}
-    d \blockasgn \mternary{c}{e_{1}}{r.\mathrm{d\_out}} \msemi \arcr
+    r_{\mathrm{d}} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{d\_out}} \msemi \arcr
     \statereg \blockasgn e_2 \msemi
   \end{array}\right)
     \end{array}}%
@@ -954,15 +954,14 @@ translation of loads.)
     e_{2}\msemi \statereg \blockasgn e_3)) \\
     (\forall c\ e_1\ e_2\ e_3\ldotp d[i] \neq (\texttt{if(}c\texttt{)}\ r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
     e_{2}\msemi \statereg \blockasgn e_3)) \\
-  (\forall d\ e_1\ e_2\ldotp d[i] \neq (d \blockasgn
+  (\forall r_{\mathrm{d}}\ e_1\ e_2\ldotp d[i] \neq (r_{\mathrm{d}} \blockasgn
   r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}\msemi \statereg \blockasgn
   e_2))\\
-(\forall c\ d\ e_1\ e_2\ldotp d[i] \neq (d \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{d}\msemi \statereg \blockasgn e_2))}%
+(\forall c\ r_{\mathrm{d}}\ e_1\ e_2\ldotp d[i] \neq (r_{\mathrm{d}} \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{r_{\mathrm{d}}}\msemi \statereg \blockasgn e_2))}%
   {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d\ i\ n}
 \end{mathpar}
 \caption[Memory transformation specification.]{Memory transformation
-  specification.\YH{TODO: replace register name $d$ because it's also used for
-    the data path.}}%
+  specification.}%
 \label{sec:hg:memory-transformation-specification}
 \end{figure}
 
@@ -1518,7 +1517,9 @@ is quite different to that of the case-statement to which it is converted.
 \begin{lemma}[Forward simulation from \htl{} to Verilog]\label{lemma:verilog}
   In the following, I write $\yhfunction{tr\_verilog}$ for the translation from
   \htl{} to Verilog. (Note that this translation cannot fail, so we do not need
-  the \yhconstant{OK} constructor here.)  {\normalfont
+  the $\some{\cdot}$ constructor here.)
+
+  {\normalfont
     \begin{align*}
       \forall h\ V\ \mathcal{B} \not\in \texttt{Wrong}\ldotp\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow \mathcal{B} \implies V \Downarrow \mathcal{B}.
     \end{align*}}

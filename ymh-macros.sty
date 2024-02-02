@@ -212,9 +212,9 @@
 \newcommand\final[1]{#1^{\mathrm{f}}}
 \newcommand\base[1]{#1^0}
 %\newcommand\some[1]{\left\lfloor #1 \right\rceil}
-\newcommand\some[1]{\yhkeyword{Some}(#1)}
+%\newcommand\some[1]{\yhkeyword{Some}(#1)}
 \newcommand\cnone{\yhkeyword{None}}
-\newcommand\ccok[1]{\yhkeyword{OK}(#1)}
+\newcommand\ccok[1]{\some{#1}}
 \newcommand\ccerror{\yhkeyword{Error}}
 \newcommand\optiontype[1]{#1^{?}}
 \newcommand{\curly}{\mathrel{\leadsto}}
@@ -594,12 +594,12 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 \newcommand\htlcode{\mathit{c}}
 \newcommand\htlmodule{\mathit{HTL}}
 
-\newcommand\statereg{\texttt{state}}
-\newcommand\finishreg{\texttt{finish}}
-\newcommand\resetreg{\texttt{reset}}
-\newcommand\returnreg{\texttt{ret}}
-\newcommand\stackreg{\texttt{stack}}
-\newcommand\clkreg{\texttt{clk}}
+\newcommand\statereg{\mathit{st}}
+\newcommand\finishreg{\mathit{fin}}
+\newcommand\resetreg{\mathit{rst}}
+\newcommand\returnreg{\mathit{ret}}
+\newcommand\stackreg{\mathit{stk}}
+\newcommand\clkreg{\mathit{clk}}
 
 \lstdefinestyle{verilog-style}
 {

@@ -1609,7 +1609,8 @@ defined in the semantics from the current state.
 The correctness theorem can be stated as a simulation between the semantics of
 the source program and the semantics of the compiled program.  The final
 correctness theorem in CompCert is a backward simulation between the source
-program semantics and compiled program semantics, stated as follows.
+program semantics and compiled program semantics, stated as follows, where we
+write $\ccok{x}$ for the presence of value $x$ in an option type.
 
 \begin{theorem}[Semantic preservation]\label{thm:semantic-preservation}
   If a successfully compiled assembly program $C$ has a behaviour $\mathcal{B}$ which does
@@ -1617,7 +1618,7 @@ program semantics and compiled program semantics, stated as follows.
   may be less defined than behaviour $\mathcal{B}$, which is expressed by $\mathcal{B}' \precsim \mathcal{B}$.
 
   {\normalfont\begin{equation*}
-      \yhfunction{compile\_c}\ S = \yhconstant{OK}\ C
+      \yhfunction{compile\_c}\ S = \ccok{C}
       \implies (\forall \mathcal{B}\ldotp C \Downarrow \mathcal{B} \implies (\exists \mathcal{B}'\ldotp S
       \Downarrow \mathcal{B}' \land \mathcal{B}' \precsim \mathcal{B}))
   \end{equation*}}
@@ -1633,7 +1634,7 @@ must be a valid behaviour for the source program.
   source program is \emph{safe}, meaning it is free of undefined behaviour, then
   $\mathcal{B}$ must be a behaviour of source program $S$.
 
-  {\normalfont\begin{equation*} \yhfunction{compile\_c}\ S = \yhconstant{OK}\ C
+  {\normalfont\begin{equation*} \yhfunction{compile\_c}\ S = \ccok{C}
       \land \mathit{safe}(S) \implies (\forall \mathcal{B}\ldotp C \Downarrow \mathcal{B} \implies S
       \Downarrow \mathcal{B})
   \end{equation*}}

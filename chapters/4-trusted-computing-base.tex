@@ -48,7 +48,7 @@ supported in \vericert{}, this trace will always be empty.
   only if $C$ has behaviour $\mathcal{B}$.
 
   {\normalfont\begin{equation*} \forall C\ V\ \mathcal{B}\ldotp\quad \yhfunction{HLS} (C)
-      = \yhconstant{OK} (V) \land \mathit{safe}(C) \implies (V \Downarrow \mathcal{B}
+      = \ccok{V} \land \mathit{safe}(C) \implies (V \Downarrow \mathcal{B}
       \implies C \Downarrow \mathcal{B}).
   \end{equation*}}
 \end{theorem}
@@ -62,11 +62,11 @@ normally produce the top-level of the design that connects all the components of
 the design together, therefore needing to run forever.  Rather, \gls{HLS} often
 produces smaller components that take an input, execute, and then terminate with
 an answer.  To start the execution of the hardware and to signal to the HLS
-component that the inputs are ready, the $\mathit{rst}$ signal is set and unset.
-Then, once the result is ready, the $\mathit{fin}$ signal is set and the result
-value is placed in $\mathit{ret}$.  This is encoded in the Verilog semantics.
-The correctness theorem therefore also uses these signals, and the proof shows
-that once the $\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct
+component that the inputs are ready, the $\resetreg$ signal is set and unset.
+Then, once the result is ready, the $\finishreg$ signal is set and the result
+value is placed in $\returnreg$.  This is encoded in the Verilog semantics.  The
+correctness theorem therefore also uses these signals, and the proof shows that
+once the $\finishreg$ flag is set, the value in $\returnreg$ is correct
 according to the semantics of Verilog and CompCert C.  Note that the compiler is
 allowed to fail and not produce any output; the correctness theorem only applies
 when the translation succeeds.
@@ -177,9 +177,8 @@ end of the clock cycle. $\Sigma$ can therefore be defined as follows:
 $\Sigma = (\Gamma, \Delta)$.  Blocking and Nonblocking assignment can therefore
 be expressed as follows:
 %
-\YH{TODO: Fix \texttt{OK} everywhere and fix names of registers like fin.}
 \begin{equation*}
-  \inferrule[Blocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ = } e) \downarrow_{\text{stmnt}} (\Gamma[n \mapsto v], \Delta)}\qquad\inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}
+  \inferrule[Blocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ = } e) \downarrow_{\text{stmnt}} (\Gamma[n \mapsto v], \Delta)}\qquad\inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}
 \end{equation*}
 %
 where assuming that $\downarrow_{\text{expr}}$ evaluates an expression $e$ to a
@@ -320,11 +319,11 @@ CompCert integer type.
   \centering
   \begin{minipage}{1.0\linewidth}
     \begin{mathpar}
-      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\mathrm{program}^\pm} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\statereg]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\statereg]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
+      \inferrule[Step]{\Gamma_r[\resetreg] = 0 \\ \Gamma_r[\finishreg] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\mathrm{program}^\pm} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\statereg]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\statereg]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
       %
-      \inferrule[Finish]{\Gamma_r[\mathit{fin}] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ n\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \mathit{ret}]}\label{infer:finishstate}\and
+      \inferrule[Finish]{\Gamma_r[\finishreg] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ n\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \returnreg]}\label{infer:finishstate}\and
       %
-      \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\statereg \mapsto n, \mathit{fin} \mapsto 0, \mathit{rst} \mapsto 0])\ \epsilon}\label{infer:callstate}\and
+      \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\statereg \mapsto n, \finishreg \mapsto 0, \resetreg \mapsto 0])\ \epsilon}\label{infer:callstate}\and
       %
       \inferrule[Return]{ }{\yhconstant{Returnstate}\ (\yhconstant{Stackframe}\ r\ m\ \mathit{pc}\ \Gamma_r\ \Gamma_a :: \mathit{sf})\ v \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \mathit{pc}\ (\Gamma_{r} [ \statereg \mapsto \mathit{pc}, r \mapsto v ])\ \Gamma_{a}}\label{infer:returnstate}
     \end{mathpar}
@@ -374,16 +373,16 @@ the following four registers and a \gls{BRAM} block:
   the next state.
 \item[function entry point] When a function is called, the entry point denotes
   the first instruction that will be executed. This can be modelled using a
-  reset signal that sets the state accordingly, denoted as $\mathit{rst}$.  In
+  reset signal that sets the state accordingly, denoted as $\resetreg$.  In
   this translation, function calls are not implemented, so the reset signal
   resets the main module and sets the state parameter for this main module.
 \item[return value] The return value can be modelled by setting a finished flag
   to 1 when the result is ready, and putting the result into a 32-bit output
-  register. These are denoted as $\mathit{fin}$ and $\mathit{ret}$ respectively.
-  Instead of a return instruction, checking that $\mathit{fin}$ is 1 should
+  register. These are denoted as $\finishreg$ and $\returnreg$ respectively.
+  Instead of a return instruction, checking that $\finishreg$ is 1 should
   signal that the result is stored in the return register.
 \item[stack] The function stack can be modelled as a \gls{BRAM} block, which is
-  implemented using an array in the module, and denoted as $\mathit{stk}$.
+  implemented using an array in the module, and denoted as $\stackreg$.
   When the main function is initially called, it allocates the stack, which
   should match the \gls{BRAM} block that was implemented.
 \end{description}
@@ -400,8 +399,8 @@ state is also the value of the $\statereg$ register in the updated association m
 $\Gamma'_r[\statereg]$.
 
 The \nameref{infer:finishstate} rule returns the final value of running the
-module and is applied when the $\mathit{fin}$ register is set; the return value
-is then taken from the $\mathit{ret}$ register.
+module and is applied when the $\finishreg$ register is set; the return value
+is then taken from the $\returnreg$ register.
 
 Note that there is no step from \texttt{State} to \texttt{Callstate}; this is
 because function calls are not supported, and it is therefore impossible in our
