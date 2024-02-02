@@ -290,7 +290,7 @@
 %\newcommand\sem[4]{#2 \vdash #3 \Downarrow #4}
 \newcommand\context{\Gamma}
 \newcommand\seminstr[3][\context]{\sem{\instrtype}{#1}{#2}{#3}}
-\newcommand\seminstrlist[3][\context]{\sem{\mathtt{list}(\instrtype)}{#1}{#2}{#3}}
+\newcommand\seminstrlist[3][\context]{\sem{\texttt{list}(\instrtype)}{#1}{#2}{#3}}
 \newcommand\semrtlblock[3][\context]{\sem{\rtlblock}{#1}{#2}{#3}}
 \newcommand\semrtlpar[3][\context]{\sem{\rtlpar}{#1}{#2}{#3}}
 \newcommand\semcfinstr[3][\context]{\sem{\cfinstrtype}{#1}{#2}{#3}}
@@ -591,9 +591,15 @@ diagonal fill/.style 2 args={fill=#2, path picture={
 
 \newcommand\verilogstmnt{V_\mathit{stmnt}}
 \newcommand\verilogstmnttype{\mathbb{V}_\mathit{stmnt}}
-\newcommand\htlcode{\mathit{code}}
+\newcommand\htlcode{\mathit{c}}
 \newcommand\htlmodule{\mathit{HTL}}
 
+\newcommand\statereg{\texttt{state}}
+\newcommand\finishreg{\texttt{finish}}
+\newcommand\resetreg{\texttt{reset}}
+\newcommand\returnreg{\texttt{ret}}
+\newcommand\stackreg{\texttt{stack}}
+\newcommand\clkreg{\texttt{clk}}
 
 \lstdefinestyle{verilog-style}
 {

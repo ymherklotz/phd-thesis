@@ -5,7 +5,7 @@
 %  headings=twolinechapter,
   twoside=semi,
   bibliography=totoc,
-%  draft=true,
+  draft=true,
 %  headsepline=true,
   DIV=11,
   ]{scrbook}
@@ -192,7 +192,9 @@ Imperial College London.}
   programming} \newacronym{LP}{LP}{linear programming}
 \newacronym{VLIW}{VLIW}{very large instruction word}
 \newacronym{DRAM}{DRAM}{dynamic random-access memory}
-\newacronym{FSM}{FSM}{finite-state machine}
+\newglossaryentry{FSM}{type=\acronymtype,
+    name={FSM},%
+    description={finite-state machine}, first={FSM}}
 \newcommand\newlanguageentry[3]{\newglossaryentry{#1}{type=\acronymtype,
     name={\textsc{#2}},%
     description={#3}, first={#3 (\textsc{#2})}}}
@@ -238,23 +240,23 @@ Imperial College London.}
 
 %\newterm
 
-\includeonly{%
- % titlepage,
- % copyright-assignment,
- % declaration,
- % abstract,
- % acknowledgements,
- % lists,
- % chapters/1-introduction,
- % chapters/2-background,
- chapters/3-introduction-to-vericert,
- % chapters/4-trusted-computing-base,
- % chapters/5-hyperblock-scheduling,
- % chapters/6-hardware-generation,
- % chapters/7-evaluation,
- % chapters/8-conclusion,
- % bibliography,
-}
+% \includeonly{%
+%  % titlepage,
+%  % copyright-assignment,
+%  % declaration,
+%  % abstract,
+%  % acknowledgements,
+%  % lists,
+%  % chapters/1-introduction,
+%  % chapters/2-background,
+%  % chapters/3-introduction-to-vericert,
+%  % chapters/4-trusted-computing-base,
+%  % chapters/5-hyperblock-scheduling,
+%  chapters/6-hardware-generation,
+%  % chapters/7-evaluation,
+%  % chapters/8-conclusion,
+%  % bibliography,
+% }
 
 \setcapindent{1em}
 

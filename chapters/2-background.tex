@@ -1612,30 +1612,30 @@ correctness theorem in CompCert is a backward simulation between the source
 program semantics and compiled program semantics, stated as follows.
 
 \begin{theorem}[Semantic preservation]\label{thm:semantic-preservation}
-  If a successfully compiled assembly program $C$ has a behaviour $B$ which does
-  not go wrong, then there must exist behaviour $B'$ of source program $S$ which
-  may be less defined than behaviour $B$, which is expressed by $B' \precsim B$.
+  If a successfully compiled assembly program $C$ has a behaviour $\mathcal{B}$ which does
+  not go wrong, then there must exist behaviour $\mathcal{B}'$ of source program $S$ which
+  may be less defined than behaviour $\mathcal{B}$, which is expressed by $\mathcal{B}' \precsim \mathcal{B}$.
 
   {\normalfont\begin{equation*}
       \yhfunction{compile\_c}\ S = \yhconstant{OK}\ C
-      \implies (\forall B\ldotp C \Downarrow B \implies (\exists B'\ldotp S
-      \Downarrow B' \land B' \precsim B))
+      \implies (\forall \mathcal{B}\ldotp C \Downarrow \mathcal{B} \implies (\exists \mathcal{B}'\ldotp S
+      \Downarrow \mathcal{B}' \land \mathcal{B}' \precsim \mathcal{B}))
   \end{equation*}}
 \end{theorem}
 
 A direct corollary of this is the following semantic preservation, where one
 proves that the source program is \emph{safe}, i.e. that it is free of behaviour
-that goes wrong.  In that case, one cannot define any more behaviour, so $B$
+that goes wrong.  In that case, one cannot define any more behaviour, so $\mathcal{B}$
 must be a valid behaviour for the source program.
 
 \begin{corollary}[Refinement of compilation]
-  If a successfully compiled assembly program $C$ has a behaviour $B$ and the
+  If a successfully compiled assembly program $C$ has a behaviour $\mathcal{B}$ and the
   source program is \emph{safe}, meaning it is free of undefined behaviour, then
-  $B$ must be a behaviour of source program $S$.
+  $\mathcal{B}$ must be a behaviour of source program $S$.
 
   {\normalfont\begin{equation*} \yhfunction{compile\_c}\ S = \yhconstant{OK}\ C
-      \land \mathit{safe}(S) \implies (\forall B\ldotp C \Downarrow B \implies S
-      \Downarrow B)
+      \land \mathit{safe}(S) \implies (\forall \mathcal{B}\ldotp C \Downarrow \mathcal{B} \implies S
+      \Downarrow \mathcal{B})
   \end{equation*}}
 \end{corollary}
 
@@ -1747,7 +1747,21 @@ backward simulation from \gls{Asm} to \gls{Clight}.
 
 \begin{figure}
   \centering
-  \begin{subfigure}[b]{0.48\linewidth}
+  \begin{subfigure}[b]{0.31\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \node (s1) {$s_1$};
+      \node[below=of s1] (s2) {$s_2$};
+      \node[right=of s1] (t1) {$c_1$};
+      \path (s2) -| node (t2) {$c_2$} (t1);
+      \draw[imparrow] (s1) -- node[left] {$t$} (s2);
+      \draw[imparrow,dashed] (t1) -- (t2);
+      \draw (s1) -- node[above] {$\approx$} (t1);
+      \draw[dashed] (s2) -- node[below] {$\approx$} (t2);
+    \end{tikzpicture}
+    \caption{Lock-step}
+  \end{subfigure}\hfill%
+  \begin{subfigure}[b]{0.31\linewidth}
     \centering
     \begin{tikzpicture}
       \node (s1) {$s_1$};
@@ -1759,8 +1773,9 @@ backward simulation from \gls{Asm} to \gls{Clight}.
       \draw (s1) -- node[above] {$\approx$} (t1);
       \draw[dashed] (s2) -- node[below] {$\approx$} (t2);
     \end{tikzpicture}
+    \caption{\enquote{plus}}
   \end{subfigure}\hfill%
-  \begin{subfigure}[b]{0.48\linewidth}
+  \begin{subfigure}[b]{0.31\linewidth}
     \centering
     \begin{tikzpicture}
       \node (s1) {$s_1$};
@@ -1773,11 +1788,13 @@ backward simulation from \gls{Asm} to \gls{Clight}.
       \draw[dashed] (s2) -- node[below] (app) {$\approx$} (t2);
       \node[below=2mm of app] {with $|s_2| < |s_1|$};
     \end{tikzpicture}
+    \caption{\enquote{star}}
   \end{subfigure}
   \caption[Examples of forward simulation diagrams.]{Forward simulation
-    diagrams, either performing one or more steps in the target program using
-    the \enquote{plus} forward simulation, or performing zero or more steps in
-    the target program with a well-founded order on the target program states.}%
+    diagrams.  The forward simulation is defined in terms of the more general
+    \enquote{plus} or \enquote{star} simulation diagrams, however, the lock-step
+  simulation diagram is a useful special case of the \enquote{plus} simulation
+  diagram which can be used for many of the translation passes.}%
   \label{fig:bg:forwards-simulation-diagram}
 \end{figure}
 

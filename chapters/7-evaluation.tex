@@ -26,11 +26,13 @@ easily accessible, but it can still
 \textquote[{\textcite{pilato13_bambu}}]{produce faster accelerators in almost
   all the cases} when compared to LegUp HLS, which itself is said to produce
 hardware \textquote[{\textcite{canis11_legup}}]{of comparable quality to a
-  commercial high-level synthesis tool}.  The baseline Bambu HLS version has all
-the default automatic optimisations turned on.  \vericert{} is also compared
-against an unoptimised version of Bambu HLS, where all optimisations that can be
-toggled are turned off.  This affects optimisations like deep if-conversion that
-Bambu HLS would normally automatically perform.  Additionally, three versions of
+  commercial high-level synthesis tool}.  Even though these quotes are quite
+old, Bambu is still in active development and implements many advanced
+optimisations like speculation.  The baseline Bambu HLS version has all the
+default automatic optimisations turned on.  \vericert{} is also compared against
+an unoptimised version of Bambu HLS, where all optimisations that can be toggled
+are turned off.  This affects optimisations like deep if-conversion that Bambu
+HLS would normally automatically perform.  Additionally, three versions of
 Vericert are compared to Bambu HLS, so that optimisations performed by Vericert
 can also be tested.  In the first version of Vericert scheduling is disabled
 completely, generating sequential hardware where an instruction is executed
@@ -39,7 +41,7 @@ implemented by disabling if-conversion, thereby only scheduling basic blocks.
 Finally, a version of Vericert with the full hyperblock scheduling optimisation
 is shown, including all optimisations that are implemented.
 
-\paragraph{Choice and preparation of benchmarks.} I xevaluate \vericert{} using
+\paragraph{Choice and preparation of benchmarks.} I evaluate \vericert{} using
 the \polybench{} benchmark suite (version 4.2.1)~\cite{pouchet20_polyb_c}, which
 is a collection of 30 numerical kernels. \polybench{} is popular in the HLS
 context~\cite{choi18_hbods,pouchet13_polyh,zhao17_comba,zuo13_improv}, since it
@@ -59,7 +61,7 @@ that trigger more advanced optimisations.
 \vericert{} implements divisions and modulo operations in C using the
 corresponding built-in Verilog operators. These built-in operators are designed
 to complete within a single clock cycle, and this causes substantial penalties
-in clock frequency.  Other HLS tools, including LegUp, supply their own
+in clock frequency.  Other HLS tools, including Bambu, supply their own
 multi-cycle division/modulo implementations, and I plan to do the same in future
 versions of \vericert{}.  In the meantime, I have prepared an alternative
 version of the benchmarks in which each division/modulo operation is replaced
@@ -142,13 +144,11 @@ $\text{total execution time} = \frac{\text{total clock cycles}}{\text{maximum
 
 \section{RQ1: Is Vericert Competitive With Unverified Tools}
 
-To assess how \VericertHyper{} fares against unverified HLS tools, I compare it
-against the state-of-the-art open-source HLS tool
-Bambu~\cite[]{ferrandi21_bambu}. Bambu is used in two modes: one where all
-default optimisations are enabled (\BambuDefault{}), and one where as many
-optimisations as possible are disabled (\BambuNoOpt{}). Note that several
-\enquote{optimisations} are built into Bambu and cannot be disabled, such as
-list scheduling and loop flattening.
+To assess how \VericertHyper{} fares against the unverified HLS tool Bambu.
+Bambu is used in two modes: one where all default optimisations are enabled
+(\BambuDefault{}), and one where as many optimisations as possible are disabled
+(\BambuNoOpt{}). Note that several \enquote{optimisations} are built into Bambu
+and cannot be disabled, such as list scheduling and loop flattening.
 
 All the bars in \cref{fig:list-against-hyper-scheduling} are relative to
 \BambuDefault. The pink bars show \BambuNoOpt. We see that although
@@ -159,8 +159,8 @@ have similar feature sets.
 
 Comparing the execution time of the hardware designs produced by Vericert with
 unoptimised Bambu HLS, we see that Vericert designs are around $1.6\times$
-slower than Bambu HLS designs.  This is because Vericert designs operate
-normally close to the maximum frequency of 100MHz, whereas Bambu HLS designs in
+slower than Bambu HLS designs.  This is because Vericert designs normally
+operate close to the maximum frequency of 100MHz, whereas Bambu HLS designs in
 general seem to give more slack.
 
 Finally, comparing area, on average all tools are quite similar, and Vericert
@@ -179,7 +179,10 @@ scheduling is enabled (\VericertHyper{}). We see that, on average, hyperblock
 scheduling leads to hardware that requires only 0.46$\times$ the cycle count
 (middle plot). This is unsurprising given that original Vericert only executed a
 single instruction per clock cycle. In terms of area (bottom plot), hyperblock
-scheduling has, on average, a slight increase in area.
+scheduling has, on average, a slight increase in area.  This is due to the
+additional logic needed to encode the predicated operations.  In addition to
+that, predicated instructions can often hinder operation chaining optimisations
+performed by the synthesis tool, increasing area further.
 
 \section{RQ3: Hyperblock Scheduling Compared to Na\"ive Scheduling}
 
@@ -235,9 +238,10 @@ predicates compared to the more naïve validator,
 \cref{fig:eval:comparison-hashing} shows detailed times of how long validation
 took on some hand-crafted examples, that would not time-out the verification for
 the naïve validator.  The example test programs differ roughly in the number of
-predicates that are present.  This shows that using final-state predicates meant
-that validation time stayed mostly constant, whereas the naïve validator quickly
-took exponentially more time to validate the same schedule.
+predicates that are present and how often they are used to justify reorderings
+of instructions.  This shows that using final-state predicates meant that
+validation time stayed mostly constant, whereas the naïve validator quickly took
+exponentially more time to validate the same schedule.
 
 \section{RQ5: Effectiveness of Vericert's Correctness Theorem}
 

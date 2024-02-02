@@ -11,49 +11,45 @@ the code that is not verified, and therefore needs to be trusted by the user
 when using the tool or the correctness theorem.  This is in contrast to the
 untrusted code that has been verified, and therefore cannot introduce bugs.  It
 is important to understand the trusted computing base of verified software such
-as CompCert and Vericert to recognise where bugs could still be introduced.  One
-example in CompCert is when \textcite{yang11_findin_under_bugs_c_compil} fuzz
-tested C compilers, finding a variety of bugs in all the compilers that were
-tested.  However, far fewer bugs were found in CompCert compared to unverified C
-compilers, and all the bugs that were found in CompCert were in the unverified,
-trusted parts of the compiler.  For example, there were bugs in the unverified
-front end of CompCert, which was then addressed by reducing the trusted
-computing base by verifying the correctness of the C
-parser~\cite{jourdan12_valid_lr_parser}.  Another bug was found because of a
-missing constraint in the semantics of the PowerPC.
+as CompCert and Vericert to recognise where bugs could still be introduced.
+When \textcite{yang11_findin_under_bugs_c_compil} fuzz tested CompCert and all
+bugs that were found were in the unverified, trusted parts of the compiler.  For
+example, there were bugs in the unverified front end of CompCert, which was then
+addressed by reducing the trusted computing base by verifying the correctness of
+the C parser~\cite{jourdan12_valid_lr_parser}.  Another bug was found because of
+a missing constraint in the semantics of the PowerPC.
 
 The trusted computing base of CompCert comprises the Coq theorem prover itself,
-the OCaml extraction from Coq which is unverified, front end semantics of C
-which may not model the C standard faithfully, and finally the semantics of
-CompCert C as well as the semantics for each assembly
-language~\cite{monniaux22_tcbcvc}.  In general, the trusted computing base of
-Vericert is the same as that of CompCert, the main two differences are described
-in this section, and they are the correctness theorem and the target Verilog
-semantics.
+the OCaml extraction from Coq which is unverified, the front end semantics of C
+which may not model the C standard faithfully, and finally the semantics for
+each assembly language~\cite{monniaux22_tcbcvc}.  In general, the trusted
+computing base of Vericert is the same as that of CompCert, the main two
+differences are described in this section, and they are the correctness theorem
+and the target Verilog semantics.
 
 \section{Formulating the Correctness Theorem}
 
-The main correctness theorem is analogous to that stated in \compcert{} and also
+The main correctness theorem is analogous to that stated in \compcert{} and
 described in \cref{sec:bg:correctness-theorem}: for all Clight source programs
-$C$, if the translation to the target Verilog code succeeds, $\mathit{Safe}(C)$
-holds and the target Verilog has behaviour $B$ when simulated, then $C$ will
-have the same behaviour $B$. $\mathit{Safe}(C)$ means all observable behaviours
-of $C$ are safe, which can be defined as
-$\forall B,\ C \Downarrow B \implies B \in \texttt{Safe}$.  A behaviour is in
-\texttt{Safe} if it is either a final state (in the case of convergence) or
-divergent, but it cannot \enquote{go wrong}, meaning it cannot contain undefined
-behaviour.  In \compcert{}, a behaviour is also associated with a trace of I/O
-events, but since external function calls are not supported in \vericert{}, this
-trace will always be empty.
+$C$, if the translation to the target Verilog code succeeds, $\mathit{safe}(C)$
+holds and the target Verilog has behaviour $\mathcal{B}$ when simulated, then
+$C$ will have the same behaviour $\mathcal{B}$.  The predicate
+$\mathit{safe}(C)$ means all observable behaviours of $C$ are safe, which can be
+defined as
+$\forall \mathcal{B},\ C \Downarrow \mathcal{B} \implies \mathcal{B} \not\in
+\texttt{Wrong}$.  A behaviour is in \texttt{Wrong} if it can \enquote{go wrong},
+meaning it contains undefined behaviour.  In \compcert{}, a behaviour is also
+associated with a trace of I/O events, but since external function calls are not
+supported in \vericert{}, this trace will always be empty.
 
 \begin{theorem}
   Whenever the translation from $C$ succeeds and produces Verilog $V\!$, and all
-  observable behaviours of $C$ are safe, then $V\!$ has behaviour $B$ only if
-  $C$ has behaviour $B$.
+  observable behaviours of $C$ are safe, then $V\!$ has behaviour $\mathcal{B}$
+  only if $C$ has behaviour $\mathcal{B}$.
 
-  {\normalfont\begin{equation*} \forall C\ V\ B\ldotp\quad \yhfunction{HLS} (C)
-      = \yhconstant{OK} (V) \land \mathit{Safe}(C) \implies (V \Downarrow B
-      \implies C \Downarrow B).
+  {\normalfont\begin{equation*} \forall C\ V\ \mathcal{B}\ldotp\quad \yhfunction{HLS} (C)
+      = \yhconstant{OK} (V) \land \mathit{safe}(C) \implies (V \Downarrow \mathcal{B}
+      \implies C \Downarrow \mathcal{B}).
   \end{equation*}}
 \end{theorem}
 
@@ -68,13 +64,12 @@ produces smaller components that take an input, execute, and then terminate with
 an answer.  To start the execution of the hardware and to signal to the HLS
 component that the inputs are ready, the $\mathit{rst}$ signal is set and unset.
 Then, once the result is ready, the $\mathit{fin}$ signal is set and the result
-value is placed in $\mathit{ret}$.  These signals are also present in the
-semantics of execution shown in \cref{fig:inference_module}.  The correctness
-theorem therefore also uses these signals, and the proof shows that once the
-$\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct according to
-the semantics of Verilog and CompCert C.  Note that the compiler is allowed to
-fail and not produce any output; the correctness theorem only applies when the
-translation succeeds.
+value is placed in $\mathit{ret}$.  This is encoded in the Verilog semantics.
+The correctness theorem therefore also uses these signals, and the proof shows
+that once the $\mathit{fin}$ flag is set, the value in $\mathit{ret}$ is correct
+according to the semantics of Verilog and CompCert C.  Note that the compiler is
+allowed to fail and not produce any output; the correctness theorem only applies
+when the translation succeeds.
 
 How can we prove this theorem?  Note that like in CompCert, this theorem can be
 proven using a backward simulation.  The same proof technique can be used to
@@ -85,10 +80,10 @@ as the simulations in Vericert imply the backward simulation needed to prove the
 theorem.  For each transformation this dissertation will therefore describe how
 the forward simulations are proven.
 
-Because the correctness theorem is unchanged except for the target language
-semantics, it means that all the corollaries proven using the top-level CompCert
-correctness theorem still hold, and do not have to be proven again or modified.
-Note however that Vericert does not support separate compilation of translation
+All the corollaries proven using the top-level CompCert correctness theorem
+still hold, and do not have to be proven again or modified, because the
+correctness theorem is unchanged except for the target language semantics.  Note
+however that Vericert does not support separate compilation of translation
 units, and needs a main function.  Any corollaries and top-level theorems about
 the linking of translation units therefore are not needed and hold vacuously, as
 compilation would fail on these translation units.
@@ -176,23 +171,33 @@ that the order in which the always blocks are executed does not matter and will
 always result in the same final state.
 
 To model both of these assignments, the state $\Sigma$ has to be split into two
-maps: $\Gamma$, which contains the current values of all variables and arrays,
-and $\Delta$, which contains the values that will be assigned at the end of the
-clock cycle. $\Sigma$ can therefore be defined as follows:
-$\Sigma = (\Gamma, \Delta)$.  Nonblocking assignment can therefore be expressed
-as follows:
+association maps: $\Gamma$, which contains the current values of all variables
+and arrays, and $\Delta$, which contains the values that will be assigned at the
+end of the clock cycle. $\Sigma$ can therefore be defined as follows:
+$\Sigma = (\Gamma, \Delta)$.  Blocking and Nonblocking assignment can therefore
+be expressed as follows:
 %
+\YH{TODO: Fix \texttt{OK} everywhere and fix names of registers like fin.}
 \begin{equation*}
-  \inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}\\
+  \inferrule[Blocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ = } e) \downarrow_{\text{stmnt}} (\Gamma[n \mapsto v], \Delta)}\qquad\inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \yhkeyword{OK}\ n \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}
 \end{equation*}
 %
 where assuming that $\downarrow_{\text{expr}}$ evaluates an expression $e$ to a
 value $v$, the nonblocking assignment $d\ \yhkeyword{ <= } e$ updates the future
 state of the variable $d$ with value $v$.
 
-Finally, the following rule dictates how the whole module runs in one clock
+Finally, the following rules dictate how the whole module runs in one clock
 cycle:
 %
+\phantomsection{}
+\begin{equation*}
+  \inferrule[Module$^+_1$]{(\Gamma, \Delta, a) \downarrow_{\text{always}^{+}}
+    (\Gamma', \Delta') \\ (\Gamma', \Delta', \vec{m})
+    \downarrow_{\mathrm{module}^{+}} (\Gamma'', \Delta'')}{(\Gamma, \Delta, a \mathbin{::} \vec{m})\ \downarrow_{\mathrm{module}^{+}}
+    (\Gamma'', \Delta'')}\label{infer:module_plus}\quad
+  \inferrule[Module$^+_2$]{ }{(\Gamma, \Delta, \varnothing)\ \downarrow_{\mathrm{module}^{+}}
+    (\Gamma, \Delta)}
+\end{equation*}
 \phantomsection{}
 \begin{equation*}
   \inferrule[Program]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\mathrm{module}^{+}}
@@ -315,13 +320,13 @@ CompCert integer type.
   \centering
   \begin{minipage}{1.0\linewidth}
     \begin{mathpar}
-      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\mathrm{program}^\pm} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\sigma]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\sigma]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
+      \inferrule[Step]{\Gamma_r[\mathit{rst}] = 0 \\ \Gamma_r[\mathit{fin}] = 0 \\ (m, (\Gamma_r, \Gamma_a))\ \downarrow_{\mathrm{program}^\pm} (\Gamma_r', \Gamma_a')}{\yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r[\statereg]\ \ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \ \Gamma_r'[\statereg]\ \ \Gamma_r'\ \Gamma_a'}\label{infer:stepstate}\and
       %
       \inferrule[Finish]{\Gamma_r[\mathit{fin}] = 1}{\yhconstant{State}\ \mathit{sf}\ m\ n\ \Gamma_r\ \Gamma_a \longrightarrow \yhconstant{Returnstate}\ \mathit{sf}\ \Gamma_r[ \mathit{ret}]}\label{infer:finishstate}\and
       %
-      \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\sigma \mapsto n, \mathit{fin} \mapsto 0, \mathit{rst} \mapsto 0])\ \epsilon}\label{infer:callstate}\and
+      \inferrule[Call]{ }{\yhconstant{Callstate}\ \mathit{sf}\ m\ \vec{r} \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ n\ ((\yhfunction{init\_params}\ \vec{r}\ a)[\statereg \mapsto n, \mathit{fin} \mapsto 0, \mathit{rst} \mapsto 0])\ \epsilon}\label{infer:callstate}\and
       %
-      \inferrule[Return]{ }{\yhconstant{Returnstate}\ (\yhconstant{Stackframe}\ r\ m\ \mathit{pc}\ \Gamma_r\ \Gamma_a :: \mathit{sf})\ v \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \mathit{pc}\ (\Gamma_{r} [ \sigma \mapsto \mathit{pc}, r \mapsto v ])\ \Gamma_{a}}\label{infer:returnstate}
+      \inferrule[Return]{ }{\yhconstant{Returnstate}\ (\yhconstant{Stackframe}\ r\ m\ \mathit{pc}\ \Gamma_r\ \Gamma_a :: \mathit{sf})\ v \longrightarrow \yhconstant{State}\ \mathit{sf}\ m\ \mathit{pc}\ (\Gamma_{r} [ \statereg \mapsto \mathit{pc}, r \mapsto v ])\ \Gamma_{a}}\label{infer:returnstate}
     \end{mathpar}
   \end{minipage}
   \caption{Top-level small-step semantics for Verilog modules in \compcert{}'s computational framework.}%
@@ -364,7 +369,7 @@ the following four registers and a \gls{BRAM} block:
 
 \begin{description}
 \item[program counter] The program counter is modelled using a register that
-  keeps track of the state, denoted by $\sigma$.  This register should always
+  keeps track of the state, named $\statereg$.  This register should always
   contain the current state, and will be checked on the next transition to pick
   the next state.
 \item[function entry point] When a function is called, the entry point denotes
@@ -390,9 +395,9 @@ the module is not being reset, that the finish state has not been reached yet,
 that the current and next state are $v$ and $v'$, and that the module runs from
 state $\Gamma$ to $\Gamma'$ using the \nameref{infer:stepstate} rule.  This rule
 also ensures that the state register contains the value of the current state, by
-checking the value of $\Gamma_r[\sigma]$.  It is then ensured that the resulting
-state is also the value of the $\sigma$ register in the updated association map
-$\Gamma'_r[\sigma]$.
+checking the value of $\Gamma_r[\statereg]$.  It is then ensured that the resulting
+state is also the value of the $\statereg$ register in the updated association map
+$\Gamma'_r[\statereg]$.
 
 The \nameref{infer:finishstate} rule returns the final value of running the
 module and is applied when the $\mathit{fin}$ register is set; the return value
@@ -564,13 +569,13 @@ In particular, note that the Verilog arrays are word-addressable instead of the
 CompCert memory model which is byte-addressable.  The instruction set
 architectures of \glspl{CPU} typically specify memory as being byte-addressable,
 however, the implementation of the memory is not that straightforward.
-\Glspl{CPU} usually implement multiple levels of caching as well as converting
-virtual addresses to physical addresses and may operate on byte- or
-word-addressable memories behind the byte-addressable interface.  Often, the
+\Glspl{CPU} usually implement multiple levels of caching as well as the
+conversion from virtual addresses to physical addresses and may operate on byte-
+or word-addressable memories behind the byte-addressable interface.  Often, the
 performance of the caches will be tuned to provide the best performance for
 reading and writing words to memory.  This makes it possible to have good
 general performance, and makes it possible to interact with larger, but slower
-memories such as \gls{DRAM}.  However, I are assuming that I are targeting an
+memories such as \gls{DRAM}.  However, Vericert assumes that it is targeting an
 \gls{FPGA} without external \gls{DRAM}, so only fast \gls{BRAM} memory is used.
 This means that the memory architecture can be specialised to work well with
 words without using a complex memory architecture, by directly using a
@@ -594,7 +599,8 @@ subset of C that is translated to Verilog.
 \subsection{Deterministic Verilog semantics}%
 \label{sec:proof:deterministic}
 
-The final lemma we need is that the Verilog semantics is deterministic. This
+Finally, to integrate the Verilog semantics into CompCert's backward simulation
+framework, we need to show that the Verilog semantics is deterministic. This
 result allows us to replace the forward simulations I have proved with the
 desired backward simulations.  This was proven for the small-step semantics
 shown in \cref{fig:inference_module}.

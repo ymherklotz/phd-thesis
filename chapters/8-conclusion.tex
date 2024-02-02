@@ -108,11 +108,11 @@ instructions, by using wires to communicate with an abstract computation block
 modelled in \htl{} and could later be replaced by a hardware implementation.
 
 Furthermore, support for \glspl{IPcore} with a specific interface, such as a
-simple ready/finished interface, could be implemented in general, so that
-hardware that follows this pattern could be directly integrated into Vericert.
-Integrating a new core would only require a proof of correctness of the
-specification and the Verilog implementation, as well as an equivalence with the
-operation that it should be replacing.  This would allow for a more general
+simple ready/finished interface, could have a general interface specification,
+so that hardware that follows this pattern could be directly integrated into
+Vericert.  Integrating a new core would only require a proof of correctness of
+the specification and the Verilog implementation, as well as an equivalence with
+the operation that it should be replacing.  This would allow for a more general
 implementation of the memory interface, for example, making it possible to
 implement both loads and stores in the usual positive edge of the clock, as well
 as making it possible to pipeline these loads and stores.
@@ -122,16 +122,16 @@ as making it possible to pipeline these loads and stores.
 Another critical \gls{HLS} optimisation that is often integrated with the
 instruction scheduling optimisation is loop pipelining, also known as modulo
 scheduling.  This is an important optimisation for \gls{HLS}, making it possible
-to execute different parts of different loop iterations in parallel.  The ideal
-scenario is that the whole function can eventually be pipelined so that it can
-accept a stream of inputs every clock cycle.  This type of hardware design is
-currently not possible with Vericert.  However, there is work on proving
-software loop pipelining correct in
-CompCert~\cite{tristan10_simpl_verif_valid_softw_pipel}, which could be adapted
-and extended to support generating hardware pipelines, by using predicated
-execution~\cite{rau92_code_gener_schem_sched_loops} and a rotating register
+to execute parts of different loop iterations in parallel.  The ideal scenario
+is that the whole function can eventually be pipelined so that it can accept a
+stream of inputs every clock cycle.  This type of hardware design is currently
+not possible with Vericert.  However, there is work on proving software loop
+pipelining correct in CompCert~\cite{tristan10_simpl_verif_valid_softw_pipel},
+which could be adapted and extended to support generating hardware pipelines, by
+using predicated execution~\cite{rau92_code_gener_schem_sched_loops}, which are
+already supported, and a rotating register
 file~\cite{rau92_regis_alloc_softw_pipel_loops} to remove the need for a
-prologue and epilogue in the pipelined loop.
+prologue and epilogue in the software pipelined loop.
 
 \subsubsection{Limitations with I/O}
 
@@ -152,10 +152,10 @@ design.
 In \compcert{}, each global variable is stored in its own memory.  A
 generalisation of our translation of the stack into a \gls{BRAM} block could
 therefore translate global variables in the same manner.  This would require a
-slight generalisation of pointers so that they store provenance information to
-ensure that each pointer accesses the right \gls{BRAM}. It would also be
-necessary to generalise the \gls{BRAM} interface so that it decodes the
-provenance information and indexes the correct array.
+generalisation of pointers so that they store provenance information to ensure
+that each pointer accesses the right \gls{BRAM}. It would also be necessary to
+generalise the \gls{BRAM} interface so that it decodes the provenance
+information and indexes the correct array.
 
 \subsubsection{Other language restrictions}
 
