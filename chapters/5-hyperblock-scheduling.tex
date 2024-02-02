@@ -1214,14 +1214,14 @@ used the same data structure for a different purpose (namely, making symbolic
 execution more efficient).
 
 For predicate expressions, we do not need value summaries, because all of the
-$\synite{e_1}{e_2}{e_3}$ operations that appear in the predicate expressions
-become purely Boolean (rather than a mix of integers and Booleans), and hence
-can be expanded to $(e_1 \rightarrow e_2) \land (\neg e_1 \rightarrow e_3)$, as
-we have done in \cref{tab:symbex2}. These predicate expressions can then be
-straightforwardly translated into propositional formulas that can be reasoned
-about using a SAT solver. For example, the generated query for checking the
-equivalence between the expressions assigned to \rtlinline|p2| looks like the
-following:
+$\mrtl{if}$ $e_1$ $\mrtl{then}$ $e_2$ $\mrtl{else}$ $e_3$ operations that appear
+in the predicate expressions become purely Boolean (rather than a mix of
+integers and Booleans), and hence can be expanded to
+$(e_1 \rightarrow e_2) \land (\neg e_1 \rightarrow e_3)$, as we have done in
+\cref{tab:symbex2}. These predicate expressions can then be straightforwardly
+translated into propositional formulas that can be reasoned about using a SAT
+solver. For example, the generated query for checking the equivalence between
+the expressions assigned to \rtlinline|p2| looks like the following:
 
 \newcommand\formY{\psi}
 \newcommand\satY{S_\psi}
@@ -1562,7 +1562,7 @@ post-scheduling block we encounter
 $\synite{\neg\afvar{p1}}{2}{\avar{r1}}$
 % $\set{(\neg\afvar{p1}, 2), (\afvar{p1}, \avar{r1})}$
 and
-$\synite{\afvar{p1}}{1}{\synite{\neg\afvar{p1}}{2}{\avar{r1}}}$;
+\synitetext{$\afvar{p1}$}{$1$}{\synitetext{$\neg\afvar{p1}$}{$2$}{$\avar{r1}$}};
 % $\set{(\neg\afvar{p1}, 2), (\afvar{p1}, 1)}$
 these two pairs
 are not equivalent, so this (correct) schedule cannot be validated.
@@ -2893,20 +2893,21 @@ from the example in \cref{sec:hs:verifying-scheduling}.
 %
 where $\formY$ abbreviates
 $\syniteformulans{\avar{p1}}{\left(\syniteformulans{\neg\avar{p1}}{1 \aeq
-      0}{\avar{r2} \aeq 0}\right)}{\avar{p2}}$.  First, this predicate
-expression is hashed so that it is only composed of variables, and produces a
-proper three-valued predicate.  In this case, all the atoms of the formula could be
-hashed and only referred to as variables, for example $c_1 \mapsto \avar{p1}$,
-$c_2 \mapsto \avar{r2} \aeq 0$ and $c_3 \mapsto \avar{p2}$.  The same is done to
-$\formY$ producing the hashed formula $h(\formY)$.  We are then left with the
-following formula:
+      0}{\avar{r2} \aeq 0}\right)}{\avar{p2}}$.
+
+First, this predicate expression is hashed so that it is only composed of
+variables, and produces a proper three-valued predicate.  In this case, all the
+atoms of the formula could be hashed and only referred to as variables, for
+example $c_1 \mapsto \avar{p1}$, $c_2 \mapsto \avar{r2} \aeq 0$ and
+$c_3 \mapsto \avar{p2}$.  The same is done to $\formY$ producing the hashed
+formula $h(\formY)$.  We are then left with the following formula:
 %
 \begin{equation*}
   \syniteformulanslk{c_1}{c_2}{c_3} \leftrightarrow_{\text{\L{}}} h(\formY).
 \end{equation*}
 %
 This is a pure three-valued logic formula using \L{}ukasiewicz three-valued
-logic semantics~\cite{borowski70_swj} described in \cref{fig:evalpred}.  This
+logic semantics \cite{borowski70_swj} described in \cref{fig:evalpred}.  This
 interpretation of three-valued logic is chosen because it allows for tautologies
 in the logic.  In the standard interpretation of three-valued logic where
 implication is defined in terms of $\predand$ and $\predor$, every expressable
