@@ -12,7 +12,7 @@ well as a rich but abstract memory model.  This representation needs to be
 transformed into a more suitable representation on which hardware specific
 transformations can be applied, and which is closer to the structure of the
 final Verilog design.  The main transformation that takes place is converting a
-control-flow graph into a state machine with data-path representation, which is
+control-flow graph into a state machine with data path representation, which is
 also the structure of the final design.  There are various steps involved in
 this refinement because of the large gap between control-flow graph semantics
 and state machine semantics.  In addition to that, additional components, such
@@ -870,16 +870,45 @@ neither. The load, store, predicated load and predicated store is translated to
 the equivalent representation using the \gls{BRAM} specification and all other
 instructions are left intact.  The specification of the translation is shown in
 \cref{sec:hg:memory-transformation-specification}, where $\statereg$ is state
-register, $r$ is the \gls{BRAM}, $d$ is the data-path map, and $i$ is the
-current state.  ($n$ is the newly inserted state, which only applies to the
-translation of loads.)
+register, $r$ is the \gls{BRAM}, $d$ is the data path map of the original
+\htl{}, $d'$ is the data path of the translated \htl{}, and $i$ is the current
+state.  The newly inserted state is denoted by $n$, which only applies to the
+translation of loads.  The specification shown in the figure relates the
+original \htl{} data path $d$ with the data path $d'$ in which \gls{BRAM}
+accesses were inserted.  For each type of direct memory access in the original
+\htl{}, there is a rule relating it to the translated data path in terms of
+\gls{BRAM} control signals.  Note that the translation is quite strict, and the
+only statements that are allowed to be in the \htl{} state are the ones that are
+listed in the relation.  Ideally, arbitrary statements could be placed before or
+after the direct memory accesses, however, proving that the translation is
+semantics preserving is more difficult due to the fact that the \gls{BRAM}
+stores values in the next negative edge and loads values in the next cycle.  One
+would therefore have to show that there are no conflicting direct memory
+accesses in the state.
 
 \newcommand\nonblockasgn{\mathrel{\texttt{<=}}}
 \newcommand\blockasgn{\mathrel{\texttt{=}}}
 \newcommand\msemi{\texttt{;}\ }
 \newcommand\mternary[3]{#1\mathbin{\texttt{?}}#2\mathbin{\texttt{:}}#3}
 \newcommand\mxor{\oplus}
-\newcommand\verilogeq{\mathbin{\texttt{==}}}
+\newcommand\verilogneq{\mathbin{\texttt{!=}}}
+
+Conditional loads and stores are also handled, by adding logic to the enable
+signal which inhibits the flip of the $r.\mathrm{u\_en}$ when the condition does
+not hold.  This is implemented by the following logic, where $\mxor$ is the
+\texttt{xor} operation:
+%
+\begin{equation*}
+  r.\mathrm{u\_en} \blockasgn
+    (c \verilogneq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi
+\end{equation*}
+%
+If $c$ is $\booleanfalse$, then this means that
+$\texttt{32'b0} \verilogneq \texttt{32'b0}$ evaluates to \texttt{1'b0}, and
+$\texttt{1'b0} \mxor r.\mathrm{u\_en} = r.\mathrm{u\_en}$, meaning the value of
+$r.\mathrm{u\_en}$ remains unchanged.  However, if $c$ evaluates to true, then
+the \texttt{xor} operation acts like a toggle, meaning the memory is activated
+normally.
 
 \begin{figure}
 \centering
@@ -889,7 +918,7 @@ translation of loads.)
     e_{2}\msemi \arcr
     \statereg \blockasgn e_3\msemi
   \end{array}\right) \\
-  t = \left(\begin{array}{l}
+  d'[i] = \left(\begin{array}{l}
     r.\mathrm{u\_en} \blockasgn
     \neg r.\mathrm{u\_en}\msemi \arcr
     r.\mathrm{wr\_en} \blockasgn 1\msemi \arcr r.\mathrm{d\_in} \blockasgn
@@ -897,58 +926,58 @@ translation of loads.)
     r.\mathrm{addr} \blockasgn e_{1} \msemi \arcr
     \statereg \blockasgn e_3 \msemi
   \end{array}\right)}%
-  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d[i \mapsto t]\ i\ n}
+  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d'\ i\ n}
   \and
   \inferrule[Predicated Store Transl]{ d[i] = \left(\begin{array}{l}
     \texttt{if(} c\texttt{)}\ r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
     e_{2}\msemi \arcr
-    \statereg \blockasgn e_3\msemi\end{array}\right) \\ t = \left(\begin{array}{l}
+    \statereg \blockasgn e_3\msemi\end{array}\right) \\ d'[i] = \left(\begin{array}{l}
       r.\mathrm{u\_en} \blockasgn
-    (c \verilogeq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi\arcr
+    (c \verilogneq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi\arcr
       r.\mathrm{wr\_en} \blockasgn \texttt{1'b1}\msemi\arcr
       r.\mathrm{d\_in} \blockasgn \mternary{c}{e_{2}}{r.\mathrm{d\_in}}\msemi\arcr
       r.\mathrm{addr} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{addr}}\msemi
       \arcr
       \statereg \blockasgn e_3 \msemi
     \end{array}\right)}%
-  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d[i \mapsto t]\ i\ n}
+  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d'\ i\ n}
   \and
   \inferrule[Load Transl]{ d[i] = \left(\begin{array}{l}
-    r_{\mathrm{d}} \blockasgn r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \arcr
+    r_{\mathrm{d}} \blockasgn r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \msemi \arcr
     \statereg \blockasgn e_2\msemi
   \end{array}\right) \\
   \begin{array}{l}
-  t_1 = \left(\begin{array}{l}
+  d'[i] = \left(\begin{array}{l}
     r.\mathrm{u\_en} \blockasgn
     \neg r.\mathrm{u\_en}\msemi \arcr
     r.\mathrm{wr\_en} \blockasgn \texttt{1'b0}\msemi \arcr
     r.\mathrm{addr} \blockasgn e_{1} \msemi \arcr
     \statereg \blockasgn n \msemi
   \end{array}\right) \arcr
-  t_2 = \left(\begin{array}{l}
+  d'[n] = \left(\begin{array}{l}
     r_{\mathrm{d}} \blockasgn r.\mathrm{d\_out} \msemi \arcr
     \statereg \blockasgn e_2 \msemi
   \end{array}\right)
   \end{array}}%
-  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
+  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d'\ i\ n}
   \and
   \inferrule[Predicated Load Transl]{ d[i] = \left(\begin{array}{l}
     r_{\mathrm{d}} \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{r_{\mathrm{d}}}\msemi \arcr
     \statereg \blockasgn e_2\msemi
   \end{array}\right) \\
   \begin{array}{l}
-    t_1 = \left(\begin{array}{l}
-    r.\mathrm{u\_en} \blockasgn (c \verilogeq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi \arcr
+    d'[i] = \left(\begin{array}{l}
+    r.\mathrm{u\_en} \blockasgn (c \verilogneq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi \arcr
     r.\mathrm{wr\_en} \blockasgn \texttt{1'b0}\msemi \arcr
     r.\mathrm{addr} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{addr}} \msemi \arcr
     \statereg \blockasgn n \msemi
   \end{array}\right) \arcr
-  t_2 = \left(\begin{array}{l}
+  d'[n] = \left(\begin{array}{l}
     r_{\mathrm{d}} \blockasgn \mternary{c}{e_{1}}{r.\mathrm{d\_out}} \msemi \arcr
     \statereg \blockasgn e_2 \msemi
   \end{array}\right)
     \end{array}}%
-  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d[i \mapsto t_1; n \mapsto t_2]\ i\ n}
+  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d'\ i\ n}
   \and
   \inferrule[Default Transl]{(\forall e_1\ e_2\ e_3\ldotp d[i] \neq (r.\mathrm{mem}\texttt{[}e_{1}\texttt{]} \blockasgn
     e_{2}\msemi \statereg \blockasgn e_3)) \\
@@ -957,13 +986,37 @@ translation of loads.)
   (\forall r_{\mathrm{d}}\ e_1\ e_2\ldotp d[i] \neq (r_{\mathrm{d}} \blockasgn
   r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}\msemi \statereg \blockasgn
   e_2))\\
-(\forall c\ r_{\mathrm{d}}\ e_1\ e_2\ldotp d[i] \neq (r_{\mathrm{d}} \blockasgn \mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{r_{\mathrm{d}}}\msemi \statereg \blockasgn e_2))}%
-  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d\ i\ n}
+(\forall c\ r_{\mathrm{d}}\ e_1\ e_2\ldotp d[i] \neq (r_{\mathrm{d}} \blockasgn
+\mternary{c}{r.\mathrm{mem}\texttt{[}e_{1}\texttt{]}}{r_{\mathrm{d}}}\msemi
+\statereg \blockasgn e_2))\\
+  d[i] = d'[i]}%
+  {\yhfunction{spec\_ram\_tr}\ \statereg\ r\ d\ d'\ i\ n}
 \end{mathpar}
 \caption[Memory transformation specification.]{Memory transformation
   specification.}%
 \label{sec:hg:memory-transformation-specification}
 \end{figure}
+
+This specification has to be shown to hold with respect to the top-level BRAM
+insertion transformation function $\yhfunction{tr\_ram\_ins}$.  We therefore
+need to show that the following lemma holds so that the correctness theorem can
+only reason about the cases in the specification.  This is especially useful in
+this transformation, because the specification states that each statement in the
+original \htl{} only has five cases it could be transformed into, and this is
+independent of any other statement in the data path.
+
+\begin{lemma}[BRAM insertion specification holds]
+  We need to show that given that the translation succeeded, that the
+  specification of the translation holds for every statement in the data path.
+
+  \begin{equation*}
+    \begin{aligned}
+      \forall h\ h'\ldotp&\quad\yhfunction{tr\_ram\_ins}(h) = (h') \land
+      h'.\mathit{ram} = \some{r} \implies\\
+      &\forall i\ldotp \exists n\ldotp\quad\yhfunction{spec\_ram\_tr}\ h.\mathit{st}\ r\ h.\mathit{datapath}\ h'.\mathit{datapath}\ i\ n
+    \end{aligned}
+  \end{equation*}
+\end{lemma}
 
 \subsubsection{From specification to simulation}
 
@@ -995,6 +1048,15 @@ the new registers introduced by the \gls{BRAM}.
   \begin{align*}
     \forall h,\ h',\ \mathcal{B} \not\in \texttt{Wrong}\ldotp\quad \yhfunction{tr\_ram\_ins}(h) = h' \land h \Downarrow \mathcal{B} \implies h' \Downarrow \mathcal{B}.
   \end{align*}
+
+  \begin{proof}[Proof sketch]
+    By using the specification defined earlier, one can handle the five
+    transformation cases independently.  The trickiest part of the proof is
+    dealing with the rearrangement of the order in which assignments are
+    performed, as well as the different times at which the memory is accessed.
+    This transformation requires a \enquote{plus} simulation diagram because the
+    loads require two cycles to complete.
+  \end{proof}
 \end{lemma}
 
 \section{Register Forward Substitution}%

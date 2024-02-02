@@ -429,20 +429,23 @@ int main() {
       \caption{Example C code passed to \vericert{}.}\label{fig:accumulator_c}
     \end{subfigure}\hfill%
     \begin{subfigure}[b]{0.48\linewidth}
-\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+%\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+\lstset{numbers=left,basicstyle=\footnotesize\ttfamily,numberstyle=\tiny,keepspaces=true,showspaces=true,xleftmargin=20pt}
+\begin{rtllisting}
 main() {
-    9:  x5 = 3
-    8:  int32[stack(0)] = x5
-    7:  x4 = 6
-    6:  int32[stack(4)] = x4
-    5:  x1 = 1
-    4:  x3 = stack(0) (int)
-    3:  x2 = int32[x3 + x1 * 4 + 0]
+    9:  r5 = 3
+    8:  int32[Stack(0)] = r5
+    7:  r4 = 6
+    6:  int32[Stack(4)] = r4
+    5:  r1 = 1
+    4:  r3 = Stack(0) (int)
+    3:  r2 = int32[r3 + r1 * 4 + 0]
         goto 1
-    2:  x2 = 0
-    1:  return x2
+    2:  r2 = 0
+    1:  return r2
 }
-\end{minted}
+\end{rtllisting}
+%\end{minted}
       \caption{\rtl{} produced by the \compcert{} front end without any optimisations.}\label{fig:accumulator_rtl}
     \end{subfigure}
     \caption{Translating a simple program from C to \rtl{}.}\label{fig:accumulator_c_rtl}
@@ -483,38 +486,46 @@ translated into hardware.
 \begin{figure}
   \centering
     \begin{subfigure}[b]{0.48\linewidth}
-\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+%\lstset{numbers=left{basicstyle=\small\ttfamily,keepspaces=true,showspaces=true}}
+%\begin{rtllisting}
+%\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+\lstset{numbers=left,basicstyle=\footnotesize\ttfamily,numberstyle=\tiny,keepspaces=true,showspaces=true,xleftmargin=20pt}
+\begin{rtllisting}
 main() {
   8: {
-    x5 = 3
-    int32[stack(0)] = x5
-    x4 = 6
-    int32[stack(4)] = x4
-    x1 = 1
-    x3 = stack(0) (int)
-    x2 = int32[x3 + x1 * 4 + 0]
+    r5 = 3
+    int32[Stack(0)] = r5
+    r4 = 6
+    int32[Stack(4)] = r4
+    r1 = 1
+    r3 = Stack(0) (int)
+    r2 = int32[r3 + r1 * 4 + 0]
     nop
-    return x2
+    return r2
   }
 }
-\end{minted}
+\end{rtllisting}
+%\end{minted}
       \caption{Code in \rtlblock{} after basic blocks have been generated.}\label{fig:accumulator_seq}
     \end{subfigure}\hfill%
     \begin{subfigure}[b]{0.48\linewidth}
-\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+%\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
+\lstset{numbers=left,basicstyle=\footnotesize\ttfamily,numberstyle=\tiny,keepspaces=true,showspaces=true,xleftmargin=20pt}
+\begin{rtllisting}
 main() {
   8: {
-    (x5 = 3)
-    (x4 = 6)
-    (x1 = 1)
-    (x3 = stack(0) (int))
+    (r5 = 3)
+    (r4 = 6)
+    (r1 = 1)
+    (r3 = Stack(0) (int))
   }
-  14: { (int32[stack(0)] = x5) }
-  15: { (int32[stack(4)] = x4) }
-  16: { (x2 = int32[x3 + x1 * 4 + 0]) }
-  17: { (return x2) }
+  14: {(int32[Stack(0)] = r5)}
+  15: {(int32[Stack(4)] = r4)}
+  16: {(r2 = int32[r3 + r1*4 + 0])}
+  17: {(return r2)}
 }
-\end{minted}
+\end{rtllisting}
+%\end{minted}
       \caption{\rtlsubpar{} code produced after scheduling and hyperblock destruction.}\label{fig:accumulator_par}
     \end{subfigure}
     \caption{Scheduling a simple program from \rtlblock{} to
@@ -737,7 +748,7 @@ stores take one cycle.
 \paragraph{Translating instructions}
 
 Most \rtl{} instructions correspond to hardware constructs.  For example, line 2
-which in \cref{fig:accumulator_rtl} shows a 32-bit register \texttt{x5} being
+which in \cref{fig:accumulator_rtl} shows a 32-bit register \rtlinline|r5| being
 initialised to 3, after which the control flow moves execution to line 3. This
 initialisation is also encoded in the Verilog generated from \htl{} at state 8
 in the always-block implementing the \gls{FSMD}, shown at line 43 in
@@ -761,16 +772,15 @@ Finally, we have to translate the \htl{} code into proper
 Verilog. % and prove that it behaves the same as the \rtl{} according to the Verilog semantics.
 The challenge here is to translate our FSMD representation into a Verilog AST.
 However, as all the instructions in \htl{} are already expressed as Verilog
-statements, only the top-level data-path and control logic maps need to be
-translated to valid Verilog case-statements.  We also require declarations for
-all the variables in the program, as well as declarations of the inputs and
-outputs to the module, so that the module can be used inside a larger hardware
-design.  In addition to translating the maps of Verilog statements, an
-always-block implementation the \gls{BRAM} interface also has to be created,
-which is only modelled abstractly at the \htl{} level.  \Cref{fig:accumulator_v}
-shows the final Verilog output that is generated for our example.  The
-\gls{BRAM} interface implementation is shown on lines 10--18 in the Verilog
-code.
+statements, only the top-level data path map needs to be translated to valid
+Verilog case-statements.  We also require declarations for all the variables in
+the program, as well as declarations of the inputs and outputs to the module, so
+that the module can be used inside a larger hardware design.  In addition to
+translating the maps of Verilog statements, an always-block implementation the
+\gls{BRAM} interface also has to be created, which is only modelled abstractly
+at the \htl{} level.  \Cref{fig:accumulator_v} shows the final Verilog output
+that is generated for our example.  The \gls{BRAM} interface implementation is
+shown on lines 10--18 in the Verilog code.
 
 Although this translation seems quite straight\-forward, proving that this
 translation is correct is complex.  All the implicit assumptions that were made
