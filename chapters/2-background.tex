@@ -764,16 +764,16 @@ that they can provide. One extension to \glspl{basic block} is
 of \glspl{basic block} to contiguous regions without arbitrary incoming
 control-flow edges, but with multiple control-flow edges out of the
 \gls{superblock}.  The main benefit of this is that due to the extra flexibility
-of the multiple exits, the \glspl{basic block} can contain arbitrary linear
-traces through regions of non-looping code.  The \enquote{hot path} of the loop
-body can be grouped into a single \gls{superblock} for example, which can then
-be heavily optimised.  Various other important paths through the program can
-then also be grouped and optimised together.  If different paths through the
-program reuse nodes from another path, as is shown with the pink and yellow
-nodes in \cref{fig:block-comparison:superblocks}, then these nodes will have to
-be duplicated so that they can be included in a different path.  As long as any
+of the multiple exits, \glspl{superblock} can contain arbitrary linear traces
+through regions of non-looping code.  The \enquote{hot path} of the loop body
+can be grouped into a single \gls{superblock} for example, which can then be
+heavily optimised.  Various other important paths through the program can then
+also be grouped and optimised together.  If different paths through the program
+reuse nodes from another path, as is shown with the pink and yellow nodes in
+\cref{fig:block-comparison:superblocks}, then these nodes will have to be
+duplicated so that they can be included in a different path.  As long as any
 optimisation takes into account the arbitrary exits that are possible in
-\glspl{superblock}, the nodes within a \glspl{superblock} can be optimised
+\glspl{superblock}, the nodes within a \gls{superblock} can be optimised
 independently from the rest of the code.
 
 Unlike \glspl{basic block}, \glspl{superblock} are not generally used to
@@ -1353,9 +1353,9 @@ higher level hardware description languages that are synthesised to a lower
 level netlist representation of the hardware design.
 
 The first mechanisation of a scheduling algorithm for the translation of a
-higher-level specification to a hardware design is presented by
-\cite{anderson94_vsa}.  This formalisation is written in HOL, and describes a
-scheduler that is proven to obey control and data dependencies, and implements
+higher level specification to a hardware design is presented by
+\textcite{anderson94_vsa}.  This formalisation is written in HOL, and describes
+a scheduler that is proven to obey control and data dependencies, and implements
 an ASAP schedule.
 
 \textcite{perna12_mechan_wire_wise_verif_handel_c_synth} developed a
@@ -1384,7 +1384,7 @@ the final semantic equivalence of the translation was not mechanised.
 Next, Fe-Si~\cite{braibant13_formal_verif_hardw_synth}, Kami~\cite{choi17_kami}
 and Kôika~\cite[]{bourgeat20_essen_blues} are all formalisations of derivatives
 of Bluespec, which popularised rule-based hardware design whereby rules can be
-written and reasoned about independently, but could be scheduled in parallel.
+written and reasoned about independently, but can be scheduled in parallel.
 Fe-Si focuses on formalising the translation of a Bluespec derivative to
 Verilog.  Kami, on the other hand, focuses on the modular verification of
 hardware designs written in the rule-based hardware design language.  Finally,

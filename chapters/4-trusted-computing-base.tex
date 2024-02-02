@@ -178,7 +178,8 @@ $\Sigma = (\Gamma, \Delta)$.  Blocking and Nonblocking assignment can therefore
 be expressed as follows:
 %
 \begin{equation*}
-  \inferrule[Blocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ = } e) \downarrow_{\text{stmnt}} (\Gamma[n \mapsto v], \Delta)}\qquad\inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d\ \yhkeyword{ <= } e) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}
+  \inferrule[Blocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e)
+    \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d \mathrel{\yhkeyword{=}} e\yhkeyword{;}) \downarrow_{\text{stmnt}} (\Gamma[n \mapsto v], \Delta)}\qquad\inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d \mathrel{\yhkeyword{<=}} e\yhkeyword{;}) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}
 \end{equation*}
 %
 where assuming that $\downarrow_{\text{expr}}$ evaluates an expression $e$ to a

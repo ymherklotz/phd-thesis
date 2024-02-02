@@ -741,7 +741,7 @@ which in \cref{fig:accumulator_rtl} shows a 32-bit register \texttt{x5} being
 initialised to 3, after which the control flow moves execution to line 3. This
 initialisation is also encoded in the Verilog generated from \htl{} at state 8
 in the always-block implementing the \gls{FSMD}, shown at line 43 in
-\cref{fig:accumulator_v} with the assignment \texttt{x10 <= 32'd3}.  Simple
+\cref{fig:accumulator_v} with the assignment \texttt{reg\_10 <= 32'd3}.  Simple
 operator instructions are translated in a similar way.  For example, the add
 instruction is just translated to the built-in add operator, similarly for the
 multiply operator.  All 32-bit instructions can be translated in this way, but
