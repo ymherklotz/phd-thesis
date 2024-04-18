@@ -1,0 +1,45 @@
+** Overview of the thesis
+
+*** Introduction
+
+**** Why did you pick this research field in the first place?
+
+High-level synthesis was becoming increasingly popular and I was familiar with
+it.  In addition to that, high-level synthesis.
+
+** Questions
+
+*** General
+
+- How and why you chose this research question
+- How your ideas have developed
+- What areas of your research you may have enjoyed the most
+- Whether you changed as a researcher during the process
+
+*** Research context
+
+- Who may have influenced you and how
+- What areas may have influenced you less and why
+- What developments have occurred in your field since you began your thesis and how this may have changed the course of your work
+- Any areas of your research field that you have chosen not to focus on
+
+*** Your methodology
+
+- What research method you used and how you developed it
+- The scope and limits of your data collection
+- Whether there were any problems with the data collection process
+- The ethical issues you faced and how these were dealt with
+
+*** Analysis
+
+- What method of analysis you used and the problems you may have encountered
+- Whether the data you collected answered your research question
+
+*** Your outcomes and findings
+
+- What your findings were
+- How you interpret your findings
+- What you think makes your research original
+- Whether you have had any issues with your findings
+- Ways in which you would like to develop on your research
+- How others might use or develop your research
