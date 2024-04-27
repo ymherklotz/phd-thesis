@@ -189,73 +189,64 @@ case-statements.
 
 \begin{figure}
   \centering
-  \begin{subfigure}{0.55\linewidth}
+  \begin{subfigure}{0.4\linewidth}
 \begin{minted}[linenos,xleftmargin=20pt,fontsize=\footnotesize]{verilog}
-module main(input rst, input y, input clk,
-            output reg z);
-  reg tmp, state;
+module counter(clk, rst, out);
+  input clk, rst;
+  output logic out = 1'b0;
+  logic [1:0] state = 2'b0;
+
   always @(posedge clk)
-    case (state)
-      1'b0: tmp <= y;
-      1'b1: begin tmp <= 1'b0; z <= tmp; end
-    endcase
-  always @(posedge clk)
-    if (rst) state <= 1'b0;
-    else case (state)
-      1'b0: if (y) state <= 1'b1;
-            else state <= 1'b0;
-      1'b1: state <= 1'b0;
-    endcase
+    if (rst == 1'b1) state <= 2'b0;
+    else
+      case (state)
+        2'd0: begin
+          out <= 1'b0;
+          state <= 2'd1;
+        end
+        2'd1: state <= 2'd2;
+        2'd2: begin
+          out <= 1'b1;
+          state <= 2'd0;
+        end
+      endcase
 endmodule
 \end{minted}
   \end{subfigure}\hfill%
-  \begin{subfigure}{0.45\linewidth}
+  \begin{subfigure}{0.6\linewidth}
     \centering
-    \begin{tikzpicture}
-      \node[draw,circle,inner sep=6pt] (s0) at (0,0) {$S_{\mathit{start}} / \texttt{x}$};
-      \node[draw,circle,inner sep=8pt] (s1) at (1.5,-3) {$S_{1} / \texttt{1}$};
-      \node[draw,circle,inner sep=8pt] (s2) at (3,0) {$S_{0} / \texttt{1}$};
-      \node (s2s) at ($(s2.west) + (-0.3,1)$) {\texttt{00}};
-      \node (s2ss) at ($(s2.east) + (0.3,1)$) {\texttt{1x}};
-      \draw[-{Latex[length=2mm,width=1.4mm]}] ($(s0.west) + (-0.3,1)$) to [out=0,in=120] (s0);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s0)
-           to [out=-90,in=150] node[midway,left] {\texttt{01}} (s1);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s1)
-      to [out=80,in=220] node[midway,left] {\texttt{xx}} (s2);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
-      to [out=260,in=50] node[midway,right] {\texttt{01}} (s1);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
-      to [out=120,in=40] ($(s2.west) + (-0.3,0.7)$) to [out=220,in=170] (s2);
-      \draw[-{Latex[length=2mm,width=1.4mm]}] (s2)
-      to [out=60,in=130] ($(s2.east) + (0.3,0.7)$) to [out=310,in=10] (s2);
+    \begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,>=Stealth,semithick]
+      \node[state with output,initial] (S0) {$S_0$ \nodepart{lower} $0$};
+      \node[state with output,below right=of S0] (S1) {$S_1$ \nodepart{lower} $0$};
+      \node[state with output,above right=of S1] (S2) {$S_2$ \nodepart{lower} $1$};
+      \path[->,every node/.style={font=\footnotesize}]
+                (S0) edge [bend left] node [below left] {$0$} (S1)
+                (S1) edge [bend left] node [below left] {$1$} (S0)
+                (S0) edge [loop above] node [above] {$1$} (S0)
+                (S1) edge node [below right] {$0$} (S2)
+                (S2) edge [bend right] (S0)
+                (S1) edge (S2);
     \end{tikzpicture}
   \end{subfigure}
 %  \alt{Verilog code of a state machine, and its equivalent state machine diagram.}
   \caption[A simple Verilog implementation of a finite-state machine.]{A simple
-    state machine implemented in Verilog, with its diagrammatic representation
-    on the right. The \texttt{x} stands for \enquote{don't care} and each
-    transition is labelled with the values of the inputs \texttt{rst} and
-    \texttt{y} that trigger the transition.  The output that will be produced is
-    shown in each state.}%
+    pulse generator implemented using a state machine in Verilog, with its
+    diagrammatic representation on the right.  The only input to the state
+    machine is the reset \texttt{rst}, and the output in each state is represented
+    by the lower half of the nodes in the finite-state machine diagram.}%
   \label{fig:tutorial:state_machine}
 \end{figure}
 
 
 A simple state machine can be implemented as shown in
-\cref{fig:tutorial:state_machine}.  At every positive edge of the clock
-(\texttt{clk}), both of the always-blocks will trigger simultaneously.  The
-first always-block controls the values in the register \texttt{tmp} and the
-output \texttt{z}, while the second always-block controls the next state the
-state machine should go to.  When the \texttt{state} is 0, \texttt{tmp} will be
-assigned to the input \texttt{y} using nonblocking assignment, denoted by
-\texttt{<=}.  Nonblocking assignment assigns registers in parallel at the end of
-the clock cycle, rather than sequentially throughout the always-block. In the
-second always-block, the input \texttt{y} will be checked, and if it is high it
-will move on to the next state, otherwise it will stay in the current state.
-When \texttt{state} is 1, the first always-block will reset the value of
-\texttt{tmp} and then set \texttt{z} to the original value of \texttt{tmp},
-since nonblocking assignment does not change its value until the end of the
-clock cycle.  Finally, the last always-block will set the state to 0 again.
+\cref{fig:tutorial:state_machine}.  This state machine implements a pulse
+generator that generates a pulse every three clock cycles.  At every positive
+edge of the clock (\texttt{clk}), the always-blocks will trigger.
+First, the \texttt{rst} input is checked, in which case the \texttt{state} variable is set back to \texttt{2'b0}.
+Next, the state machine is implemented by checking the current value of \texttt{state} and defining the next \texttt{state}, including setting a value for the output \texttt{out}.
+No explicit value is set for the output in state \texttt{2'd1}, however, as \texttt{out} is a register, it will keep the same value from the last state, which in this case is \texttt{1'b0}.
+Assignments are performed using nonblocking assignment (\texttt{<=}), which assigns registers simultaneously at the end of each clock cycle.
+This state machine has the same general structure as the state machines discussed in this dissertation.
 
 \section{High-Level Synthesis}%
 \label{sec:bg:hls}
@@ -277,24 +268,25 @@ following~\cite{coussy09_introd_to_high_level_synth,canis13_l}:
   in the input language to the \gls{HLS} tool is compiled into an intermediate
   language that is more suitable to be transformed by optimisations.  The input
   language for most traditional \gls{HLS} tools is a restricted version of C or
-  C++, however, \gls{HLS} tools such as Google XLS~\cite{google23_xls} can use a
+  C++, however, \gls{HLS} tools such as Google XLS~\cite{google24_gx} can use a
   \gls{DSL} based on communicating sequential
   processes~\cite{hoare78_commun_sequen_proces} as an input specification as
   well.  There are also \gls{HLS} tools based on
   OpenCL~\cite{intel20_sdk_openc_applic} or Matlab through the Simulink block
-  diagram language~\cite{ou05_msf}.  This specification is then turned into some
-  intermediate language that is easier to manipulate through optimisations and
-  transformations to hardware.  This includes intermediate languages such as the
-  LLVM \gls{IR}~\cite{lattner04_llvm}, MLIR~\cite{lattner21_mlir} or a custom
-  representation of the code.  The structure of these intermediate languages is
-  further discussed in \cref{sec:bg:intermediate-language}.
+  diagram language~\cite{constantinides01_mwp,ou05_msf}.  This specification is
+  then turned into some intermediate language that is easier to manipulate
+  through optimisations and transformations to hardware.  This includes
+  intermediate languages such as the LLVM \gls{IR}~\cite{lattner04_llvm},
+  MLIR~\cite{lattner21_mlir} or a custom representation of the code.  The
+  structure of these intermediate languages is further discussed in
+  \cref{sec:bg:intermediate-language}.
 
 \item[Hardware resource allocation] Depending on if the hardware target is a
   specific \gls{FPGA} or an \gls{ASIC} built on a specific technology library,
   the \gls{HLS} tool will have to allocate resources differently.  For example,
   on \glspl{FPGA} there are only a limited number of \glspl{LUT}, \glspl{DSP}
-  and \gls{BRAM} available.  The \gls{HLS} tool therefore often decides ahead of
-  time which resources the program will need based on the operations that are
+  and \glspl{BRAM} available.  The \gls{HLS} tool therefore often decides ahead
+  of time which resources the program will need based on the operations that are
   present in the program.  A few resources are often assumed to be infinite to
   simplify the resource allocation, examples being registers, which are normally
   cheap especially on \glspl{FPGA}, or simple logic circuits that are cheap
@@ -341,7 +333,7 @@ following~\cite{coussy09_introd_to_high_level_synth,canis13_l}:
 There are many examples of existing high-level synthesis tools, the most popular
 ones being Bambu HLS~\cite{pilato13_bambu}, LegUp~\cite{canis13_l}, Vitis
 HLS~\cite{amd23_vitis_high_synth}, Catapult
-C~\cite{mentor20_catap_high_level_synth}, Google XLS~\cite{google23_xls} and
+C~\cite{mentor20_catap_high_level_synth}, Google XLS~\cite{google24_gx} and
 Intel's OpenCL SDK~\cite{intel20_sdk_openc_applic}.  These HLS tools all accept
 general programming languages such as C/C++ or OpenCL.
 
@@ -357,7 +349,9 @@ provides a high-level hardware specification language that can be used to define
 concurrently running rules.  These are automatically scheduled by the Bluespec
 synthesis tool and converted to a traditional synthesisable \gls{HDL}.
 Handel-C~\cite{aubury96_handel_c_languag_refer_guide,bowen98_hclrm} is in a
-similar position, being a C-like language for hardware development.  It supports
+similar position, being a C-like language for hardware development.
+Handel-C and its translation to hardware is based on occam~\cite{page91_compil_occam}.
+It supports
 many C features such as assignments, if-statements, loops, pointers and
 functions.  In addition to these constructs, Handel-C also supports explicit
 concurrency as well as sequential or parallel assignments, similar to blocking
@@ -542,7 +536,7 @@ so lists are likely only the final representation of the code.
 
 \subsubsection{\Glsfmtlongpl{CFG}}
 
-Instead, a \gls{CFG} representation of the code is a graph instead of a list,
+A \gls{CFG} representation of the code is a graph instead of a list,
 and allows any instruction to be connected to any other instruction explicitly
 by a control-flow edge.  This signifies that after executing an instruction, the
 execution will then move to one of the successors of the current node.  This
@@ -566,10 +560,10 @@ flow as netlists can be viewed as data flow graphs, and even \glspl{HDL} can be
 modelled by synchronous data flow programming
 languages~\cite{halbwachs91_sdfpll}.  One could therefore represent the code as
 a pure \gls{DFG} to help with data-flow optimisations as well as the translation
-to the final hardware.  An example of the \gls{CFG} shown in
-\cref{fig:data-structure-comparison:cfg} being represented as a \gls{DFG} is
-shown in \cref{fig:data-structure-comparison:dfg}, where arrows now represent
-data dependencies between nodes instead of control-flow dependencies.
+to the final hardware.  An example of a \gls{DFG} that is be compatible with
+the \gls{CFG} shown in \cref{fig:data-structure-comparison:cfg} is represented
+in \cref{fig:data-structure-comparison:dfg}, where arrows now represent data
+dependencies between nodes instead of control-flow dependencies.
 
 As can be observed in the diagram, the edges between the nodes are very
 different to the edges in the \gls{CFG}.  Nodes in the \gls{CFG} may not have
@@ -578,7 +572,7 @@ independent, one still needs to define an order between them.  This is necessary
 due to the sequential nature of the \gls{CFG}, instead, the \gls{DFG} only
 represents the necessary edges between the nodes.  Additionally, we have added
 two additional nodes to handle the back edges of the loop, which are also data
-dependencies.  These nodes are represented by a trapeze in the \gls{DFG} and act
+dependencies.  These nodes are represented by a trapezium in the \gls{DFG} and act
 as loop headers to control the loop iterations when interpreting the graph as
 pure data flow.  These additional nodes are needed because otherwise the data
 dependencies due to the back edges of the loop would conflict with the data
@@ -603,9 +597,9 @@ arrows are control dependencies between \glspl{DFG}, and the solid lines are the
 data dependencies within the \gls{DFG}.  In this way, loops can be supported
 without having to introduce special nodes, leaving the loop back edge as a
 control dependency instead. \Glspl{DFG} can represent the sections of code
-without arbitrary incoming control-flow edges using data dependencies, thereby
-being more flexible in how instructions are rearranged without the downside of
-having to introduce additional nodes.
+without arbitrary external incoming control-flow edges using data
+dependencies, thereby being more flexible in how instructions are rearranged
+without the downside of having to introduce additional nodes.
 
 \subsection{Grouping instructions into blocks}%
 \label{sec:bg:intermediate-language}
@@ -736,23 +730,23 @@ can perform.
 \subsubsection{Basic blocks}
 
 To build a bit more structure in the \gls{CFG}, it is useful to group
-non-branching instructions without any incoming edges together forming
+non-branching instructions without any external incoming edges together forming
 \glspl{basic block}.  An example of the \gls{CFG} segmented into \glspl{basic
   block} is shown in \cref{fig:block-comparison:basicblocks}.  Instructions
 within a \gls{basic block} can then be represented as a list of instructions, as
 there cannot be any branches, and these lists of instructions can then be safely
-manipulated because there is a guarantee that there is no incoming control flow
-in the middle of a \gls{basic block}.  For example, as long as two instructions
-in a \gls{basic block} are independent, they can be safely reordered.  This
-would have otherwise not been a case, because incoming control flow may mean
-that reordering the instructions now leads to the unintended execution of an
-instruction.  \Glspl{basic block} are used by \glspl{IR} in real compilers such
-as Gimple in GCC or LLVM IR in clang as the default grouping of sequential
-instructions.  They are a useful representation for various optimisations and
-transformations, because the \gls{CFG} can be viewed as being coarser grained
-when manipulating control flow, because one does not have to inspect the control
-flow within basic blocks, and provides useful assumptions that can be made when
-performing intra-block transformations.
+manipulated because there is a guarantee that there is no external incoming
+control flow in the middle of a \gls{basic block}.  For example, as long as two
+instructions in a \gls{basic block} are independent, they can be safely
+reordered.  This would have otherwise not been possible, because external incoming
+control flow may mean that reordering the instructions now leads to the
+unintended execution of an instruction.  \Glspl{basic block} are used by
+\glspl{IR} in real compilers such as Gimple in GCC or LLVM IR in clang as the
+default grouping of sequential instructions.  They are a useful representation
+for various optimisations and transformations, because the \gls{CFG} can be
+viewed as being coarser grained when manipulating control flow, because one does
+not have to inspect the control flow within basic blocks, and provides useful
+assumptions that can be made when performing intra-block transformations.
 
 \subsubsection{Superblocks}
 
@@ -788,17 +782,18 @@ joining control flow within a single block.  For example, the block present in
 the \gls{CDFG} shown in \cref{fig:data-structure-comparison:cdfg} could not be
 represented by a \gls{superblock}.  \Glspl{hyperblock} are defined as
 \glspl{basic block} of \glspl{predicated instruction} with arbitrary outgoing
-edges~\cite[]{mahlke92_effec_compil_suppor_predic_execut_using_hyper}.  They can
-represent arbitrary branching and joining control flow without arbitrary
-incoming control-flow edges, and are therefore an extension to
-\glspl{superblock}.  This means that they could represent the \gls{CDFG} shown
-in \cref{fig:data-structure-comparison:cdfg}, and an example of a hyperblock is
-shown in \cref{fig:block-comparison:hyperblocks}, where in practice code within
-the \gls{hyperblock} has been linearised using predicated instructions, instead
-of being represented as a graph.  This leads to possibly more complex control
-flow than in both of the previous cases, however, it can be reasoned with using
-a \gls{SAT} or \gls{SMT} solver as the path information is part of the
-predicates.
+edges leading to the next
+hyperblock~\cite[]{mahlke92_effec_compil_suppor_predic_execut_using_hyper}.
+They can represent arbitrary branching and joining control flow without
+arbitrary external incoming control-flow edges, and are therefore an extension
+to \glspl{superblock}.  This means that they could represent the \gls{CDFG}
+shown in \cref{fig:data-structure-comparison:cdfg}, and an example of a
+hyperblock is shown in \cref{fig:block-comparison:hyperblocks}, where in
+practice code within the \gls{hyperblock} has been linearised using predicated
+instructions, instead of being represented as a graph.  This leads to possibly
+more complex control flow than in both of the previous cases, however, it can be
+reasoned with using a \gls{SAT} or \gls{SMT} solver as the path information is
+part of the predicates.
 
 Superblocks may require many blocks to be duplicated to group all the wanted
 instructions together.  However, with predicated instructions, hyperblocks can
@@ -814,6 +809,11 @@ their A64 ARMv8 ISA, because \textquote[{\textcite[sec~3.2,
 intermediate language for \gls{HLS}~\cite{budiu02_compil_applic_specif_hardw,
   callahan98_instr_level_paral_recon_comput}, as the flexibility of targeting
 hardware directly means that predication can be implemented efficiently.
+
+On the other hand, \glspl{GPU} often have sophisticated support for predication so that the same sequence of instructions (also called warps) can be executed on multiple different threads on the \gls{GPU}, and so that diverging control-flow can still be handled by a single, large warp.
+This can be achieved by designing predicates based on the thread identifier~\cite{narasiman11_igplw} and instructions operating on such predicates can be found in the SPIR-V specification~\cite[p.~172]{kessenich18_svs}.
+Trace scheduling methods that are aware of warps produced by the \gls{GPU} have therefore been developed, however, if-conversion is only performed after scheduling instead of using a scheduling algorithm that is aware of predication.
+\textquote[{\textcite{jablin14_watsg}}]{Warp-Aware Trace Scheduling could benefit from trace-enlarging techniques, like Superblock scheduling's tail duplication and Hyperblock scheduling's predication}.
 
 \section{Scheduling}%
 \label{sec:bg:scheduling}
@@ -844,7 +844,9 @@ example, by using static analysis on each \gls{hyperblock} to gather all data
 dependencies and convert them into \glspl{DFG}.
 
 Scheduling can have different optimisation goals for the design in terms of
-latency and resource usage.  In the simplest case, each operation in the
+latency and resource usage.
+We will assume that scheduling is performed independently on blocks of code without back edges, i.e. on the \gls{DFG} blocks in a \gls{CDFG} like the one shown in \cref{fig:data-structure-comparison:cdfg}.
+Within these blocks, each operation in the
 \gls{DFG} can be scheduled as soon as its predecessor in the graph has been
 scheduled, resulting in an \gls{ASAP} schedule, where the start time of each
 node corresponds to the longest path from the start of the \gls{DFG} to that
@@ -856,11 +858,14 @@ minimise resources while also minimising latency.
 
 A more advanced scheduler can either optimise for resource usage based on a
 maximum latency or for latency based on a maximum amount of resources.  In
-general this is an NP-hard problem, however, \emph{\gls{list scheduling}}
+general this is an NP-hard problem, however, \emph{\gls{list scheduling}}~\cite[][p.~257]{baker19_princ}
 provides a heuristic for this problem by ordering nodes that can be scheduled
 according to a priority function and picking a subset of these nodes to actually
 be scheduled as long as the resources used by the subset is not greater than the
 available resources.
+Another alternative scheduling algorithm initially used to perform synthesis of behavioural hardware description languages is called force-directed scheduling~\cite{paulin89_fdsbsa}, which is tasked to minimise the number of functional units, memory and buses by balancing operations associated with these resources.
+The intuition is that this balancing creates a schedule with high utilisation and therefore low resource usage, without sacrificing on overall execution time of the design.
+It works by iteratively calculating forces associated with each node and scheduling the node with the lowest force.
 
 \subsubsection{System of difference constraints scheduling}
 
@@ -882,10 +887,10 @@ terms of scheduling variables.  For example, if one has a data dependency from
 operation $a$ to operation $b$, the following constraint is added to the
 \gls{SDC}.
 
-\begin{equation*}
+\begin{equation}
   \gls{scheduling variable}_{\mathrm{fin}}(a) - \gls{scheduling
     variable}_{\mathrm{init}}(b) \leq 0
-\end{equation*}
+\end{equation}
 
 Other types of constraints that are normally added to get a valid schedule are:
 
@@ -920,9 +925,9 @@ Solving the \gls{SDC} with different optimisation functions produces different
 kinds of schedules.  For example, optimising the following function will produce
 an \gls{ALAP} schedule, as the start time of every operation is maximised.
 
-\begin{equation*}
+\begin{equation}
   \mathrm{max} \sum_{v \in V_{\mathrm{op}}} \gls{scheduling variable}_{\mathrm{init}}(v)
-\end{equation*}
+\end{equation}
 
 Modern \gls{HLS} tools often use a variation of \gls{SDC} scheduling.  For
 example, Vitis HLS and LegUp use an extension of \gls{SDC}
@@ -981,13 +986,12 @@ verification tools.
 \label{sec:bg:automatic-theorem-provers}
 
 Automatic theorem provers are tools that can reason about logic automatically,
-and answer whether a theorem about some variables is true or whether there
+and answer whether a theorem is true or whether there
 exists a counter example.  Most automatic theorem provers are implemented around
 \gls{SAT} or \gls{SMT} solvers, which can be characterised as deciding if a
-formula is satisfiable or not by finding an assignment that satisfies the
+formula is satisfiable (or not) by finding an assignment that satisfies the
 formula.  These solvers can also be used to used to prove that a theorem holds
-by showing that the negation of the theorem is unsatisfiable, in which case
-there is no assignment that satisfies the negation of the theorem, which implies
+by showing that the negation of the theorem is unsatisfiable, which implies
 that the theorem must hold for all assignments.  In \gls{SAT}, the formula is
 purely boolean, but in \gls{SMT} the boolean formula may include arbitrary
 theories that extend the logic, for example by including linear integer
@@ -1012,9 +1016,9 @@ assertions to SMT-LIB2~\cite{barrett17_sls}, a standard input language to
 unsatisfiable, this implies that the properties in the hardware will always
 hold.  Commercial verification tools like Cadence Conformal~\cite[]{cadence23_c}
 and Synopsys VC Formal~\cite[]{synopsys23_v} use similar techniques, but provide
-use more complex solver orchestration to enable larger scale automatic
-verification of formal properties~\cite{koelbl09_sr}.  More details about
-current hardware verification methodologies are given in
+more complex solver orchestration to enable larger scale automatic verification
+of formal properties~\cite{koelbl09_sr}.  More details about current hardware
+verification methodologies are given in
 \cref{sec:bg:unmechanised-verification-of-hls}, especially as they apply to
 \gls{HLS}.
 
@@ -1153,7 +1157,7 @@ descriptions into low-level netlists.  This synthesis back end can seamlessly
 integrate with the proof-producing HOL4 to Verilog translator as it is based on
 the same Verilog semantics, and therefore creates verified translation from HOL4
 circuit descriptions to synthesised Verilog netlists.
-\citeauthor{perna12_mechan_wire_wise_verif_handel_c_synth} designed a formally
+\Citeauthor{perna12_mechan_wire_wise_verif_handel_c_synth} designed a formally
 verified translator from a deep embedding of Handel-C into a deep embedding of a
 circuit~\cite{perna12_mechan_wire_wise_verif_handel_c_synth,perna11_correc_hardw_synth}.
 Finally, \textcite{ellis08_csicgfu} used Isabelle to implement and reason about
@@ -1206,7 +1210,7 @@ implemented in hardware and the correctness could still be shown.
     \node at (-3,6.1) {\color{colorusabletool}\strut Usable tool};
     \node at (2.1,6.1) {\color{colorhighlevel}\strut High-level software input};
   \end{tikzpicture}
-  \caption{Summary of related work}\label{fig:bg:related_euler}
+  \caption{Summary of related work.}\label{fig:bg:related_euler}
 \end{figure}
 
 \subsection{Unmechanised verification of HLS}%
@@ -1315,29 +1319,22 @@ the input.
 There has also been work on proving the translation from occam to
 gates~\cite{page91_compil_occam} correctly using algebraic
 proofs~\cite{jifeng93_towar}.  This translation resembles dynamic scheduling as
-tokens are used to start the next operations.  To take advantage of the parallel
-nature of hardware, occam has explicit concurrency using the PAR constructs with
-channels to share state.  Handel-C, a version of occam with many more features
-such as memory and pointers, and is described further in
-\cref{sec:bg:mechanised-compiler-proofs} as there is mechanised translation from
-Handel-C into a netlist.  One aspect to note about these translations from occam
-and Handel-C into netlists is that they are essentially timed languages in SEQ
-blocks, because every assignment takes one cycle to complete and expressions are
-assumed to finish evaluation within that cycle.  No automatic scheduling is
-performed by the translation, and the designer has full control over the design
-and can manually pipeline and parallelise it.
+tokens are used to start the next operations.  A mechanised translation from
+Handel-C into a netlist is described further in
+\cref{sec:bg:mechanised-compiler-proofs}.
 
 \subsection{Mechanised compiler proofs in high-level hardware design}%
 \label{sec:bg:mechanised-compiler-proofs}
 
 Even though a proof for the correctness of an algorithm might exist, this does
 not guarantee that the algorithm itself behaves in the same way as the assumed
-algorithm in the proof.  The implementation of the algorithm is separate from
+algorithm in the proof.  The specification of the algorithm is separate from
 the actual implementation, meaning there could be various implementation bugs in
 the algorithm that cause it to behave incorrectly.  C compilers are a good
-example of this, where many optimisations performed by the compilers have been
+example of this, where a few optimisations performed by the compilers have been
 proven correct, however these proofs are not linked directly to the actual
 implementations of these algorithms in GCC or Clang.
+Additionally, with the exception of a few proofs such as the proof of correctness of lazy code motion~\cite{knoop94_ocm}, most proofs reference simpler versions of optimisations than the ones that are eventually implemented in the compiler.
 \textcite{yang11_findin_under_bugs_c_compil} found more than 300 bugs in GCC and
 Clang, many of them appearing in the optimisation phases of the compiler.  One
 way to link the proofs to the actual implementations in these compilers is to
@@ -1412,7 +1409,7 @@ verified \gls{HLS} using Isabelle.  The main goal of the thesis is to provide a
 framework to prove hardware/software co-design compilers correct, where part of
 the design is specified in software and other parts of the design are translated
 to equivalent hardware to be accelerated.  The dissertation describes the
-semantics of an \gls{SSA} based software \gls{IR} which supports partitioning of
+semantics of a \gls{SSA} based software \gls{IR} which supports partitioning of
 code into hardware and software parts, as well as a custom netlist format which
 is used to describe the hardware parts and is the final target of the
 hardware/software compiler.  The dissertation then describes what the
@@ -1454,7 +1451,7 @@ large semantic gap between the semantics of \gls{Asm} and the semantics of
 \gls{Clight}.  The first three intermediate languages (\gls{CSminor},
 \gls{Cminor}, \gls{CminorSel}) are used to transform \gls{Clight}, a
 deterministic subset of C, into a more assembly-like language called \gls{RTL}.
-This language consist of a \gls{CFG} of instructions, and is therefore well
+This language consists of a \gls{CFG} of instructions, and is therefore well
 suited for various compiler optimisations such as constant propagation,
 dead-code elimination or function inlining.  After \gls{RTL}, each intermediate
 language is used to get closer to the assembly language of the architecture,
@@ -1610,18 +1607,18 @@ The correctness theorem can be stated as a simulation between the semantics of
 the source program and the semantics of the compiled program.  The final
 correctness theorem in CompCert is a backward simulation between the source
 program semantics and compiled program semantics, stated as follows, where we
-write $\ccok{x}$ for the presence of value $x$ in an option type.
+write $\ccok{x}$ for the presence of value $x$ in an option type and we write $A \Downarrow \mathcal{B}$ for an execution of $A$ leading to an observable behaviour $\mathcal{B}$.
 
 \begin{theorem}[Semantic preservation]\label{thm:semantic-preservation}
   If a successfully compiled assembly program $C$ has a behaviour $\mathcal{B}$ which does
   not go wrong, then there must exist behaviour $\mathcal{B}'$ of source program $S$ which
   may be less defined than behaviour $\mathcal{B}$, which is expressed by $\mathcal{B}' \precsim \mathcal{B}$.
 
-  {\normalfont\begin{equation*}
+  {\normalfont\begin{equation}
       \yhfunction{compile\_c}\ S = \ccok{C}
       \implies (\forall \mathcal{B}\ldotp C \Downarrow \mathcal{B} \implies (\exists \mathcal{B}'\ldotp S
       \Downarrow \mathcal{B}' \land \mathcal{B}' \precsim \mathcal{B}))
-  \end{equation*}}
+  \end{equation}}
 \end{theorem}
 
 A direct corollary of this is the following semantic preservation, where one
@@ -1634,10 +1631,10 @@ must be a valid behaviour for the source program.
   source program is \emph{safe}, meaning it is free of undefined behaviour, then
   $\mathcal{B}$ must be a behaviour of source program $S$.
 
-  {\normalfont\begin{equation*} \yhfunction{compile\_c}\ S = \ccok{C}
+  {\normalfont\begin{equation} \yhfunction{compile\_c}\ S = \ccok{C}
       \land \mathit{safe}(S) \implies (\forall \mathcal{B}\ldotp C \Downarrow \mathcal{B} \implies S
       \Downarrow \mathcal{B})
-  \end{equation*}}
+  \end{equation}}
 \end{corollary}
 
 This theorem correctly conveys the property that the compilation of the source
@@ -1708,8 +1705,8 @@ source program from two matching states $s_1$ and $c_1$.  This is shown in
       \node[below=of s1] (s2) {$s_2$};
       \node[right=of s1] (t1) {$c_1$};
       \path (s2) -| node (t2) {$c_2$} (t1);
-      \draw[imparrow] (s1) -- node[left] {$t$} node[below right,font=\scriptsize] {$+$} (s2);
-      \draw[imparrow,dashed] (t1) -- node[right] {$t$} (t2);
+      \draw[imparrow] (s1) -- (s2);
+      \draw[imparrow,dashed] (t1) -- (t2);
       \draw (s1) -- node[above] {$\approx$} (t1);
     \end{tikzpicture}
     \caption{Progress property needed for the backward simulation.}%
@@ -1742,7 +1739,7 @@ deterministic, then the forward simulation implies the backward simulation.
 In addition, forward simulations as well as backward simulations can be
 composed.  This means that one can prove a forward simulation for each
 transformation shown in \cref{fig:bg:compcert-languages} from \gls{Clight} to
-\gls{Asm} which implies a forward simulation from Clight to \gls{Asm}.  After
+\gls{Asm} which implies a forward simulation from \gls{Clight} to \gls{Asm}.  After
 showing that the semantics of \gls{Asm} is deterministic, one can then prove a
 backward simulation from \gls{Asm} to \gls{Clight}.
 
@@ -1810,7 +1807,7 @@ implementation of superblock scheduling and finally an implementation of trace
 scheduling.  These scheduling methods all implement validators based on symbolic
 execution of the code.
 
-Symbolic expressions are expressions in terms of initial values of registers at
+Symbolic expressions are formulated in terms of initial values of registers (denoted by $\cdot^0$) at
 the start of the block.  For example, \cref{fig:bg:symbolic-evaluation} shows an
 example of symbolic execution, where the result is a map from \emph{resources},
 which might be memory or registers, to symbolic expressions, which are
@@ -1823,7 +1820,7 @@ The symbolic state can then be used to validate code transformations.  If the
 code transformation only reorders instructions, then the correctness of the
 transformation only relies on data dependencies, which is naturally encoded in
 the symbolic state.  As long as one can show that the symbolic expressions of
-two registers are structurally equivalent, then this means that the reordering
+two registers are syntactically equal, then this means that the reordering
 of instructions did not violate any data dependencies, and this should imply
 that the behaviours of the original block and the reordered block are identical
 as well.
@@ -1878,7 +1875,7 @@ and after scheduling.  The symbolic execution of both blocks starts with the
 same symbolic state, sequentially symbolically executing each instruction while
 updating the symbolic state.  The final states reached for both the block before
 and after scheduling can then be compared.  If the scheduler only
-\emph{reorders} instructions, structural equality suffices for comparing
+\emph{reorders} instructions, syntactic equality suffices for comparing
 symbolic expressions, as an instruction is only reordered if it does not break
 any data-dependencies.  In that case, the symbolic expressions for the reordered
 instruction would be identical as they were independent.  However, the scheduler
@@ -1887,13 +1884,15 @@ the comparison of the symbolic state is not enough to show equivalent behaviour.
 Consider the following example:
 
 \begin{center}
-\begin{tikzpicture}
-\node[] (initial) {\begin{minipage}{2.7cm}
+\begin{tikzpicture}[>=Latex,shorten >=1pt,
+    label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
+    bb/.style={align=left, draw=white, fill=black!5}]
+\node[bb] (initial) {\begin{minipage}{2.7cm}
 \begin{rtllisting}
 r3 := r2 + 4;
 \end{rtllisting}
 \end{minipage}};
-\node[right=3.5cm of initial] (scheduled) {
+\node[bb,right=3.5cm of initial] (scheduled) {
   \begin{minipage}{2.7cm}
 \begin{rtllisting}
 r3 := 5 / r1;
@@ -1901,8 +1900,8 @@ r3 := r2 + 4;
 \end{rtllisting}
   \end{minipage}
 };
-\draw[-{Latex[length=3mm]}] ($(initial.east)+(0.5,0)$) -- node [below] {scheduling}
-($(scheduled.west)-(0.5,0)$);
+   \path (initial) -- node[pass] (fs) {scheduling} (scheduled);
+   \draw[ed] (initial) -- (fs) -- (scheduled);
 \end{tikzpicture}
 \end{center}
 
@@ -1910,7 +1909,7 @@ In this case, the scheduler introduces an additional instruction that is later
 overwritten.  The symbolic states will therefore be equivalent, however, the
 transformed block may encounter undefined behaviour when \rtlinline`r1` is 0.
 To guard against the scheduler introducing additional instructions that may have
-undefined behaviour, \citeauthor*{tristan08_formal_verif_trans_valid} introduce
+undefined behaviour, \citeauthor{tristan08_formal_verif_trans_valid} introduce
 the concept of \emph{constraints}, which is the set of all previously
 encountered operations.  In the case of the example, the constraint set of the
 original block would be empty, whereas the constraints of the second block would
@@ -1922,7 +1921,7 @@ block are a subset of the constraints of the original block.
 Together, this forms a validation algorithm for list scheduling by comparing the
 symbolic states of the basic blocks for equivalence, and ensuring that the
 constraints form a subset.  The post-pass scheduler by
-\citeauthor*{six20_certif_effic_instr_sched} optimises the validation algorithm
+\citeauthor{six20_certif_effic_instr_sched} optimises the validation algorithm
 by using hash-consing to replace the expensive expression comparison by pointer
 comparisons.
 
@@ -2042,10 +2041,10 @@ symbolic expressions can grow exponentially as they do not share any
 subexpressions, which means that comparing two expressions can take
 exponentially longer.  This affects both the list scheduling and the trace
 scheduling validator, and is addressed by
-\citeauthor*{six20_certif_effic_instr_sched} through hash-consing.  Secondly,
-comparing two trees symbolically can also contain an exponential number of
-comparisons of symbolic states, due to expressions in different branches of the
-tree having to be duplicated.  This means that the choice of cut points becomes
+\citeauthor{six20_certif_effic_instr_sched} through hash-consing.  Secondly,
+comparing two trees symbolically can also lead to an exponential number of
+comparisons of symbolic states, due to duplicated expressions in different branches of the
+tree.  This means that the choice of cut points becomes
 important to try and minimise the size of the trees and still achieve a good
 schedule.
 

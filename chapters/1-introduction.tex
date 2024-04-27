@@ -174,11 +174,11 @@ contributions of \vericert{} are the following:
   reset, and how the final return value is extracted.  Another challenge was
   extending the Verilog semantics with support for arrays, which is necessary to
   model hardware memory interfaces.  Lastly, one particular difficulty that had
-  to be overcome is proving that the function stack could be modelled by this
+  to be overcome is proving that the function stack frame could be modelled by this
   finite Verilog array.
 
 \item[First mechanisation of general if-conversion] CompCert does already
-  perform limited if-conversion, removing branches that contain a single
+  perform limited \gls{if-conversion}, removing branches that contain a single
   instruction and replacing them with a conditional move instruction, because
   predicated instructions are unsupported.  I describe the formalisation of a
   general if-conversion transformation in CompCert used to generate hyperblocks,
@@ -253,9 +253,7 @@ This dissertation is organised into the following chapters.
   overview of how it is structured, as well as what kind of transformations are
   performed.  Design choices made during the development of Vericert are also
   described and compared against other possible approaches.
-\item[\Cref{sec:trusted-computing-base}] then gives a summary of the trusted
-  computing base in Vericert, describing the Verilog semantics and the final
-  correctness theorem.
+\item[\Cref{sec:trusted-computing-base}] then describes the Verilog semantics and the final correctness theorem of Vericert, which covers the main trusted computing base.
 \item[\Cref{sec:hyperblock-scheduling}] then describes the front end of
   Vericert, which hooks into the middle end of \gls{CompCert}.  This chapter
   describes the implementation of hyperblock scheduling.
@@ -290,9 +288,9 @@ publications.
 
   \printpublication{herklotz21_fvhls}.
 
-\item[PLDI 2024 (under submission)] Finally, an article describing a critical
-  optimisation in the \gls{HLS} flow called \gls{hyperblock scheduling} is under
-  submission.  This preprint underpins \cref{sec:hyperblock-scheduling}.
+\item[PLDI 2024] Finally, we describe a critical optimisation in the \gls{HLS}
+  flow called \gls{hyperblock scheduling}.  This article underpins
+  \cref{sec:hyperblock-scheduling}.
 
   \printpublication{herklotz24_hsvhls}.
 

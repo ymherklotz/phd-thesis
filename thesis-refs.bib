@@ -90,7 +90,7 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 }
 
 @INPROCEEDINGS{anderson94_vsa,
-	author = {Anderson, D.P. and Ainscough, J.},
+	author = {Anderson, Damian P. and Ainscough, John},
 	booktitle = {IEE Colloquium on Structured Methods for Hardware Systems Design},
 	title = {The Verification of Scheduling Algorithms},
 	year = {1994},
@@ -199,7 +199,7 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 }
 
 @article{banerjee14_verif_code_motion_techn_using_value_propag,
-	author = {Banerjee, K. and Karfa, C. and Sarkar, D. and Mandal, C.},
+	author = {Banerjee, Kunal and Karfa, Chandan and Sarkar, Dipankar and Mandal, Chittaranjan},
 	doi = {10.1109/TCAD.2014.2314392},
 	issn = {1937-4151},
 	journaltitle = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
@@ -213,6 +213,7 @@ ebib-main-file: /home/ymh/Dropbox/bibliography/references.bib
 }
 
 @InProceedings{barbosa22_cvc5,
+	doi = {10.1007/978-3-030-99524-9_24},
 	author = {Barbosa, Haniel and Barrett, Clark and Brain, Martin and Kremer, Gereon and Lachnitt, Hanna and Mann, Makai and Mohamed, Abdalrhman and Mohamed, Mudathir and Niemetz, Aina and N{\"o}tzli, Andres and Ozdemir, Alex and Preiner, Mathias and Reynolds, Andrew and Sheng, Ying and Tinelli, Cesare and Zohar, Yoni},
 	editor = "Fisman, Dana
 and Rosu, Grigore",
@@ -280,7 +281,7 @@ and Rosu, Grigore",
 }
 
 @ARTICLE{biesenack93_siemen_callas,
-	author = {Biesenack, J. and Koster, M. and Langmaier, A. and Ledeux, S. and Marz, S. and Payer, M. and Pilsl, M. and Rumler, S. and Soukup, H. and Wehn, N. and Duzy, P.},
+	author = {Biesenack, Jörg and Koster, Michael and Langmaier, Anton and Ledeux, Stephane and Marz, Sabine and Payer, Michael and Pilsl, Michael and Rumler, Steffen and Soukup, Holger and Wehn, Norbert and Duzy, Peter},
 	journal = {IEEE Transactions on Very Large Scale Integration (VLSI) Systems},
 	title = {The Siemens high-level synthesis system CALLAS},
 	year = {1993},
@@ -295,6 +296,7 @@ and Rosu, Grigore",
 }
 
 @inproceedings{blazy05_formal_verif_memor_model_c,
+	doi = {10.1007/11576280_20},
 	abstract = {This paper presents a formal verification with the Coq proof assistant of a memory model for C-like imperative languages. This model defines the memory layout and the operations that manage the memory. The model has been specified at two levels of abstraction and implemented as part of an ongoing certification in Coq of a moderately-optimising C compiler. Many properties of the memory have been verified in the specification. They facilitate the definition of precise formal semantics of C pointers. A certified OCaml code implementing the memory model has been automatically extracted from the specifications.},
 	author = {Blazy, Sandrine and Leroy, Xavier},
 	editor = {Lau, Kung-Kiu and Banach, Richard},
@@ -309,7 +311,7 @@ and Rosu, Grigore",
 }
 
 @book{borowski70_swj,
-	author = {L. Borowski},
+	author = {Ludwik Borowski},
 	year = {1970},
 	title = {Selected Works of J. Łukasiewicz},
 	publisher = {Nort Holland}
@@ -381,6 +383,7 @@ and Rosu, Grigore",
 }
 
 @inproceedings{braibant13_formal_verif_hardw_synth,
+	doi = {10.1007/978-3-642-39799-8_14},
 	abstract = {We report on the implementation of a certified compiler for a high-level hardware description language (HDL) called Fe-Si (FEatherweight SynthesIs). Fe-Si is a simplified version of Bluespec, an HDL based on a notion of guarded atomic actions. Fe-Si is defined as a dependently typed deep embedding in Coq. The target language of the compiler corresponds to a synthesisable subset of Verilog or VHDL. A key aspect of our approach is that input programs to the compiler can be defined and proved correct inside Coq. Then, we use extraction and a Verilog back-end (written in OCaml) to get a certified version of a hardware design.},
 	author = {Braibant, Thomas and Chlipala, Adam},
 	editor = {Sharygina, Natasha and Veith, Helmut},
@@ -395,6 +398,7 @@ and Rosu, Grigore",
 }
 
 @InProceedings{brummayer09_b,
+	doi = {10.1007/978-3-642-00768-2_16},
 	keywords = {SMT},
 	author = {Brummayer, Robert and Biere, Armin},
 	editor = "Kowalewski, Stefan
@@ -464,13 +468,17 @@ and Philippou, Anna",
 	bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@article{campbell93_refin,
-	author = {Campbell, Philip L and Krishna, Ksheerabdhi and Ballance, Robert A},
+@TechReport{campbell93_refin,
+	pages = {1--33},
+	date = {1993-02},
+	number = {93-6},
+	address = {Albuquerque, NM 87131},
+	institution = {The University of New Mexico},
+	author = {Campbell, Philip L. and Krishna, Ksheerabdhi and Ballance, Robert A.},
 	publisher = {Citeseer},
 	journaltitle = {Cs93-6, University of New Mexico, Albuquerque},
 	keywords = {gated-SSA},
-	title = {Refining and defining the program dependence web},
-	year = {1993}
+	title = {Refining and defining the program dependence web}
 }
 
 @inproceedings{canis11_legup,
@@ -505,7 +513,7 @@ and Philippou, Anna",
 
 @inproceedings{canis14_modul_sdc,
 	abstract = {Loop pipelining is a high-level synthesis scheduling technique that overlaps loop iterations to achieve higher performance. However, industrial designs often have resource constraints and other constraints imposed by cross-iteration dependencies. The interaction between multiple constraints can pose a challenge for HLS modulo scheduling algorithms, which, if not handled properly can lead to a loop pipeline schedule that fails to achieve the minimum possible initiation interval. We propose a novel modulo scheduler based on an SDC formulation that includes a backtracking mechanism to properly handle multiple scheduling constraints and still achieve the minimum possible initiation interval. The SDC formulation has the advantage of being a mathematical framework that supports flexible constraints that are useful for more complex loop pipelines. Furthermore, we describe how to specifically apply associative expression transformations during modulo scheduling to restructure recurrences in complex loops to enable better scheduling. We compared our techniques to existing prior work in modulo scheduling in HLS and also compared against a state-of-art commercial tool. Over a suite of benchmarks, we show that our scheduler and proposed optimizations can result in a geomean wall-clock time reduction of 32 \% versus prior work and 29 \% versus a commercial tool.},
-	author = {Canis, A. and Brown, S. D. and Anderson, J. H.},
+	author = {Canis, Andrew and Brown, Stephen D. and Anderson, Jason H.},
 	booktitle = {2014 24th International Conference on Field Programmable Logic and Applications (FPL)},
 	doi = {10.1109/FPL.2014.6927490},
 	issn = {1946-1488},
@@ -525,24 +533,22 @@ and Philippou, Anna",
 }
 
 @ARTICLE{carloni01_tlid,
-	author = {Carloni, L.P. and McMillan, K.L. and Sangiovanni-Vincentelli, A.L.},
+	author = {Carloni, Luca P. and McMillan, Kenneth L. and Sangiovanni-Vincentelli, Alberto L.},
 	journal = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
 	title = {Theory of Latency-Insensitive Design},
 	year = {2001},
 	volume = {20},
 	number = {9},
-	pages = {1059-1076},
+	pages = {1059--1076},
 	abstract = {The theory of latency-insensitive design is presented as the foundation of a new correct-by-construction methodology to design complex systems by assembling intellectual property components. Latency-insensitive designs are synchronous distributed systems and are realized by composing functional modules that exchange data on communication channels according to an appropriate protocol. The protocol works on the assumption that the modules are stallable, a weak condition to ask them to obey. The goal of the protocol is to guarantee that latency-insensitive designs composed of functionally correct modules behave correctly independently of the channel latencies. This allows us to increase the robustness of a design implementation because any delay variations of a channel can be "recovered" by changing the channel latency while the overall system functionality remains unaffected. As a consequence, an important application of the proposed theory is represented by the latency-insensitive methodology to design large digital integrated circuits by using deep submicrometer technologies.},
 	keywords = {Protocols;Design methodology;Clocks;Integrated circuit technology;Integrated circuit interconnections;Communication channels;Application specific integrated circuits;Integrated circuit synthesis;Delay estimation;Assembly systems},
 	doi = {10.1109/43.945302},
-	ISSN = {1937-4151},
+	ISSN = {1937--4151},
 	month = {9}
 }
 
 @article{chang91_using_profil_infor_assis_class_code_optim,
-	author = {Pohua P. Chang and
-                  Scott A. Mahlke and
-                  Wen{-}mei W. Hwu},
+	author = {Chang, Pohua P. and Mahlke, Scott A. and Hwu, Wen{-}mei W.},
 	title = {Using Profile Information to Assist Classic Code Optimizations},
 	journal = {Softw. Pract. Exp.},
 	volume = {21},
@@ -557,7 +563,7 @@ and Philippou, Anna",
 
 @inproceedings{chapman92_verif_bedroc,
 	abstract = {The authors present the HardwarePal hardware description language and formal operational and denotational semantics for it, briefly discussing their proof of the two semantics' equivalence. They then discuss their intermediate representation, dependence flow graphs, and the operational semantics of DFG. They describe the translation from HardwarePal to dependence flow graphs and outline their proof that this translation preserves the meaning of the initial HardwarePal program. The authors discuss proving the correctness of the translation from behavioral specification to intermediate form, proving the correctness of optimizations, and plans for proving the correctness of scheduling. The authors conclude by discussing their plans for proofs that register-transfer level design produced by BEDROC implements the dependence flow graph.<>},
-	author = {Chapman, R. and Brown, G. and Leeser, M.},
+	author = {Chapman, Richard and Brown, Geoffrey and Leeser, Miriam},
 	publisher = {IEEE Computer Society},
 	booktitle = {[1992] Proceedings The European Conference on Design Automation},
 	doi = {10.1109/EDAC.1992.205894},
@@ -611,7 +617,7 @@ and Philippou, Anna",
 }
 
 @article{chouksey19_trans_valid_code_motion_trans_invol_loops,
-	author = {Chouksey, R. and Karfa, C. and Bhaduri, P.},
+	author = {Chouksey, Ramanuj and Karfa, Chandan and Bhaduri, Purandar},
 	doi = {10.1109/TCAD.2018.2846654},
 	issn = {1937-4151},
 	journaltitle = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
@@ -626,7 +632,7 @@ and Philippou, Anna",
 
 @article{chouksey20_verif_sched_condit_behav_high_level_synth,
 	abstract = {High-level synthesis (HLS) technique translates the behaviors written in high-level languages like C/C++ into register transfer level (RTL) design. Due to its complexity, proving the correctness of an HLS tool is prohibitively expensive. Translation validation is the process of proving that the target code is a correct translation of the source program being compiled. The path-based equivalence checking (PBEC) method is a widely used translation validation method for verification of the scheduling phase of HLS. The existing PBEC methods cannot handle significant control structure modification that occurs in the efficient scheduling of conditional behaviors. Hence, they produce a false-negative result. In this article, we identify some scenarios involving path merge/split where the state-of-the-art PBEC approaches fail to show the equivalence even though behaviors are equivalent. We propose a value propagation-based PBEC method along with a new cutpoint selection scheme to overcome this limitation. Our method can also handle the scenario where adjacent conditional blocks (CBs) having an equivalent conditional expression are combined into one CB. Experimental results demonstrate the usefulness of our method over the existing methods.},
-	author = {Chouksey, R. and Karfa, C.},
+	author = {Chouksey, Ramanuj and Karfa, Chandan},
 	doi = {10.1109/TVLSI.2020.2978242},
 	issn = {1557-9999},
 	journaltitle = {IEEE Transactions on Very Large Scale Integration (VLSI) Systems},
@@ -638,7 +644,7 @@ and Philippou, Anna",
 
 @inproceedings{clarke03_behav_c_veril,
 	abstract = {We present an algorithm that checks behavioral consistency between an ANSI-C program and a circuit given in Verilog using Bounded Model Checking. Both the circuit and the program are unwound and translated into a formula that represents behavioral consistency. The formula is then checked using a SAT solver. We are able to translate C programs that include side effects, pointers, dynamic memory allocation, and loops with conditions that cannot be evaluated statically. We describe experimental results on various reactive circuits and programs, including a small processor given in Verilog and its Instruction Set Architecture given in ANSI-C.},
-	author = {Clarke, E. and Kroening, D. and Yorav, K.},
+	author = {Clarke, Edmund and Kroening, Daniel and Yorav, Karen},
 	booktitle = {Proceedings 2003. Design Automation Conference (IEEE Cat. No.03CH37451)},
 	doi = {10.1145/775832.775928},
 	keywords = {bounded model checking,high-level synthesis,translation validation,verilog,verification},
@@ -663,7 +669,7 @@ and Philippou, Anna",
 
 @article{cong11_high_level_synth_fpgas,
 	abstract = {Escalating system-on-chip design complexity is pushing the design community to raise the level of abstraction beyond register transfer level. Despite the unsuccessful adoptions of early generations of commercial high-level synthesis (HLS) systems, we believe that the tipping point for transitioning to HLS msystem-on-chip design complexityethodology is happening now, especially for field-programmable gate array (FPGA) designs. The latest generation of HLS tools has made significant progress in providing wide language coverage and robust compilation technology, platform-based modeling, advancement in core HLS algorithms, and a domain-specific approach. In this paper, we use AutoESL's AutoPilot HLS tool coupled with domain-specific system-level implementation platforms developed by Xilinx as an example to demonstrate the effectiveness of state-of-art C-to-FPGA synthesis solutions targeting multiple application domains. Complex industrial designs targeting Xilinx FPGAs are also presented as case studies, including comparison of HLS solutions versus optimized manual designs. In particular, the experiment on a sphere decoder shows that the HLS solution can achieve an 11-31 \% reduction in FPGA resource usage with improved design productivity compared to hand-coded design.},
-	author = {Cong, J. and Liu, B. and Neuendorffer, S. and Noguera, J. and Vissers, K. and Zhang, Z.},
+	author = {Cong, Jason and Liu, Bin and Neuendorffer, Stephen and Noguera, Juanjo and Vissers, Kees and Zhang, Zhiru},
 	doi = {10.1109/TCAD.2011.2110592},
 	issn = {1937-4151},
 	journaltitle = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
@@ -676,8 +682,23 @@ and Philippou, Anna",
 	year = {2011}
 }
 
+@INPROCEEDINGS{constantinides01_mwp,
+	author = {Constantinides, George A. and Cheung, Peter Y.K. and Luk, Wayne},
+	booktitle = {The 9th Annual IEEE Symposium on Field-Programmable Custom Computing Machines (FCCM'01)},
+	title = {The Multiple Wordlength Paradigm},
+	year = {2001},
+	volume = {},
+	number = {},
+	pages = {51-60},
+	abstract = {This paper presents a paradigm for the design of multiple wordlength parallel processing systems for DSP applications based on varying the wordlength and scaling of each signal in a DSP block diagram. A technique for estimating the observable effects of truncation and roundoff error is illustrated, and used to form the basis of an optimization algorithm to automate the design of such multiple wordlength systems. Results from implementation on a reconfigurable computing platform show that significant logic usage savings and increased clock rates can be obtained by customizing the datapath precision to the algorithm according to the techniques described in this paper. On selected DSP benchmarks, we obtain up to 45\% area reduction and up to 39\% speed increase over standard design techniques.},
+	keywords = {Digital signal processing;Signal design;Parallel processing;Signal processing;Roundoff errors;Design optimization;Algorithm design and analysis;Reconfigurable logic;Clocks},
+	doi = {},
+	ISSN = {},
+	month = {3}
+}
+
 @article{coussy09_introd_to_high_level_synth,
-	author = {Coussy, P. and Gajski, D. D. and Meredith, M. and Takach, A.},
+	author = {Coussy, Philippe and Gajski, Daniel D. and Meredith, Michael and Takach, Andres},
 	doi = {10.1109/MDT.2009.69},
 	journaltitle = {IEEE Design Test of Computers},
 	keywords = {high-level synthesis,introduction,survey},
@@ -729,23 +750,29 @@ and Kun{\v{c}}ak, Viktor",
 
 @phdthesis{ellis85_bulld,
 	title = {Bulldog: A compiler for {VLIW} architectures},
-	author = {Ellis, John R},
+	author = {Ellis, John R.},
 	year = {1985},
 	school = {Yale University}
 }
 
 @inproceedings{even-mendoza20_ce,
+	series = {ASE '20},
+	pages = {1219-–1223},
+	doi = {10.1145/3324884.3418933},
+	address = {New York, NY, USA},
+	publisher = {Association for Computing Machinery},
+	isbn = {9781450367684},
 	author = {Karine Even-Mendoza and Cristian Cadar and Alastair Donaldson},
 	title = {Closer to the Edge: Testing Compilers More Thoroughly by Being Less Conservative About Undefined Behaviour},
-	booktitle = {IEEE/ACM International Conference on Automated Software Engineering, New Ideas and Emerging Results Track (ASE-NIER 2020)},
-	year = {2020},
-	month = {09},
-	location = {undefined}
+	booktitle = {Proceedings of the 35th IEEE/ACM International Conference on Automated Software Engineering},
+	year = {2021},
+	month = {01},
+	location = {Virtual Event, Australia}
 }
 
 @ARTICLE{faraboschi01_isilpp,
 	date = {2001-11},
-	author = {Faraboschi, P. and Fisher, J.A. and Young, C.},
+	author = {Faraboschi, Paolo and Fisher, Joseph A. and Young, Cliff},
 	journal = {Proceedings of the IEEE},
 	title = {Instruction Scheduling for Instruction Level Parallel Processors},
 	volume = {89},
@@ -839,7 +866,7 @@ and Kun{\v{c}}ak, Viktor",
 	year = {2008}
 }
 
-@misc{google23_xls,
+@misc{google23_xls_uses_smt,
 	author = {Google},
 	title = {{XLS: Accelerated HW Synthesis}},
 	url = {https://github.com/google/xls/blob/dde7095ff1050b09c37cb44d1977bff1af8de050/xls/scheduling/mutual_exclusion_pass.h#L112},
@@ -848,16 +875,23 @@ and Kun{\v{c}}ak, Viktor",
 	note = {The XLS scheduler refers to using an SMT solver to merge mutually exclusive nodes}
 }
 
+@Software{google24_gx,
+	urldate = {2024-03-21},
+	url = {https://google.github.io/xls/},
+	date = {2024},
+	title = {Google XLS},
+	author = {Google}
+}
+
 @article{gourdin23_fvobs,
 	date = {2023-10},
-	author = {Gourdin, L\'{e}o and Bonneau, Benjamin and Boulm\'{e}, Sylvain and Monniaux, David and B\'{e}rard, Alexandre},
+	author = {Gourdin, Léo and Bonneau, Benjamin and Boulmé, Sylvain and Monniaux, David and Bérard, Alexandre},
 	title = {Formally Verifying Optimizations with Block Simulations},
 	issue_date = {October 2023},
 	publisher = {Association for Computing Machinery},
 	address = {New York, NY, USA},
 	volume = {7},
-	number = {OOPSLA2},
-	url = {https://doi.org/10.1145/3622799},
+	number = {OOPSLA},
 	doi = {10.1145/3622799},
 	abstract = {CompCert (ACM Software System Award 2021) is the first industrial-strength compiler with a mechanically checked proof of correctness. Yet, CompCert remains a moderately optimizing C compiler. Indeed, some optimizations of “gcc ‍-O1” such as Lazy Code Motion (LCM) or Strength Reduction (SR) were still missing: developing these efficient optimizations together with their formal proofs remained a challenge. Cyril Six et al. have developed efficient formally verified translation validators for certifying the results of superblock schedulers and peephole optimizations. We revisit and generalize their approach into a framework (integrated into CompCert) able to validate many more optimizations: an enhanced superblock scheduler, but also Dead Code Elimination (DCE), Constant Propagation (CP), and more noticeably, LCM and SR. In contrast to other approaches to translation validation, we co-design our untrusted optimizations and their validators. Our optimizations provide hints, in the forms of invariants or CFG morphisms, that help keep the formally verified validators both simple and efficient. Such designs seem applicable beyond CompCert.},
 	journal = {Proc. ACM Program. Lang.},
@@ -887,7 +921,7 @@ and Kun{\v{c}}ak, Viktor",
 
 @inproceedings{gupta03_spark,
 	abstract = {This paper presents a modular and extensible high-level synthesis research system, called SPARK, that takes a behavioral description in ANSI-C as input and produces synthesizable register-transfer level VHDL. SPARK uses parallelizing compiler technology, developed previously, to enhance instruction-level parallelism and re-instruments it for high-level synthesis by incorporating ideas of mutual exclusivity of operations, resource sharing and hardware cost models. In this paper, we present the design flow through the SPARK system, a set of transformations that include speculative code motions and dynamic transformations and show how these transformations and other optimizing synthesis and compiler techniques are employed by a scheduling heuristic. Experiments are performed on two moderately complex industrial applications, namely MPEG-1 and the GIMP image processing tool. The results show that the various code transformations lead to up to 70 \% improvements in performance without any increase in the overall area and critical path of the final synthesized design.},
-	author = {Gupta, S. and Dutt, N. and Gupta, R. and Nicolau, A.},
+	author = {Gupta, Sumit and Dutt, Nikil and Gupta, Rajesh and Nicolau, Alex},
 	booktitle = {16th International Conference on VLSI Design, 2003. Proceedings.},
 	doi = {10.1109/ICVD.2003.1183177},
 	issn = {1063-9667},
@@ -904,11 +938,11 @@ and Kun{\v{c}}ak, Viktor",
 	urldate = {2024-01-13},
 	url = {https://blog.google/products/pixel/google-tensor-g3-pixel-8/},
 	organization = {Google},
-	author = {Monika Gupta}
+	author = {Gupta, Monika}
 }
 
 @ARTICLE{halbwachs91_sdfpll,
-	author = {Halbwachs, N. and Caspi, P. and Raymond, P. and Pilaud, D.},
+	author = {Halbwachs, Nicholas and Caspi, Paul and Raymond, Pascal and Pilaud, Daniel},
 	journal = {Proceedings of the IEEE},
 	title = {The Synchronous Data Flow Programming Language {LUSTRE}},
 	year = {1991},
@@ -919,6 +953,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @inproceedings{havlak94_const,
+	doi = {10.1007/3-540-57659-2_28},
 	abstract = {Analysis of symbolic expressions benefits from a suitable program representation. We show how to build thinned gated single-assignment (TGSA) form, a value-oriented program representation which is more complete than standard SSA form, defined on all reducible programs, and better for representing symbolic expressions than program dependence graphs or original GSA form. We present practical algorithms for constructing thinned GSA form from the control dependence graph and SSA form. Extensive experiments on large Fortran programs show these methods to take linear time and space in practice. Our implementation of value numbering on TGSA form drives scalar symbolic analysis in the ParaScope programming environment.},
 	author = {Havlak, Paul},
 	editor = {Banerjee, Utpal and Gelernter, David and Nicolau, Alex and Padua, David},
@@ -939,7 +974,7 @@ and Kun{\v{c}}ak, Viktor",
 	publisher = {Association for Computing Machinery},
 	booktitle = {Proceedings of the 2020 ACM/SIGDA International Symposium on Field-Programmable Gate Arrays},
 	doi = {10.1145/3373087.3375310},
-	isbn = {978-1-4503-7099-8},
+	isbn = {9781450370998},
 	keywords = {test case reduction,logic synthesis,fuzzing,verilog},
 	pages = {277--287},
 	series = {FPGA '20},
@@ -957,12 +992,12 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @article{herklotz21_fvhls,
+	journal = {Proceedings of the ACM on Programming Languages},
 	abstract = {High-level synthesis (HLS), which refers to the automatic compilation of software into hardware, is rapidly gaining popularity. In a world increasingly reliant on application-specific hardware accelerators, HLS promises hardware designs of comparable performance and energy efficiency to those coded by hand in a hardware description language such as Verilog, while maintaining the convenience and the rich ecosystem of software development. However, current HLS tools cannot always guarantee that the hardware designs they produce are equivalent to the software they were given, thus undermining any reasoning conducted at the software level. Furthermore, there is mounting evidence that existing HLS tools are quite unreliable, sometimes generating wrong hardware or crashing when given valid inputs. To address this problem, we present the first HLS tool that is mechanically verified to preserve the behaviour of its input software. Our tool, called Vericert, extends the CompCert verified C compiler with a new hardware-oriented intermediate language and a Verilog back end, and has been proven correct in Coq. Vericert supports most C constructs, including all integer operations, function calls, local arrays, structs, unions, and general control-flow statements. An evaluation on the PolyBench/C benchmark suite indicates that Vericert generates hardware that is around an order of magnitude slower (only around 2\texttimes{} slower in the absence of division) and about the same size as hardware generated by an existing, optimising (but unverified) HLS tool.},
 	author = {Herklotz, Yann and Pollard, James D. and Ramanathan, Nadesh and Wickerson, John},
 	location = {New York, NY, USA},
 	publisher = {Association for Computing Machinery},
 	doi = {10.1145/3485494},
-	journaltitle = {Proc. ACM Program. Lang.},
 	keywords = {high-level synthesis,Coq,Verilog,CompCert,C},
 	month = oct,
 	number = {OOPSLA},
@@ -998,12 +1033,18 @@ and Kun{\v{c}}ak, Viktor",
 	series = {CPP 2023}
 }
 
-@unpublished{herklotz24_hsvhls,
-	date = {2024},
-	author = {Herklotz, Yann and Wickerson, John},
-	url = {https://yannherklotz.com/docs/drafts/verified_hyperblock_scheduling.pdf},
+@Article{herklotz24_hsvhls,
+	address = {New York, NY, USA},
+	publisher = {Association for Computing Machinery},
+	volume = {8},
+	number = {PLDI},
+	numpages = {25},
+	doi = {10.1145/3656455},
+	articleno = {225},
+	date = {2024-06},
+	journal = {Proceedings of the ACM on Programming Languages},
 	title = {Hyperblock Scheduling for Verified High-Level Synthesis},
-	note = {Submitted to PLDI 2024}
+	author = {Herklotz, Yann and Wickerson, John}
 }
 
 @software{herklotz24_v,
@@ -1013,8 +1054,7 @@ and Kun{\v{c}}ak, Viktor",
 	year = 2024,
 	publisher = {Zenodo},
 	version = {v2.0.0-rc1},
-	doi = {10.5281/zenodo.10541391},
-	url = {https://doi.org/10.5281/zenodo.10541391}
+	doi = {10.5281/zenodo.10541391}
 }
 
 @inproceedings{herzog21_price_meltd_spect,
@@ -1034,7 +1074,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @article{hoare78_commun_sequen_proces,
-	author = {Hoare, C. A. R.},
+	author = {Hoare, C.A.R.},
 	title = {Communicating Sequential Processes},
 	year = {1978},
 	issue_date = {Aug. 1978},
@@ -1094,6 +1134,14 @@ and Kun{\v{c}}ak, Viktor",
 	year = {1993}
 }
 
+@article{ieee24_iss,
+	author = {IEEE},
+	year = {2024},
+	doi = {10.1109/IEEESTD.2024.10458102},
+	pages = {1--1354},
+	title = {{IEEE Standard for SystemVerilog--Unified Hardware Design, Specification, and Verification Language}}
+}
+
 @misc{intel20_hsc,
 	author = {Intel},
 	title = {High-level Synthesis Compiler},
@@ -1110,7 +1158,25 @@ and Kun{\v{c}}ak, Viktor",
 	year = {2020}
 }
 
+@inproceedings{jablin14_watsg,
+	author = {Jablin, James A. and Jablin, Thomas B. and Mutlu, Onur and Herlihy, Maurice},
+	title = {Warp-Aware Trace Scheduling for GPUs},
+	year = {2014},
+	isbn = {9781450328098},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	doi = {10.1145/2628071.2628101},
+	abstract = {GPU performance depends not only on thread/warp level parallelism (TLP) but also on instruction-level parallelism (ILP). It is not enough to schedule instructions within basic blocks, it is also necessary to exploit opportunities for ILP optimization beyond branch boundaries. Unfortunately, modern GPUs cannot dynamically carry out such optimizations because they lack hardware branch prediction and cannot speculatively execute instructions beyond a branch.We propose to circumvent these limitations by adapting Trace Scheduling, a technique originally developed for microcode optimization. Trace Scheduling divides code into traces (or paths), and optimizes each trace in a context-independent way. Adapting Trace Scheduling to GPU code requires revisiting and revising each step of microcode Trace Scheduling to attend to branch and warp behavior, identifying instructions on the critical path, avoiding warp divergence, and reducing divergence time.Here, we propose "Warp-Aware Trace Scheduling" for GPUs. As evaluated on the Rodinia Benchmark Suite using dynamic profiling, our fully-automatic optimization achieves a geometric mean speedup of 1.10x on a real system by increasing instructions executed per cycle (IPC) by a harmonic mean of 1.12x and reducing instruction serialization and total instructions executed.},
+	booktitle = {Proceedings of the 23rd International Conference on Parallel Architectures and Compilation},
+	pages = {163–174},
+	numpages = {12},
+	keywords = {trace scheduling, instruction-level parallelism, gpu, global instruction scheduling, compiler optimization},
+	location = {Edmonton, AB, Canada},
+	series = {PACT '14}
+}
+
 @inproceedings{jifeng93_towar,
+	doi = {10.1007/BFb0021726},
 	abstract = {This paper shows how to compile a program written in a subset of occam into a normal form suitable for further processing into a netlist of components which may be loaded into a Field-Programmable Gate Array (FPGA). A simple state-machine model is adopted for specifying the behaviour of a synchronous circuit where the observable includes the state of the control path and the data path of the circuit. We identify the behaviour of a circuit with a program consisting of a very restricted subset of occam. Algebraic laws are used to facilitate the transformation from a program into a normal form. The compiling specification is presented as a set of theorems that must be proved correct with respect to these laws. A rapid prototype compiler in the form of a logic program may be implemented from these theorems.},
 	author = {Jifeng, He and Page, Ian and Bowen, Jonathan},
 	editor = {Milne, George J. and Pierre, Laurence},
@@ -1176,6 +1242,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @inproceedings{jourdan12_valid_lr_parser,
+	doi = {10.1007/978-3-642-28869-2_20},
 	abstract = {An LR(1) parser is a finite-state automaton, equipped with a stack, which uses a combination of its current state and one lookahead symbol in order to determine which action to perform next. We present a validator which, when applied to a context-free grammar {\$}{\backslash}mathcal G{\$}and an automaton {\$}{\backslash}mathcal A{\$}, checks that {\$}{\backslash}mathcal A{\$}and {\$}{\backslash}mathcal G{\$}agree. Validating the parser provides the correctness guarantees required by verified compilers and other high-assurance software that involves parsing. The validation process is independent of which technique was used to construct {\$}{\backslash}mathcal A{\$}. The validator is implemented and proved correct using the Coq proof assistant. As an application, we build a formally-verified parser for the C99 language.},
 	author = {Jourdan, Jacques-Henri and Pottier, François and Leroy, Xavier},
 	editor = {Seidl, Helmut},
@@ -1208,7 +1275,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @inproceedings{karfa06_formal_verif_method_sched_high_synth,
-	author = {Karfa, C and Mandal, C and Sarkar, D and Pentakota, S R. and Reade, Chris},
+	author = {Karfa, Chandan and Mandal, Chittaranjan and Sarkar, Dipankar and Pentakota, S. R. and Reade, Chris},
 	location = {Washington, DC, USA},
 	publisher = {IEEE Computer Society},
 	booktitle = {Proceedings of the 7th International Symposium on Quality Electronic Design},
@@ -1235,7 +1302,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @article{karfa08_equiv_check_method_sched_verif,
-	author = {{Karfa}, C. and {Sarkar}, D. and {Mandal}, C. and {Kumar}, P.},
+	author = {Karfa, Chandan and Sarkar, Dipankar and Mandal, Chittaranjan and Kumar, Pramod},
 	doi = {10.1109/TCAD.2007.913390},
 	issn = {1937-4151},
 	journaltitle = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
@@ -1249,7 +1316,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @article{karfa10_verif_datap_contr_gener_phase,
-	author = {{Karfa}, C. and {Sarkar}, D. and {Mandal}, C.},
+	author = {Karfa, Chandan and Sarkar, Dipankar and Mandal, Chittaranjan},
 	doi = {10.1109/TCAD.2009.2035542},
 	issn = {1937-4151},
 	journaltitle = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
@@ -1277,6 +1344,15 @@ and Kun{\v{c}}ak, Viktor",
 	year = {2012}
 }
 
+@article{kessenich18_svs,
+	date = {2018-01},
+	title = {{Spir-V} Specification 1.2},
+	author = {Kessenich, John and Ouriel, Boaz and Krisch, Raun},
+	journal = {Khronos Group},
+	volume = {4},
+	pages = {211}
+}
+
 @inproceedings{kildall73_unified_approac_global_progr_optim,
 	author = {Kildall, Gary A.},
 	location = {Boston, Massachusetts},
@@ -1291,7 +1367,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @inproceedings{kim04_autom_fsmd,
-	author = {{Youngsik Kim} and {Kopuri}, S. and {Mansouri}, N.},
+	author = {{Youngsik Kim} and Kopuri, S. and Mansouri, N.},
 	booktitle = {International Symposium on Signals, Circuits and Systems. Proceedings, SCS 2003. (Cat. No.03EX720)},
 	doi = {10.1109/ISQED.2004.1283659},
 	issn = {null},
@@ -1346,7 +1422,6 @@ and Kun{\v{c}}ak, Viktor",
 	author = {Koenig, Jérémie and Shao, Zhong},
 	location = {Virtual, Canada},
 	publisher = {Association for Computing Machinery},
-	url = {https://doi.org/10.1145/3453483.3454097},
 	booktitle = {Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
 	doi = {10.1145/3453483.3454097},
 	isbn = {9781450383912},
@@ -1368,6 +1443,7 @@ and Kun{\v{c}}ak, Viktor",
 }
 
 @InProceedings{kroening14_c,
+	doi = {10.1007/978-3-642-54862-8_26},
 	keywords = {bounded model checking},
 	author = {Kroening, Daniel and Tautschnig, Michael},
 	editor = "{\'A}brah{\'a}m, Erika
@@ -1384,7 +1460,7 @@ and Havelund, Klaus",
 
 @inproceedings{kundu07_autom,
 	abstract = {Stepwise refinement is at the core of many approaches to synthesis and optimization of hardware and software systems. For instance, it can be used to build a synthesis approach for digital circuits from high level specifications. It can also be used for post-synthesis modification such as in engineering change orders (ECOs). Therefore, checking if a system, modeled as a set of concurrent processes, is a refinement of another is of tremendous value. In this paper, we focus on concurrent systems modeled as communicating sequential processes (CSP) and show their refinements can be validated using insights from translation validation, automated theorem proving and relational approaches to reasoning about programs. The novelty of our approach is that it handles infinite state spaces in a fully automated manner. We have implemented our refinement checking technique and have applied it to a variety of refinements. We present the details of our algorithm and experimental results. As an example, we were able to automatically check an infinite state space buffer refinement that cannot be checked by current state of the art tools such as FDR. We were also able to check the data part of an industrial case study on the EP2 system.},
-	author = {{Sudipta Kundu} and {Lerner}, S. and {Rajesh Gupta}},
+	author = {Kundu, Sudipta and Lerner, Sorin and Gupta, Rajesh},
 	booktitle = {2007 IEEE/ACM International Conference on Computer-Aided Design},
 	doi = {10.1109/ICCAD.2007.4397284},
 	issn = {1558-2434},
@@ -1396,6 +1472,7 @@ and Havelund, Klaus",
 }
 
 @inproceedings{kundu08_valid_high_level_synth,
+	doi = {10.1007/978-3-540-70545-1_44},
 	abstract = {The growing design-productivity gap has made designers shift toward using high-level languages like C, C++ and Java to do system-level design. High-Level Synthesis (HLS) is the process of generating Register Transfer Level (RTL) design from these initial high-level programs. Unfortunately, this translation process itself can be buggy, which can create a mismatch between what a designer intends and what is actually implemented in the circuit. In this paper, we present an approach to validate the result of HLS against the initial high-level program using insights from translation validation, automated theorem proving and relational approaches to reasoning about programs. We have implemented our validating technique and have applied it to a highly parallelizing HLS framework called SPARK. We present the details of our algorithm and experimental results.},
 	author = {Kundu, Sudipta and Lerner, Sorin and Gupta, Rajesh},
 	editor = {Gupta, Aarti and Malik, Sharad},
@@ -1410,7 +1487,7 @@ and Havelund, Klaus",
 
 @article{lahti19_are_we_there_yet,
 	abstract = {To increase productivity in designing digital hardware components, high-level synthesis (HLS) is seen as the next step in raising the design abstraction level. However, the quality of results (QoRs) of HLS tools has tended to be behind those of manual register-transfer level (RTL) flows. In this paper, we survey the scientific literature published since 2010 about the QoR and productivity differences between the HLS and RTL design flows. Altogether, our survey spans 46 papers and 118 associated applications. Our results show that on average, the QoR of RTL flow is still better than that of the state-of-the-art HLS tools. However, the average development time with HLS tools is only a third of that of the RTL flow, and a designer obtains over four times as high productivity with HLS. Based on our findings, we also present a model case study to sum up the best practices in comparative studies between HLS and RTL. The outcome of our case study is also in line with the survey results, as using an HLS tool is seen to increase the productivity by a factor of six. In addition, to help close the QoR gap, we present a survey of literature focused on improving HLS. Our results let us conclude that HLS is currently a viable option for fast prototyping and for designs with short time to market.},
-	author = {{Lahti}, S. and {Sjövall}, P. and {Vanne}, J. and {Hämäläinen}, T. D.},
+	author = {Lahti, Sakari and Sjövall, Panu and Vanne, Jarno and Hämäläinen, Timo D.},
 	doi = {10.1109/TCAD.2018.2834439},
 	issn = {1937-4151},
 	journaltitle = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
@@ -1424,7 +1501,7 @@ and Havelund, Klaus",
 }
 
 @INPROCEEDINGS{lattner04_llvm,
-	author = {Lattner, C. and Adve, V.},
+	author = {Lattner, Chris and Adve, Vikram},
 	booktitle = {International Symposium on Code Generation and Optimization, 2004. CGO 2004.},
 	title = {LLVM: a compilation framework for lifelong program analysis \& transformation},
 	year = {2004},
@@ -1459,6 +1536,7 @@ and Havelund, Klaus",
 }
 
 @InProceedings{leino10_d,
+	doi = {10.1007/978-3-642-17511-4_20},
 	author = "Leino, K. Rustan M.",
 	editor = "Clarke, Edmund M.
 and Voronkov, Andrei",
@@ -1610,6 +1688,17 @@ and Voronkov, Andrei",
 	year = {1992}
 }
 
+@article{mcbride08_apwe,
+	title = {Applicative Programming With Effects},
+	volume = {18},
+	DOI = {10.1017/S0956796807006326},
+	number = {1},
+	journal = {Journal of Functional Programming},
+	author = {McBride, Conor and Paterson, Ross},
+	year = {2008},
+	pages = {1–13}
+}
+
 @misc{mentor20_catap_high_level_synth,
 	author = {Siemens},
 	title = {Catapult High-Level Synthesis},
@@ -1619,7 +1708,7 @@ and Voronkov, Andrei",
 }
 
 @inproceedings{meredith10_veril,
-	author = {{Meredith}, P. and {Katelman}, M. and {Meseguer}, J. and {Roşu}, G.},
+	author = {Meredith, Patrick and Katelman, Michael and Meseguer, José and Roşu, Grigore},
 	booktitle = {Eighth ACM/IEEE International Conference on Formal Methods and Models for Codesign (MEMOCODE 2010)},
 	doi = {10.1109/MEMCOD.2010.5558634},
 	issn = {null},
@@ -1646,11 +1735,12 @@ and Boulm{\'e}, Sylvain",
 }
 
 @InProceedings{moura08_z,
+	doi = {10.1007/978-3-540-78800-3_24},
 	keywords = {SMT},
-	author = {de Moura, Leonardo and Bj{\o}rner, Nikolaj},
+	author = {de Moura, Leonardo and Bjørner, Nikolaj},
 	editor = "Ramakrishnan, C. R.
 and Rehof, Jakob",
-	title = {Z3: An Efficient SMT Solver},
+	title = {Z3: An Efficient {SMT} Solver},
 	booktitle = "Tools and Algorithms for the Construction and Analysis of Systems",
 	year = "2008",
 	publisher = "Springer Berlin Heidelberg",
@@ -1674,12 +1764,28 @@ and Rehof, Jakob",
 	isbn = "978-3-319-21401-6"
 }
 
+@inproceedings{narasiman11_igplw,
+	author = {Narasiman, Veynu and Shebanow, Michael and Lee, Chang Joo and Miftakhutdinov, Rustam and Mutlu, Onur and Patt, Yale N.},
+	title = {Improving {GPU} Performance via Large Warps and Two-Level Warp Scheduling},
+	year = {2011},
+	isbn = {9781450310536},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	doi = {10.1145/2155620.2155656},
+	abstract = {Due to their massive computational power, graphics processing units (GPUs) have become a popular platform for executing general purpose parallel applications. GPU programming models allow the programmer to create thousands of threads, each executing the same computing kernel. GPUs exploit this parallelism in two ways. First, threads are grouped into fixed-size SIMD batches known as warps, and second, many such warps are concurrently executed on a single GPU core. Despite these techniques, the computational resources on GPU cores are still underutilized, resulting in performance far short of what could be delivered. Two reasons for this are conditional branch instructions and stalls due to long latency operations.To improve GPU performance, computational resources must be more effectively utilized. To accomplish this, we propose two independent ideas: the large warp microarchitecture and two-level warp scheduling. We show that when combined, our mechanisms improve performance by 19.1\% over traditional GPU cores for a wide variety of general purpose parallel applications that heretofore have not been able to fully exploit the available resources of the GPU chip.},
+	booktitle = {Proceedings of the 44th Annual IEEE/ACM International Symposium on Microarchitecture},
+	pages = {308–317},
+	numpages = {10},
+	keywords = {GPGPU, SIMD, divergence, warp scheduling},
+	location = {Porto Alegre, Brazil},
+	series = {MICRO-44}
+}
+
 @inproceedings{nigam20_predic_accel_desig_time_sensit_affin_types,
 	abstract = {Field-programmable gate arrays (FPGAs) provide an opportunity to co-design applications with hardware accelerators, yet they remain difficult to program. High-level synthesis (HLS) tools promise to raise the level of abstraction by compiling C or C++ to accelerator designs. Repurposing legacy software languages, however, requires complex heuristics to map imperative code onto hardware structures. We find that the black-box heuristics in HLS can be unpredictable: changing parameters in the program that should improve performance can counterintuitively yield slower and larger designs. This paper proposes a type system that restricts HLS to programs that can predictably compile to hardware accelerators. The key idea is to model consumable hardware resources with a time-sensitive affine type system that prevents simultaneous uses of the same hardware structure. We implement the type system in Dahlia, a language that compiles to HLS C++, and show that it can reduce the size of HLS parameter spaces while accepting Pareto-optimal designs.},
 	author = {Nigam, Rachit and Atapattu, Sachille and Thomas, Samuel and Li, Zhijing and Bauer, Theodore and Ye, Yuwei and Koti, Apurva and Sampson, Adrian and Zhang, Zhiru},
 	location = {London, UK},
 	publisher = {Association for Computing Machinery},
-	url = {https://doi.org/10.1145/3385412.3385974},
 	booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
 	doi = {10.1145/3385412.3385974},
 	isbn = {9781450376136},
@@ -1691,7 +1797,7 @@ and Rehof, Jakob",
 }
 
 @inproceedings{nikhil04_bsv,
-	author = {R. {Nikhil}},
+	author = {Nikhil, Rishiyur},
 	title = {Bluespec System Verilog: efficient, correct RTL from high level specifications},
 	booktitle = {Proceedings. Second ACM and IEEE International Conference on Formal Methods and
                   Models for Co-Design, 2004. MEMOCODE '04.},
@@ -1701,7 +1807,7 @@ and Rehof, Jakob",
 }
 
 @inproceedings{noronha17_rapid_fpga,
-	author = {{Noronha}, D. H. and {Pinilla}, J. P. and {Wilton}, S. J. E.},
+	author = {Noronha, Daniel H. and Pinilla, Jose P. and Wilton, Steven J. E.},
 	booktitle = {2017 International Conference on ReConFigurable Computing and FPGAs (ReConFig)},
 	doi = {10.1109/RECONFIG.2017.8279807},
 	keywords = {high-level synthesis,FPGA,inlining,compiler optimisation},
@@ -1732,6 +1838,7 @@ and Rehof, Jakob",
 	year = {2005},
 	volume = {},
 	number = {},
+	pages = {1--8},
 	abstract = {FPGA configured soft processors are an attractive choice for implementing many embedded systems. For application development using these soft processors, the users can execute portions of the applications as software programs and the other portions as customized hardware implementations. Being able to rapidly simulate various partitions of the applications on hardware and software is crucial to efficiently execute them on soft processors because (a) there are many possible configurations of soft processors, and (b) low-level simulation techniques are too time consuming for evaluating these different partitioning and configuration possibilities. While state-of-the-art design tools rely on low-level simulation and are unable to deliver such a fast simulation speed, we propose a high-level cycle-accurate hardware/software co-simulation environment based on MATLAB/Simulink for application development using soft processors. By utilizing the high-level cycle-accurate abstractions of the low-level hardware implementations and the arithmetic simulation capability provided by MATLAB/Simulink, our tool considerably accelerates the time for cycle-accurate functional simulation of both hardware and software portions of a given application running on soft processors. To illustrate our approach, we develop a CORDIC division application and a matrix multiplication application on a commercial soft processor. Up to 19.4x improvement in simulation time is achieved using our co-simulation environment compared with that of low-level simulation for various partitions of these applications and for various configurations of the soft processor.},
 	keywords = {MATLAB;Hardware;Software design;Field programmable gate arrays;Application software;Concurrent computing;Embedded system;Software tools;Protocols;Joining processes},
 	doi = {10.1109/IPDPS.2005.275},
@@ -1776,6 +1883,18 @@ and Rehof, Jakob",
 	doi = {10.1109/FCCM53951.2022.9786208}
 }
 
+@ARTICLE{paulin89_fdsbsa,
+	author = {Paulin, P.G. and Knight, J.P.},
+	journal = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
+	title = {Force-Directed Scheduling for the Behavioral Synthesis of {ASICs}},
+	year = {1989},
+	volume = {8},
+	number = {6},
+	pages = {661-679},
+	keywords = {scheduling, hardware scheduling},
+	doi = {10.1109/43.31522}
+}
+
 @book{paulson94_i,
 	title = {Isabelle: A generic theorem prover},
 	author = {Paulson, Lawrence C},
@@ -1795,7 +1914,6 @@ and Rehof, Jakob",
 @article{perna11_correc_hardw_synth,
 	abstract = {This paper presents an algebraic compilation approach to the correct synthesis (compilation into hardware) of a synchronous language with shared variables and parallelism. The synthesis process generates a hardware component that implements the source program by means of gradually reducing it into a highly parallel state-machine. The correctness of the compiler follows by construction from the correctness of the transformations involved in the synthesis process. Each transformation is proved sound from more basic algebraic laws of the source language; the laws are themselves formally derived from a denotational semantics expressed in the Unified Theories of Programming. The proposed approach is based on previous efforts that handle both software and hardware compilation, in a pure algebraic style, but the complexity of our source language demanded significant adaptations and extensions to the existing approaches.},
 	author = {Perna, Juan and Woodcock, Jim and Sampaio, Augusto and Iyoda, Juliano},
-	url = {https://doi.org/10.1007/s00236-011-0142-y},
 	date = {2011-12-01},
 	doi = {10.1007/s00236-011-0142-y},
 	issn = {1432-0525},
@@ -1820,7 +1938,7 @@ and Rehof, Jakob",
 }
 
 @inproceedings{pilato13_bambu,
-	author = {{Pilato}, C. and {Ferrandi}, F.},
+	author = {Pilato, Christian and Ferrandi, Fabrizio},
 	booktitle = {2013 23rd International Conference on Field programmable Logic and Applications},
 	doi = {10.1109/FPL.2013.6645550},
 	pages = {1--4},
@@ -1829,6 +1947,7 @@ and Rehof, Jakob",
 }
 
 @inproceedings{pnueli98_trans,
+	doi = {10.1007/BFb0054170},
 	abstract = {We present the notion of translation validation as a new approach to the verification of translators (compilers, code generators). Rather than proving in advance that the compiler always produces a target code which correctly implements the source code (compiler verification), each individual translation (i.e. a run of the compiler) is followed by a validation phase which verifies that the target code produced on this run correctly implements the submitted source program. Several ingredients are necessary to set up the --- fully automatic --- translation validation process, among which are:1.A common semantic framework for the representation of the source code and the generated target code.2.A formalization of the notion of ``correct implementation'' as a refinement relation.3.A syntactic simulation-based proof method which allows to automatically verify that one model of the semantic framework, representing the produced target code, correctly implements another model which represents the source.},
 	author = {Pnueli, A. and Siegel, M. and Singerman, E.},
 	editor = {Steffen, Bernhard},
@@ -1842,22 +1961,23 @@ and Rehof, Jakob",
 }
 
 @inproceedings{pouchet13_polyh,
-	author = {Pouchet, Louis-Noel and Zhang, Peng and Sadayappan, Ponnuswamy and Cong, Jason},
+	author = {Pouchet, Louis-Noël and Zhang, Peng and Sadayappan, Ponnuswamy and Cong, Jason},
 	booktitle = {Proceedings of the ACM/SIGDA international symposium on Field programmable gate arrays},
 	doi = {https://doi.org/10.1145/2435264.2435273},
 	pages = {29--38},
-	title = {Polyhedral-based data reuse optimization for configurable computing},
+	title = {Polyhedral\?based data reuse optimization for configurable computing},
 	year = {2013}
 }
 
 @misc{pouchet20_polyb_c,
-	author = {Pouchet, Louis-No\"el},
+	author = {Pouchet, Louis-Noël},
 	title = {PolyBench/C: the Polyhedral Benchmark suite},
 	url = {http://web.cse.ohio-state.edu/~pouchet.2/software/polybench/},
 	year = {2020}
 }
 
 @inproceedings{rau92_code_gener_schem_sched_loops,
+	doi = {10.1145/144965.145795},
 	author = {Rau, B. Ramakrishna and Schlansker, Michael S. and Tirumalai, P. P.},
 	location = {Portland, Oregon, USA},
 	publisher = {IEEE Computer Society Press},
@@ -1872,10 +1992,9 @@ and Rehof, Jakob",
 
 @inproceedings{rau92_regis_alloc_softw_pipel_loops,
 	abstract = {Software pipelining is an important instruction scheduling technique for efficiently overlapping successive iterations of loops and executing them in parallel. This paper studies the task of register allocation for software pipelined loops, both with and without hardware features that are specifically aimed at supporting software pipelines. Register allocation for software pipelines presents certain novel problems leading to unconventional solutions, especially in the presence of hardware support. This paper formulates these novel problems and presents a number of alternative solution strategies. These alternatives are comprehensively tested against over one thousand loops to determine the best register allocation strategy, both with and without the hardware support for software pipelining.},
-	author = {Rau, B. R. and Lee, M. and Tirumalai, P. P. and Schlansker, M. S.},
+	author = {Rau, B. Ramakrishna and Lee, M. and Tirumalai, P. P. and Schlansker, M. S.},
 	location = {San Francisco, California, USA},
 	publisher = {Association for Computing Machinery},
-	url = {https://doi.org/10.1145/143095.143141},
 	booktitle = {Proceedings of the ACM SIGPLAN 1992 Conference on Programming Language Design and Implementation},
 	doi = {10.1145/143095.143141},
 	isbn = {0897914759},
@@ -1913,6 +2032,7 @@ and Rehof, Jakob",
 }
 
 @InProceedings{rizzi23_iterat_method_mappin_aware_frequen,
+	doi = {10.1109/DAC56929.2023.10247686},
 	keywords = {delay prediction},
 	author = {Rizzi, Carmine and Guerrieri, Andrea and Josipović, Lana},
 	booktitle = {Proceedings of the 60rd ACM/IEEE Design Automation Conference},
@@ -1930,6 +2050,24 @@ and Rehof, Jakob",
 	year = {2023},
 	title = {Automated HW/SW Co-Design of DSP Systems Composed of Processors and Hardware Accelerators},
 	author = {Roane, Jeff}
+}
+
+@inproceedings{rogers13_daws,
+	author = {Rogers, Timothy G. and O'Connor, Mike and Aamodt, Tor M.},
+	title = {Divergence-Aware Warp Scheduling},
+	year = {2013},
+	isbn = {9781450326384},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/2540708.2540718},
+	doi = {10.1145/2540708.2540718},
+	abstract = {This paper uses hardware thread scheduling to improve the performance and energy efficiency of divergent applications on GPUs. We propose Divergence-Aware Warp Scheduling (DAWS), which introduces a divergence-based cache footprint predictor to estimate how much L1 data cache capacity is needed to capture intra-warp locality in loops. Predictor estimates are created from an online characterization of memory divergence and runtime information about the level of control flow divergence in warps. Unlike prior work on Cache-Conscious Wavefront Scheduling, which makes reactive scheduling decisions based on detected cache thrashing, DAWS makes proactive scheduling decisions based on cache usage predictions. DAWS uses these predictions to schedule warps such that data reused by active scalar threads is unlikely to exceed the capacity of the L1 data cache. DAWS attempts to shift the burden of locality management from software to hardware, increasing the performance of simpler and more portable code on the GPU. We compare the execution time of two Sparse Matrix Vector Multiply implementations and show that DAWS is able to run a simple, divergent version within 4\% of a performance optimized version that has been rewritten to make use of the on-chip scratchpad and have less memory divergence. We show that DAWS achieves a harmonic mean 26\% performance improvement over Cache-Conscious Wavefront Scheduling on a diverse selection of highly cache-sensitive applications, with minimal additional hardware.},
+	booktitle = {Proceedings of the 46th Annual IEEE/ACM International Symposium on Microarchitecture},
+	pages = {99–110},
+	numpages = {12},
+	keywords = {scheduling, divergence, caches, GPU},
+	location = {Davis, California},
+	series = {MICRO-46}
 }
 
 @inproceedings{schuiki20_llhd,
@@ -2038,6 +2176,7 @@ and Rehof, Jakob",
 }
 
 @InProceedings{tan15_mappin_lut_fpgas,
+	doi = {10.1145/2684746.2689063},
 	keywords = {delay prediction},
 	author = {Tan, Mingxing and Dai, Steve and Gupta, Udit and Zhang, Zhiru},
 	title = {Mapping-aware constrained scheduling for {LUT-based FPGAs}},
@@ -2091,7 +2230,6 @@ and Rehof, Jakob",
 	author = {Tristan, Jean-Baptiste and Leroy, Xavier},
 	location = {Madrid, Spain},
 	publisher = {Association for Computing Machinery},
-	url = {https://doi.org/10.1145/1706299.1706311},
 	booktitle = {Proceedings of the 37th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
 	doi = {10.1145/1706299.1706311},
 	isbn = {9781605584799},
@@ -2118,6 +2256,7 @@ and Rehof, Jakob",
 }
 
 @InProceedings{ustun20_accur_fpga_hls,
+	doi = {10.1145/3400302.3415657},
 	keywords = {delay prediction},
 	author = {Ustun, Ecenur and Deng, Chenhui and Pal, Debjit and Li, Zhijing and Zhang, Zhiru},
 	title = {Accurate operation delay prediction for {FPGA HLS} using graph neural networks},
@@ -2144,6 +2283,7 @@ and Rehof, Jakob",
 }
 
 @InProceedings{wang23_mapbuf,
+	doi = {10.1109/ICCAD57390.2023.10323639},
 	keywords = {delay prediction},
 	author = {Wang, Hanyu and Rizzi, Carmine and Josipović, Lana},
 	booktitle = {Proceedings of the 42nd IEEE/ACM Intl. Conference on Computer-Aided Design},
@@ -2254,7 +2394,7 @@ and Rehof, Jakob",
 
 @inproceedings{zuo13_improv,
 	abstract = {High-level synthesis (HLS) tools are now capable of generating high-quality RTL codes for a number of programs. Nevertheless, for best performance aggressive program transformations are still required to exploit data reuse and enable communication/computation overlap. The polyhedral compilation framework has shown great promise in this area with the development of HLS-specific polyhedral transformation techniques and tools. However, all these techniques rely on polyhedral code generation to translate a schedule for the program's operations into an actual C code that is input to the HLS tool. In this work we study the changes to the state-of-the-art polyhedral code generator CLooG which are required to tailor it for HLS purposes. In particular, we develop various techniques to significantly improve resource utilization on the FPGA. We also develop a complete technique geared towards effective code generation of rectangularly tiled code, leading to further improvements in resource utilization. We demonstrate our techniques on a collection of affine benchmarks, reducing by 2x on average (up to 10x) the area used after high-level synthesis.},
-	author = {Zuo, W. and Li, P. and Chen, D. and Pouchet, L. and Zhong, Shunan and Cong, J.},
+	author = {Zuo, Wei and Li, Peng and Chen, Deming and Pouchet, Louis-Noël and Zhong, Shunan and Cong, Jason},
 	booktitle = {2013 International Conference on Hardware/Software Codesign and System Synthesis (CODES+ISSS)},
 	doi = {10.1109/CODES-ISSS.2013.6659002},
 	keywords = {FPGA,high-level synthesis,polyhedral analysis},
@@ -2263,6 +2403,27 @@ and Rehof, Jakob",
 	title = {Improving polyhedral code generation for high-level synthesis},
 	year = {2013}
 }
+
+@article{knoop94_ocm,
+	author = {Knoop, Jens and R\"{u}thing, Oliver and Steffen, Bernhard},
+	title = {Optimal Code Motion: Theory and Practice},
+	year = {1994},
+	issue_date = {July 1994},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {16},
+	number = {4},
+	issn = {0164-0925},
+	doi = {10.1145/183432.183443},
+	abstract = {An implementation-oriented algorithm for lazy code motion is presented that minimizes the number of computations in programs while suppressing any unnecessary code motion in order to avoid superfluous register pressure. In particular, this variant of the original algorithm for lazy code motion works on flowgraphs whose nodes are basic blocks rather than single statements, since this format is standard in optimizing compilers. The theoretical foundations of the modified algorithm are given in the first part, where t-refined flowgraphs are introduced for simplifying the treatment of flow graphs whose nodes are basic blocks. The second part presents the “basic block” algorithm in standard notation and gives directions for its implementation in standard compiler environments.},
+	journal = {ACM Trans. Program. Lang. Syst.},
+	month = {jul},
+	pages = {1117–1155},
+	numpages = {39},
+	keywords = {nondeterministic flowgraphs, lifetimes of registers, lifetime optimality, elimination of partial redundancies, data flow analysis, critical edges, computational optimality, code motion, t-refined flow graphs}
+}
+
+
 
 @Comment{
 Local Variables:

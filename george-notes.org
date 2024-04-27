@@ -1,0 +1,4 @@
+p.21: So I agree that this is great but will ASIC industry ever accept _ that
+doesn't involve translation validation too.
+p.22: How hard is it to lift function inlining restriction
+p.23: Why slightly worse clock speed.

@@ -10,17 +10,17 @@
   DIV=11,
   ]{scrbook}
 
-\setkomafont{publishers}{\large\itshape}
+\setkomafont{publishers}{\large}
+\setkomafont{date}{}
+\setkomafont{subject}{\large\scshape}
 
 \usepackage[svgnames]{xcolor}
-\usepackage{afterpage}
-\usepackage{pdflscape}
 
 \colorlet{maincolour}{DarkSlateBlue}
 
 \renewcommand\chapterlinesformat[3]{%
-  \leavevmode\marginpar{\fontsize{96}{115}\selectfont\textcolor{maincolour}{#2}}%
-  {\raggedleft #3\par}%
+  \leavevmode{\raggedleft #3\par}%
+  \marginpar{\fontsize{96}{115}\selectfont\textcolor{maincolour}{#2}}
 }
 
 \renewcommand{\figureformat}{\textbf{\figurename~\thefigure\autodot}}
@@ -35,8 +35,15 @@
 \usepackage{polyglossia}
 \setdefaultlanguage[variant=british]{english}
 
+\usepackage[en-GB,calc]{datetime2}
+
+\DTMnewdatestyle{ymhgshortdate}{%
+  \renewcommand{\DTMdisplaydate}[4]{\DTMmonthname{##2} ##1}%
+  \renewcommand{\DTMDisplaydate}{\DTMdisplaydate}%
+}
+
 \begin{hyphenrules}[variant=british]{english}
-  \hyphenation{Comp-Cert Veri-cert Comp-Cert-GSA Comp-Cert-SSA Comp-Cert-O Bo-row-ski}
+  \hyphenation{Comp-Cert Veri-cert Comp-Cert-GSA Comp-Cert-SSA Comp-Cert-O Bo-row-ski poly-he-dral}
 \end{hyphenrules}
 
 \usepackage[
@@ -46,8 +53,8 @@
   maxbibnames=9,
   maxcitenames=2,
   mincitenames=1,
-  uniquename=minfull,
-  uniquelist=minyear,
+  uniquename=false,
+  uniquelist=false,
   labeldateparts=true,
   datamodel=acmdatamodel,
   style=acmauthoryear,
@@ -59,7 +66,7 @@
 % For ACM author year citations
 \newcommand{\bibliofont}{\normalfont\normalsize}
 \renewcommand*{\bibfont}{\normalfont\normalsize}
-%\setlength\bibitemsep{\baselineskip}
+\setlength\bibitemsep{\baselineskip}
 
 %\usepackage{lineno}
 %\linenumbers
@@ -82,10 +89,11 @@
 
 \usepackage{tikz-timing}
 \usepackage{tikz}
-\usetikzlibrary{arrows,arrows.meta,shapes,snakes,automata,backgrounds,petri,%
+\usepackage{circuitikz}
+\usetikzlibrary{arrows,arrows.meta,shapes,automata,backgrounds,petri,%
                 decorations.pathreplacing,calligraphy,patterns,%
                 patterns.meta,pgfplots.groupplots,positioning,shapes.geometric,%
-                fit,tikzmark}
+                fit,tikzmark,intersections}
 
 \usepackage{mathpartir}
 \usepackage{multirow}
@@ -128,16 +136,17 @@
 %\usepackage{uni-titlepage}
 %\TitlePageStyle{UKoLa}
 
-\subject{PhD Thesis}
+\subject{Imperial College London\\Department of Electrical and Electronic Engineering}
 \title{Formal Verification \\ of High-Level Synthesis}
 \author{Yann Herklotz Grave}
+\date{\DTMsetdatestyle{ymhgshortdate}\today}
 
-\publishers{Supervised by \\ Dr John Wickerson}
+\publishers{Supervised by John Wickerson}
 
 \makeatletter
 \newcommand\@titlefooter{Submitted in part fulfilment of the requirements for
 the degree of Doctor of Philosophy in Electrical and Electronic Engineering of
-Imperial College London.}
+Imperial College London and the Diploma of Imperial College London.}
 \makeatother
 
 %\university{Imperial College London}
@@ -215,47 +224,50 @@ Imperial College London.}
 \newlanguageentrynofirst{AsmBlock}{AsmBlock}{CompCert KVX assembly block
   language}
 
-\newterm[name={\enquote{plus} forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
-\newterm[name={\enquote{star} forward simulation},sort=starforwardsimulation]{star-forward-simulation}
-\newterm{CompCert}
-\newterm{translation validation}
-\newterm{data flow}
-\newterm{control flow}
-\newterm{data path}
-\newterm{control logic}
-\newterm{basic block}
-\newterm{superblock}
-\newterm{hyperblock}
-\newterm{predicated instruction}
-\newterm{scheduling}
-\newterm[see={[see also]scheduling}]{list scheduling}
-\newterm[see={[see also]{hyperblock,scheduling}}]{hyperblock scheduling}
-\newterm[see={[see also]{superblock,scheduling}}]{superblock scheduling}
-\newterm{static scheduling}
-\newterm{dynamic scheduling}
-\newterm{operation chaining}
+\newignoredglossary{ignoredglossary}
 
-\glsxtrnewsymbol[description={variable defining the time step of an
+\newterm[type=ignoredglossary,name={\enquote{plus} forward simulation},sort=plusforwardsimulation]{plus-forward-simulation}
+\newterm[type=ignoredglossary,name={\enquote{star} forward simulation},sort=starforwardsimulation]{star-forward-simulation}
+\newterm[type=ignoredglossary]{CompCert}
+\newterm[type=ignoredglossary]{translation validation}
+\newterm[type=ignoredglossary]{data flow}
+\newterm[type=ignoredglossary]{control flow}
+\newterm[type=ignoredglossary]{data path}
+\newterm[type=ignoredglossary]{control logic}
+\newterm[type=ignoredglossary]{basic block}
+\newterm[type=ignoredglossary]{superblock}
+\newterm[type=ignoredglossary]{hyperblock}
+\newterm[type=ignoredglossary]{predicated instruction}
+\newterm[type=ignoredglossary]{scheduling}
+\newterm[type=ignoredglossary]{if-conversion}
+\newterm[type=ignoredglossary,see={[see also]scheduling}]{list scheduling}
+\newterm[type=ignoredglossary,see={[see also]{hyperblock,scheduling}}]{hyperblock scheduling}
+\newterm[type=ignoredglossary,see={[see also]{superblock,scheduling}}]{superblock scheduling}
+\newterm[type=ignoredglossary]{static scheduling}
+\newterm[type=ignoredglossary]{dynamic scheduling}
+\newterm[type=ignoredglossary]{operation chaining}
+
+\glsxtrnewsymbol[type=ignoredglossary,description={variable defining the time step of an
   operation}]{scheduling variable}{\ensuremath{\mathrm{sv}}}
 
 %\newterm
 
 % \includeonly{%
-%  % titlepage,
-%  % copyright-assignment,
-%  % declaration,
-%  % abstract,
-%  % acknowledgements,
-%  % lists,
-%  % chapters/1-introduction,
-%  % chapters/2-background,
-%  chapters/3-introduction-to-vericert,
-%  % chapters/4-trusted-computing-base,
-%  % chapters/5-hyperblock-scheduling,
-%  % chapters/6-hardware-generation,
-%  % chapters/7-evaluation,
-%  % chapters/8-conclusion,
-%  % bibliography,
+% % titlepage,
+% % copyright-assignment,
+% % declaration,
+% % abstract,
+% % acknowledgements,
+% % lists,
+% % chapters/1-introduction,
+% % chapters/2-background,
+% % chapters/3-introduction-to-vericert,
+% % chapters/4-trusted-computing-base,
+% chapters/5-hyperblock-scheduling,
+% % chapters/6-hardware-generation,
+% % chapters/7-evaluation,
+% % chapters/8-conclusion,
+% % bibliography,
 % }
 
 \setcapindent{1em}
