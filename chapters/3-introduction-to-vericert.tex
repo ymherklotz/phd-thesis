@@ -33,7 +33,7 @@ they can be effective at exercising corner cases missed by human-designed test
 suites.  Fuzzing has been used extensively to test conventional compilers; for
 example, \textcite{yang11_findin_under_bugs_c_compil} used it to reveal more
 than three hundred bugs in GCC and LLVM, and tested CompCert as well, only
-finding bugs in the trusted parts of the code.
+finding bugs in the verified parts of the code.
 
 \begin{example}[A miscompilation bug in Vivado HLS]
 \label{ex:vivado_miscomp}
@@ -340,16 +340,16 @@ then performed as follows:
 \begin{enumerate}[label=\protect\blacknum{\arabic*}]
 \item Basic block generation creates basic blocks from the pure \rtl{}
   \gls{CFG}.
-\item If-conversion combines basic blocks into a single hyperblock based on
+\item \Gls{if-conversion} combines basic blocks into a single hyperblock based on
   heuristics on the \gls{CFG} layout.  The hyperblock is represented as a basic
   block of predicated instructions with an exit instruction to leave the basic
   block prematurely.
-\item The scheduler itself is written in unverified OCaml, and works similarly
+\item The scheduler itself is written in unverified OCaml and works similarly
   to those in existing HLS tools~\cite[]{canis13_l}: it takes a set of
   scheduling constraints that capture the clock period, available hardware
   resources, and dependencies between operations, encodes them as a
   \glsfirst{SDC}~\cite[]{cong06_sdc}, and then hands them off to a linear
-  program solver.
+  program solver.  The result is checked by a verified validator that ensures the correctness of the schedule that was produced by the scheduler.
 \item Next, the hyperblocks are destroyed to explicitly place instructions into
   individual states.
 \item \htl{} is generated, which is a language that models an \gls{FSMD}, which
@@ -357,7 +357,7 @@ then performed as follows:
   but is still close enough to a hardware description so that hardware-specific
   optimisations can be performed on it.
 \item \gls{BRAM} insertion generates a proper memory interface for any
-  interaction with the stack.
+  interaction with the stack frame.
 \item To ensure that these assignments are actually performed in parallel, a
   final pass performs \emph{forward substitution}~\cite[p.~109]{hopwood78_decom}
   to turn the sequence of Verilog blocking assignments into a sequence of
@@ -365,17 +365,25 @@ then performed as follows:
 %
 \begin{center}
 \begin{tikzpicture}[>=Latex,shorten >=1pt,label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize}, bb/.style={align=left, draw=white, fill=black!5},font=\strut\sffamily]
-\node[bb,inner sep=3mm] (initial) {\begin{minipage}{1.7cm}
+\node[bb,inner sep=3mm] (initial) {\begin{minipage}{3.5cm}
 \begin{minted}{systemverilog}
-a = b * c;
-d = a + d;
+always @(posedge clk)
+  begin
+    r = r1 * r2;
+    r = r + r3;
+    r5 = r + r4;
+  end
 \end{minted}
 \end{minipage}};
-\node[right=5cm of initial,bb,inner sep=3mm] (scheduled) {%
-  \begin{minipage}{3cm}
+\node[right=3.5cm of initial,bb,inner sep=3mm] (scheduled) {%
+  \begin{minipage}{5.4cm}
 \begin{minted}{systemverilog}
-a <= b * c;
-d <= (b * c) + d;
+always @(posedge clk)
+  begin
+    r <= r1 * r2;
+    r <= (r1 * r2) + r3;
+    r5 <= ((r1 * r2) + r3) + r4;
+  end
 \end{minted}
   \end{minipage}%
 };
@@ -384,11 +392,15 @@ d <= (b * c) + d;
 \end{tikzpicture}
 \end{center}
 %
-The two versions are semantically equivalent, but the second, in which both
-right-hand sides must be evaluated before either assignment is performed, makes
-the downstream logic synthesis tools more likely to produce the intended
-hardware (which, in this particular example, involves exploiting a fused
-multiply--accumulator unit if available).
+The two versions are semantically equivalent, but we find that the second, in
+which both right-hand sides must be evaluated before either assignment is
+performed, makes the downstream logic synthesis tools more likely to produce the
+hardware we intend (which, in this particular example, involves exploiting a
+fused multiply--accumulator unit if available).%
+\footnote{As the example shows, forward substitution does not remove duplicate
+  writes to a variable because Verilog semantics explicitly state that the order
+  of nonblocking assignments to the same variable will be
+  preserved~\cite[p.~254]{ieee24_iss}.}
 \item Finally, syntactic Verilog is generated from \htl{}, which consists of
   translating the \gls{FSMD} into a case statement and implementing the memory
   interface in Verilog.
@@ -420,9 +432,8 @@ supported in most HLS tools anyway~\cite{thomas16_srcht}.
   \centering
     \begin{subfigure}[b]{0.48\linewidth}
 \begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
-int main() {
+int main(int i) {
     int x[2] = {3, 6};
-    int i = 1;
     return x[i];
 }
 \end{minted}
@@ -432,17 +443,14 @@ int main() {
 %\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
 \lstset{numbers=left,basicstyle=\footnotesize\ttfamily,numberstyle=\tiny,keepspaces=true,showspaces=true,xleftmargin=20pt}
 \begin{rtllisting}
-main() {
-    9:  r5 = 3
-    8:  int32[Stack(0)] = r5
-    7:  r4 = 6
-    6:  int32[Stack(4)] = r4
-    5:  r1 = 1
-    4:  r3 = Stack(0) (int)
-    3:  r2 = int32[r3 + r1 * 4 + 0]
-        goto 1
-    2:  r2 = 0
-    1:  return r2
+main(r1) {
+  7: r5 := 3
+  6: M[&Stack[0]] := r5
+  5: r4 := 6
+  4: M[&Stack[4]] := r4
+  3: r3 := &Stack[0]
+  2: r2 := M[r3 + r1 * 4 + 0]
+  1: return r2
 }
 \end{rtllisting}
 %\end{minted}
@@ -459,7 +467,7 @@ target.  An example of such a constraint is that two memory operations cannot be
 performed in the same cycle.  The goal is to schedule as many instructions as
 possible together to give the scheduler the most flexibility.  Vericert
 therefore constructs hyperblocks from the \rtl{} \gls{CFG}, by building basic
-blocks first and then performing if-conversion on blocks that should be merged.
+blocks first and then performing \gls{if-conversion} on blocks that should be merged.
 This is shown in \cref{fig:accumulator_seq}, where all the instructions can fit
 into a single basic block.  Each hyperblock can then be scheduled individually
 using \gls{SDC} scheduling by specifying any necessary constraints, the result
@@ -491,16 +499,14 @@ translated into hardware.
 %\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
 \lstset{numbers=left,basicstyle=\footnotesize\ttfamily,numberstyle=\tiny,keepspaces=true,showspaces=true,xleftmargin=20pt}
 \begin{rtllisting}
-main() {
-  8: {
-    r5 = 3
-    int32[Stack(0)] = r5
-    r4 = 6
-    int32[Stack(4)] = r4
-    r1 = 1
-    r3 = Stack(0) (int)
-    r2 = int32[r3 + r1 * 4 + 0]
-    nop
+main(r1) {
+  7: {
+    r5 := 3
+    M[&Stack[0]] := r5
+    r4 := 6
+    M[&Stack[4]] := r4
+    r3 := &Stack[0]
+    r2 := M[r3 + r1 * 4 + 0]
     return r2
   }
 }
@@ -512,17 +518,26 @@ main() {
 %\begin{minted}[fontsize=\footnotesize,linenos,xleftmargin=20pt]{c}
 \lstset{numbers=left,basicstyle=\footnotesize\ttfamily,numberstyle=\tiny,keepspaces=true,showspaces=true,xleftmargin=20pt}
 \begin{rtllisting}
-main() {
-  8: {
-    (r5 = 3)
-    (r4 = 6)
-    (r1 = 1)
-    (r3 = Stack(0) (int))
+main(r1) {
+  7: {
+    r5 := 3
+    r4 := 6
+    r3 := &Stack[0]
+    goto 13
   }
-  14: {(int32[Stack(0)] = r5)}
-  15: {(int32[Stack(4)] = r4)}
-  16: {(r2 = int32[r3 + r1*4 + 0])}
-  17: {(return r2)}
+  13: {
+    M[&Stack[0]] := r5
+    goto 14
+  }
+  14: {
+    M[&Stack[4]] := r4
+    goto 15
+  }
+  15: {
+    r2 := M[r3 + r1 * 4 + 0]
+    goto 16
+  }
+  16: { return r2 }
 }
 \end{rtllisting}
 %\end{minted}
@@ -606,21 +621,20 @@ manipulate and analyse, thereby making it easier to prove optimisations like
   \filldraw[fill=white,rounded corners=3pt] (7,0.5) rectangle (11.5,2.2);
   \node at (8.2,2) {\footnotesize \texttt{Next State \gls{FSM}}};
   \begin{scope}[xshift=5mm,yshift=-1mm]
-  \foreach \x in {8,...,3}
-    {\pgfmathtruncatemacro{\y}{8-\x}%
+  \foreach \x in {7,...,3}
+    {\pgfmathtruncatemacro{\y}{7-\x}%
       \node[draw,circle,inner sep=0,minimum size=10,scale=0.8] (s\x) at
       (7.5+\y/2,1.35) {};}
-  \node[font=\tiny] at (s8) {8};
-  \node[font=\tiny] at (s7) {14};
-  \node[font=\tiny] at (s6) {15};
-  \node[font=\tiny] at (s5) {16};
-  \node[font=\tiny] at (s4) {18};
-  \node[font=\tiny] (s1c) at (s3) {17};
+  \node[font=\tiny] at (s7) {7};
+  \node[font=\tiny] at (s6) {13};
+  \node[font=\tiny] at (s5) {14};
+  \node[font=\tiny] at (s4) {15};
+  \node[font=\tiny] (s1c) at (s3) {16};
   \node[draw,circle,inner sep=0,minimum size=13,scale=0.8] (s1) at (s1c) {};
   \draw[-{Latex[length=1mm,width=0.7mm]}] (s1) to [loop,looseness=5,out=45,in=-45] (s1);
-  \foreach \x in {8,...,4}
+  \foreach \x in {7,...,4}
     {\pgfmathtruncatemacro{\y}{\x-1}\draw[-{Latex[length=1mm,width=0.7mm]}] (s\x) -- (s\y);}
-  \draw[-{Latex[length=1mm,width=0.7mm]}] (7.2,1.7) to [out=0,in=100] (s8);
+  \draw[-{Latex[length=1mm,width=0.7mm]}] (7.2,1.7) to [out=0,in=100] (s7);
   \end{scope}
 
   \node[draw,fill=white] (nextstate) at (9.25,3) {\tiny \texttt{current state}};
@@ -729,21 +743,21 @@ memory view is very different from the C memory model, so I perform the
 following translation from \compcert{}'s abstract memory model to a concrete
 \gls{BRAM}.\@ Variables that do not have their address taken are kept in
 registers, which correspond to the registers in \rtl{}.  All address-taken
-variables, arrays, and structs are kept in \gls{BRAM}.  The stack of the main
+variables, arrays, and structs are kept in \gls{BRAM}.  The stack frame of the main
 function becomes an unpacked array of 32-bit integers representing the
 \gls{BRAM} block.  Any loads and stores are temporarily translated to direct
 accesses to this array, where each address has its offset removed and is divided
 by four.  In a separate \htl{}-to-\htl{} conversion, these direct accesses are
 then translated to proper loads and stores that use an interface to communicate
-with the \gls{BRAM}, shown on lines 31--32, 35--36 and 39--40 of
+with the \gls{BRAM}, shown on lines 32--33, 36--37 and 40--41 of
 \cref{fig:accumulator_v} in the final Verilog design.  This pass inserts a
 \gls{BRAM} block with an interface defined around the unpacked array.  Without
 this interface and without the \gls{BRAM} block, the synthesis tool processing
 the Verilog hardware description would not identify the array as a \gls{BRAM},
 and would instead implement it using many registers.  A high-level overview of
 the architecture and of the \gls{BRAM} interface can be seen in
-\cref{fig:accumulator_diagram}, where loads are specified to take two cycles and
-stores take one cycle.
+\cref{fig:accumulator_diagram}, where loads are specified to take one cycle and
+stores take half a cycle.
 
 \paragraph{Translating instructions}
 
@@ -751,7 +765,7 @@ Most \rtl{} instructions correspond to hardware constructs.  For example, line 2
 which in \cref{fig:accumulator_rtl} shows a 32-bit register \rtlinline|r5| being
 initialised to 3, after which the control flow moves execution to line 3. This
 initialisation is also encoded in the Verilog generated from \htl{} at state 8
-in the always-block implementing the \gls{FSMD}, shown at line 43 in
+in the always-block implementing the \gls{FSMD}, shown at line 44 in
 \cref{fig:accumulator_v} with the assignment \texttt{reg\_10 <= 32'd3}.  Simple
 operator instructions are translated in a similar way.  For example, the add
 instruction is just translated to the built-in add operator, similarly for the
@@ -780,7 +794,7 @@ translating the maps of Verilog statements, an always-block implementation the
 \gls{BRAM} interface also has to be created, which is only modelled abstractly
 at the \htl{} level.  \Cref{fig:accumulator_v} shows the final Verilog output
 that is generated for our example.  The \gls{BRAM} interface implementation is
-shown on lines 10--18 in the Verilog code.
+shown on lines 12--20 in the Verilog code.
 
 Although this translation seems quite straight\-forward, proving that this
 translation is correct is complex.  All the implicit assumptions that were made

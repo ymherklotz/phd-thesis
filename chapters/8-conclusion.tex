@@ -136,7 +136,7 @@ prologue and epilogue in the software pipelined loop.
 \subsubsection{Limitations with I/O}
 
 \vericert{} is currently limited in terms of I/O because the main function
-cannot accept any arguments if the Clight program is to be
+cannot accept any arguments if the \gls{Clight} program is to be
 well-formed.\footnote{Technically, \vericert{} (and indeed, \compcert{}) can
   compile main functions that have arbitrary arguments and will handle those
   inputs appropriately, but the correctness theorem offers no guarantees about
@@ -150,7 +150,7 @@ design.
 \subsubsection{Lack of support for global variables}
 
 In \compcert{}, each global variable is stored in its own memory.  A
-generalisation of our translation of the stack into a \gls{BRAM} block could
+generalisation of our translation of the stack frame into a \gls{BRAM} block could
 therefore translate global variables in the same manner.  This would require a
 generalisation of pointers so that they store provenance information to ensure
 that each pointer accesses the right \gls{BRAM}. It would also be necessary to

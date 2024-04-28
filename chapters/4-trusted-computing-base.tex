@@ -1,4 +1,4 @@
-\chapter{Trusted Computing Base}%
+\chapter{Correctness Theorem and Verilog Semantics}%
 \label{sec:trusted-computing-base}
 
 \begin{chapsummary}
@@ -30,7 +30,7 @@ and the target Verilog semantics.
 \section{Formulating the Correctness Theorem}
 
 The main correctness theorem is analogous to that stated in \compcert{} and
-described in \cref{sec:bg:correctness-theorem}: for all Clight source programs
+described in \cref{sec:bg:correctness-theorem}: for all \gls{Clight} source programs
 $C$, if the translation to the target Verilog code succeeds, $\mathit{safe}(C)$
 holds and the target Verilog has behaviour $\mathcal{B}$ when simulated, then
 $C$ will have the same behaviour $\mathcal{B}$.  The predicate
@@ -47,10 +47,10 @@ supported in \vericert{}, this trace will always be empty.
   observable behaviours of $C$ are safe, then $V\!$ has behaviour $\mathcal{B}$
   only if $C$ has behaviour $\mathcal{B}$.
 
-  {\normalfont\begin{equation*} \forall C\ V\ \mathcal{B}\ldotp\quad \yhfunction{HLS} (C)
+  {\normalfont\begin{equation} \forall C\ V\ \mathcal{B}\ldotp\quad \yhfunction{HLS} (C)
       = \ccok{V} \land \mathit{safe}(C) \implies (V \Downarrow \mathcal{B}
       \implies C \Downarrow \mathcal{B}).
-  \end{equation*}}
+  \end{equation}}
 \end{theorem}
 
 Why is this correctness theorem also the right one for HLS?  It could be argued
@@ -118,9 +118,7 @@ features that are excluded are continuous assignment and combinational
 always-blocks; these are modelled in other semantics such as that
 by~\textcite{meredith10_veril}.
 
-The semantics of Verilog differs from regular programming languages, as it is
-used to describe hardware directly, which is inherently parallel, rather than an
-algorithm, which is usually sequential.  The main construct in Verilog is the
+The semantics of Verilog is inherently parallel as it needs to describe hardware.  The main construct in Verilog is the
 always-block.  A module can contain multiple always-blocks, all of which run in
 parallel.  These always-blocks further contain statements such as if-statements
 or assignments to variables.  Only \emph{synchronous} logic is supported, which
@@ -139,15 +137,15 @@ executing an always-block that is triggered at the positive edge of the clock is
 shown below, where $\Sigma$ is the state of the registers in the module and $s$
 is the statement inside the always-block:
 %
-\begin{equation*}
+\begin{equation}
   \inferrule[Always]{(\Sigma, s)\downarrow_{\text{stmnt}} \Sigma'}{(\Sigma,
     \yhkeyword{always} \texttt{ @(}\yhkeyword{posedge}\texttt{ clk) } s) \downarrow_{\text{always}^{+}} \Sigma'}
-\end{equation*}
+\end{equation}
 %
 This rule says that assuming the statement $s$ in the always-block runs with
 state $\Sigma$ and produces the new state $\Sigma'$, the always-block will
 result in the same final state.  The rule is triggered once for every clock
-cycle.
+cycle, on the positive edge of the clock (denoted by the $\cdot^{+}$).
 
 Two types of assignments are supported in always-blocks: nonblocking and
 blocking assignment.  Nonblocking assignments all take effect simultaneously at
@@ -177,10 +175,10 @@ end of the clock cycle. $\Sigma$ can therefore be defined as follows:
 $\Sigma = (\Gamma, \Delta)$.  Blocking and Nonblocking assignment can therefore
 be expressed as follows:
 %
-\begin{equation*}
+\begin{equation}
   \inferrule[Blocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e)
     \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d \mathrel{\yhkeyword{=}} e\yhkeyword{;}) \downarrow_{\text{stmnt}} (\Gamma[n \mapsto v], \Delta)}\qquad\inferrule[Nonblocking Reg]{\yhkeyword{name}\ d = \ccok{n} \\ (\Gamma, e) \downarrow_{\text{expr}} v}{((\Gamma, \Delta), d \mathrel{\yhkeyword{<=}} e\yhkeyword{;}) \downarrow_{\text{stmnt}} (\Gamma, \Delta [n \mapsto v])}
-\end{equation*}
+\end{equation}
 %
 where assuming that $\downarrow_{\text{expr}}$ evaluates an expression $e$ to a
 value $v$, the nonblocking assignment $d\ \yhkeyword{ <= } e$ updates the future
@@ -190,21 +188,21 @@ Finally, the following rules dictate how the whole module runs in one clock
 cycle:
 %
 \phantomsection{}
-\begin{equation*}
+\begin{equation}
   \inferrule[Module$^+_1$]{(\Gamma, \Delta, a) \downarrow_{\text{always}^{+}}
     (\Gamma', \Delta') \\ (\Gamma', \Delta', \vec{m})
     \downarrow_{\mathrm{module}^{+}} (\Gamma'', \Delta'')}{(\Gamma, \Delta, a \mathbin{::} \vec{m})\ \downarrow_{\mathrm{module}^{+}}
     (\Gamma'', \Delta'')}\label{infer:module_plus}\quad
   \inferrule[Module$^+_2$]{ }{(\Gamma, \Delta, \varnothing)\ \downarrow_{\mathrm{module}^{+}}
     (\Gamma, \Delta)}
-\end{equation*}
+\end{equation}
 \phantomsection{}
-\begin{equation*}
+\begin{equation}
   \inferrule[Program]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\mathrm{module}^{+}}
     (\Gamma', \Delta')}{(\Gamma, \yhkeyword{module } \yhconstant{main}
     \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule})
     \downarrow_{\text{program}} (\Gamma' \verilogmerge \Delta')}\label{infer:module_old}
-\end{equation*}
+\end{equation}
 %
 where $\Gamma$ is the initial state of all the variables, $\epsilon$ is the
 empty map because the $\Delta$ map is assumed to be empty at the start of the
@@ -272,9 +270,9 @@ This is shown in the modifications of the \nameref{infer:module} rule shown
 below:
 %
 \phantomsection{}
-\begin{equation*}
+\begin{equation}
   \inferrule[Program$^\pm$]{(\Gamma, \epsilon, \vec{m})\ \downarrow_{\text{module}^{+}} (\Gamma', \Delta') \\ (\Gamma' \verilogmerge \Delta', \epsilon, \vec{m}) \downarrow_{\text{module}^{-}} (\Gamma'', \Delta'')}{(\Gamma, \yhkeyword{module}\ \yhconstant{main} \yhkeyword{(...);}\ \vec{m}\ \yhkeyword{endmodule}) \downarrow_{\mathrm{program}^\pm} (\Gamma''\verilogmerge \Delta'')}\label{infer:module}
-\end{equation*}
+\end{equation}
 %
 The main execution of the module $\downarrow_{\text{module}}$ is split into
 $\downarrow_{\text{module}^{+}}$ and $\downarrow_{\text{module}^{-}}$, which are
@@ -313,7 +311,7 @@ registers are not introduced, because the Verilog subset could be restriced to
 bitvectors of sizes 4, 8, 16, 32 and 64, which are already supported by the
 CompCert integer type.
 
-\subsection{Integrating the Verilog semantics into \compcert{}'s model}
+\subsection{Integrating the Verilog semantics into CompCert's model}
 \label{sec:verilog:integrating}
 
 \begin{figure*}
@@ -348,19 +346,18 @@ therefore not part of the general Verilog semantics themselves, but part of the
 Verilog semantics for designs produced through \gls{HLS}.
 \begin{description}
 \item[\texttt{State} $\mathit{sf}$ $m$ $v$ $\Gamma_{r}$ $\Gamma_{a}$] The main
-  state when executing a function, with stack frame $\mathit{sf}$, current
-  module $m$, current state $v$ and variable states $\Gamma_{r}$ and
+  state when executing a function, with stack frames $\mathit{sf}$, the top-level module $m$, current state $v$ and variable states $\Gamma_{r}$ and
   $\Gamma_{a}$.  The regular execution of the module will proceed from
   \texttt{State} to \texttt{State} until the \textit{fin} signal is high.
   \item[\texttt{Callstate} $\mathit{sf}$ $m$ $\vec{r}$] The state that is
-    reached when a function is called, with the current stack frame
-    $\mathit{sf}$, current module $m$ and arguments $\vec{r}$.  In practice, as
+    reached when a function is called, with the stack frames
+    $\mathit{sf}$, the top-level module $m$ and arguments $\vec{r}$.  In practice, as
     there are no function calls in the Verilog semantics, this state is only
-    reached at the start of the main function.  A better name for this state
+    reached at the start of the execution.  A better name for this state
     might therefore be \texttt{Resetstate}, as it corresponds to the behaviour
     of the module when the reset input was asserted.
   \item[\texttt{Returnstate} $\mathit{sf}$ $v$] The state that is reached when a
-    function returns back to the caller, with stack frame $\mathit{sf}$ and
+    function returns back to the caller, with stack frames $\mathit{sf}$ and
     return value $v$.
 \end{description}
 
@@ -382,9 +379,9 @@ the following four registers and a \gls{BRAM} block:
   register. These are denoted as $\finishreg$ and $\returnreg$ respectively.
   Instead of a return instruction, checking that $\finishreg$ is 1 should
   signal that the result is stored in the return register.
-\item[stack] The function stack can be modelled as a \gls{BRAM} block, which is
+\item[stack] The function's stack frame can be modelled as a \gls{BRAM} block, which is
   implemented using an array in the module, and denoted as $\stackreg$.
-  When the main function is initially called, it allocates the stack, which
+  When the main function is initially called, it allocates a stack frame, which
   should match the \gls{BRAM} block that was implemented.
 \end{description}
 
@@ -409,10 +406,9 @@ semantics ever to reach a \texttt{Callstate} except for the initial call to
 main. So the \nameref{infer:callstate} rule is only used at the very beginning
 of execution; likewise, the \nameref{infer:finishstate} rule is only matched for
 the final return value from the main function.  As a result, the final rule
-called \nameref{infer:returnstate} is never reached in practice, as the stack
-frame will always be empty.  This rule could ideally therefore be removed,
+called \nameref{infer:returnstate} is never reached in practice, as the stack will always be empty.  This rule could ideally therefore be removed,
 however it is still present to match the state transitions used in CompCert.  To
-remove this rule, one would have to show that the stack frame remains empty by
+remove this rule, one would have to show that the stack remains empty by
 induction over the semantics.
 
 In addition to these rules, a valid semantics also needs an intial state and a
@@ -429,11 +425,10 @@ final state.  These are therefore defined as follows:
   \label{infer:finalstate}
 \end{mathpar}
 
-\noindent where the initial state is the \texttt{Callstate} with an empty stack
-frame and no arguments for the \texttt{main} function of program $P$, where this
+\noindent where the initial state is the \texttt{Callstate} with an empty stack and no arguments for the \texttt{main} function of program $P$, where this
 \texttt{main} function needs to be in the current translation unit.  The final
 state results in the program output of value $n$ when reaching a
-\texttt{Returnstate} with an empty stack frame.
+\texttt{Returnstate} with an empty stack.
 
 \subsection{Memory model}\label{sec:verilog:memory}
 
@@ -609,9 +604,9 @@ shown in \cref{fig:inference_module}.
   If a Verilog program $V\!$ admits behaviours $B_1$ and $B_2$, then $B_1$ and
   $B_2$ must be the same.
 
-  \begin{equation*}
+  {\normalfont\begin{equation}
     \forall V\ B_{1}\ B_{2}\ldotp\quad V \Downarrow B_{1} \land V \Downarrow B_{2} \implies B_{1} = B_{2}.
-  \end{equation*}
+  \end{equation}}
 \end{lemma}
 
 \begin{proof}[Proof sketch]

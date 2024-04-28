@@ -31,7 +31,7 @@ old, Bambu is still in active development and implements many advanced
 optimisations like speculation.  The baseline Bambu HLS version has all the
 default automatic optimisations turned on.  \vericert{} is also compared against
 an unoptimised version of Bambu HLS, where all optimisations that can be toggled
-are turned off.  This affects optimisations like deep if-conversion that Bambu
+are turned off.  This affects optimisations like deep \gls{if-conversion} that Bambu
 HLS would normally automatically perform.  Additionally, three versions of
 Vericert are compared to Bambu HLS, so that optimisations performed by Vericert
 can also be tested.  In the first version of Vericert scheduling is disabled
@@ -89,7 +89,7 @@ $\text{total execution time} = \frac{\text{total clock cycles}}{\text{maximum
 \definecolor{colorVericertList}{HTML}{fc8d62}
 \definecolor{colorVericertHyper}{HTML}{8da0cb}
 \definecolor{colorBambuNoOpt}{HTML}{e78ac3}
-\definecolor{colorBambuDefault}{HTML}{bbbbbb}
+\definecolor{colorBambuDefault}{HTML}{a6d854}
 
 \colorlet{colorVericertBaseLIGHT}{colorVericertBase!50!white}
 \colorlet{colorVericertListLIGHT}{colorVericertList!50!white}
@@ -107,40 +107,46 @@ $\text{total execution time} = \frac{\text{total clock cycles}}{\text{maximum
 
 \newcommand\VericertBase{%
 \setul{-1pt}{3pt}\setulcolor{colorVericertBaseLIGHT}%
-{\ul{\textsf{Vericert-no-scheduling}}}}
+{\ul{\textsf{Vericert-original}}}}
 
 \newcommand\VericertList{%
 \setul{-1pt}{3pt}\setulcolor{colorVericertListLIGHT}%
-{\ul{\textsf{Vericert-list-scheduling}}}}
+{\ul{\textsf{Vericert-list}}}}
 
 \newcommand\VericertHyper{%
 \setul{-1pt}{3pt}\setulcolor{colorVericertHyperLIGHT}%
-{\ul{\textsf{Vericert-hyperblock-scheduling}}}}
+{\ul{\textsf{Vericert-hyperblock}}}}
 
-% \begin{figure}
-%   \centering
-%   \resizebox{\linewidth}{!}{\input{figures/5-hyperblock-scheduling/bar-plot}}
-%   \caption[Results of simulating and synthesising the PolyBench/C benchmark suite using a range of HLS tools. All figures are relative to Bambu.]{Results of simulating and synthesising the PolyBench/C benchmark suite using a range of HLS tools. All figures are relative to \BambuDefault{}.}%
-%   \label{fig:list-against-hyper-scheduling}
-% \end{figure}
+\definecolor{benchcol}{HTML}{264653}
+\newcommand\benchmark[1]{\textcolor{benchcol}{\textsf{#1}}}
 
-\afterpage{
-\clearpage% To flush out all floats, might not be what you want
-\thispagestyle{empty}
-\begin{landscape}
-%\thispagestyle{lscape}
-%\pagestyle{lscape}
+\Cref{fig:list-against-hyper-scheduling} visualises the results of simulation and synthesis of the PolyBench/C benchmark. We use default Vericert (\VericertBase), Vericert with list scheduling (\VericertList), and Vericert with hyperblock scheduling (\VericertHyper). We also use the state-of-the-art open-source HLS tool Bambu in two modes: one where all default optimisations are enabled (\BambuDefault{}), and one where as many optimisations as possible are disabled (\BambuNoOpt{}). Several optimisations are built into Bambu though and cannot be disabled, such as list scheduling and loop flattening.
+
 \begin{figure}
   \centering
-  \resizebox{\linewidth}{!}{\input{figures/5-hyperblock-scheduling/bar-plot-sideways}}
-  \caption[Results of simulating and synthesising the PolyBench/C benchmark
-  suite using a range of HLS tools.]{Results of simulating and synthesising the
-    PolyBench/C benchmark suite using a range of HLS tools. All figures are
-    relative to \BambuDefault{}.}%
-\label{fig:list-against-hyper-scheduling}
+  \newcommand\y[1]{\benchmark{#1}}
+  \resizebox{\linewidth}{!}{\input{figures/5-hyperblock-scheduling/bar-plot-full}}
+  \caption[Benchmark results compared to Bambu HLS and other Vericert versions.]{Results of simulating and synthesising the PolyBench/C benchmark suite using a range of HLS tool configurations. All measurements are relative to \BambuDefault{} except the greatest critical path delay, which is given absolutely. The dashed red line in that graph corresponds to the target clock with a period of 10ns, or a frequency of 100MHz.}%
+  \label{fig:list-against-hyper-scheduling}
 \end{figure}
-\end{landscape}
-}
+
+% \afterpage{
+% \clearpage% To flush out all floats, might not be what you want
+% \thispagestyle{empty}
+% \begin{landscape}
+% %\thispagestyle{lscape}
+% %\pagestyle{lscape}
+% \begin{figure}
+%   \centering
+%   \resizebox{\linewidth}{!}{\input{figures/5-hyperblock-scheduling/bar-plot-sideways}}
+%   \caption[Results of simulating and synthesising the PolyBench/C benchmark
+%   suite using a range of HLS tools.]{Results of simulating and synthesising the
+%     PolyBench/C benchmark suite using a range of HLS tools. All figures are
+%     relative to \BambuDefault{}.}%
+% \label{fig:list-against-hyper-scheduling}
+% \end{figure}
+% \end{landscape}
+% }
 
 \section{RQ1: Is Vericert Competitive With Unverified Tools}
 
@@ -150,65 +156,42 @@ Bambu is used in two modes: one where all default optimisations are enabled
 (\BambuNoOpt{}). Note that several \enquote{optimisations} are built into Bambu
 and cannot be disabled, such as list scheduling and loop flattening.
 
-All the bars in \cref{fig:list-against-hyper-scheduling} are relative to
+Most the bars in \cref{fig:list-against-hyper-scheduling} are relative to
 \BambuDefault. The pink bars show \BambuNoOpt. We see that although
-\VericertHyper{} is well behind \BambuDefault{} (its designs require 3$\times$
-the cycle count), it performs comparably to \BambuNoOpt{} (1.04$\times$ the
-cycle count), which is encouraging because \VericertHyper{} and \BambuNoOpt{}
-have similar feature sets.
+\VericertHyper{} is well behind \BambuDefault{} (its designs require 3.6$\times$
+the execution time), it only performs slightly worse when compared to
+\BambuNoOpt{} (1.57$\times$ the execution time).  This is encouraging because
+the main reason for the slow-down in execution time is the higher critical path
+delay -- \VericertHyper{} performs comparably with \BambuNoOpt{} in terms of
+cycle count, with its designs needing only 1.04$\times$ the cycles.  Cycle count
+is under the direct control of the scheduler, and therefore shows the effect of
+the scheduler most clearly, whereas the critical path delay is sensitive to
+which optimisations the downstream synthesis tool decides to perform.  As
+mentioned previously, estimating the delay of operations and predicting when
+downstream optimisations will fire is an active research area and is currently
+implemented conservatively.  For example, even \BambuNoOpt{} failed to predict
+the delay of the critical path correctly for the \benchmark{fdtd-2d} benchmark,
+and failed timing for it, as did \VericertList{} on the \benchmark{cholesky}
+benchmark.
 
-Comparing the execution time of the hardware designs produced by Vericert with
-unoptimised Bambu HLS, we see that Vericert designs are around $1.6\times$
-slower than Bambu HLS designs.  This is because Vericert designs normally
-operate close to the maximum frequency of 100MHz, whereas Bambu HLS designs in
-general seem to give more slack.
-
-Finally, comparing area, on average all tools are quite similar, and Vericert
-can achieve designs that are around the same size as optimised Bambu and
-unoptimised Bambu.  One thing to note, is that Bambu could be made to optimise
-the design purely for area, instead of the default configuration that was
-chosen, in which case execution speed might suffer slightly but the area could
-be reduced further.
+In terms of area, \VericertHyper{} designs are 1.7$\times$ larger than
+\BambuDefault{} and 1.2$\times$ larger than \BambuNoOpt{}, however, this is
+tightly linked to the fact that some chaining optimisations are currently missed
+by the downstream synthesis tool.  Tweaking the representation of predicated
+instructions could improve the area significantly.
 
 \section{RQ2: Area and Delay Improvements of Vericert}
 
-To assess whether adding scheduling to Vericert leads to better hardware
-designs, \cref{fig:list-against-hyper-scheduling} compares the hardware produced
-by original Vericert (\VericertBase{}) with that produced when hyperblock
-scheduling is enabled (\VericertHyper{}). We see that, on average, hyperblock
-scheduling leads to hardware that requires only 0.46$\times$ the cycle count
-(middle plot). This is unsurprising given that original Vericert only executed a
-single instruction per clock cycle. In terms of area (bottom plot), hyperblock
-scheduling has, on average, a slight increase in area.  This is due to the
-additional logic needed to encode the predicated operations.  In addition to
-that, predicated instructions can often hinder operation chaining optimisations
-performed by the synthesis tool, increasing area further.
+To assess whether adding scheduling to Vericert leads to better hardware designs, we compare the hardware produced by \VericertBase{} with that produced by \VericertHyper{}. We see that, on average, hyperblock scheduling leads to hardware that requires only 0.48$\times$ the time to execute a benchmark (\cref{fig:list-against-hyper-scheduling}\hyperref[fig:list-against-hyper-scheduling]{a}).  This can be attributed to the scheduled hardware requiring only 0.46$\times$ the number of cycles (\cref{fig:list-against-hyper-scheduling}\hyperref[fig:list-against-hyper-scheduling]{b}) and the minimum clock period being nearly identical between the scheduled and unscheduled designs (\cref{fig:list-against-hyper-scheduling}\hyperref[fig:list-against-hyper-scheduling]{c}). This improvement is unsurprising given that \VericertBase{} only executes a single instruction per clock cycle. In terms of area (\cref{fig:list-against-hyper-scheduling}\hyperref[fig:list-against-hyper-scheduling]{d}), hyperblock scheduling leads, on average, to a slight increase in area of 23.6\%.  This can mostly be attributed to the additional circuitry needed to check the value of predicates and gate instructions. However, in some cases, like \benchmark{floyd-warshall}, the area increase is quite egregious, which can be attributed to some back-end optimisations like operation fusing not triggering because the Verilog code does not match a specific pattern the synthesis tool recognises. Tweaking the syntax of the generated code should allow us to produce designs with similar area to those of \VericertBase{}.
 
 \section{RQ3: Hyperblock Scheduling Compared to Na\"ive Scheduling}
 
-Hyperblock scheduling is considerably more complicated to implement and verify
-than list scheduling, as it requires if-conversion to combine basic blocks into
-hyperblocks, as well as predicate-aware scheduling. If we omit if-conversion
-entirely (hence avoiding predication too), we obtain list scheduling as a
-special case. Does hyperblock scheduling yield enough of a performance
-improvement over list scheduling to justify its additional complexity?
+Hyperblock scheduling is considerably more complicated to implement and verify than list scheduling because it requires \gls{if-conversion} to combine basic blocks into hyperblocks, as well as predicate-aware scheduling. If we omit if-conversion entirely (hence avoiding predication too), we obtain list scheduling as a special case. Does hyperblock scheduling yield enough of a performance improvement over list scheduling to justify its additional complexity?
 
-To answer this, \cref{fig:list-against-hyper-scheduling} measures the hardware
-produced by Vericert with list scheduling (\VericertList{}). On average, list
-scheduling leads to hardware that requires 0.51$\times$ the cycle count compared
-to \VericertBase{}, which is 1.1$\times$ the cycle count compared to
-\VericertHyper{}. I expect hyperblock scheduling to extend its small lead over
-list scheduling once the heuristics that guide if-conversion are improved.  In
-particular, our predictions of the latency of predicated instructions are
-currently quite conservative to ensure that timing constraints are met;
-improving these estimates is an active research
-area~\cite{tan15_mappin_lut_fpgas,rizzi23_iterat_method_mappin_aware_frequen,wang23_mapbuf,ustun20_accur_fpga_hls,zheng14_fast_effec_placem_routin_direc}.
+To answer this, \cref{fig:list-against-hyper-scheduling} measures the hardware produced by \VericertList{}. On average, list scheduling leads to hardware requiring 0.52$\times$ the total time compared to \VericertBase{} and 1.08$\times$ the total time compared to \VericertHyper{}. We expect hyperblock scheduling to extend its small lead over list scheduling once the if-conversion heuristics are improved.  In particular, our predictions of predicated instruction latency are currently quite conservative to ensure that timing constraints are met; improving these estimates is an active research area~\cite{tan15_mappin_lut_fpgas,rizzi23_iterat_method_mappin_aware_frequen,wang23_mapbuf,ustun20_accur_fpga_hls,zheng14_fast_effec_placem_routin_direc}.
+On the other hand, the latency of instructions without predicates is much more predictable and its estimation less conservative, leading to better overall performance. We believe list scheduling is at its best, whereas hyperblock scheduling could be greatly improved with better predictions.
 
-In terms of area, we see that \VericertList{} leads to the smallest hardware
-designs. This can be attributed to the downstream logic synthesis tool being
-able to save area by optimising chained operations, such as
-multiply--accumulate, while not having to handle the predicates that are
-introduced with \VericertHyper{}.
+In terms of area, we see that \VericertList{} leads to the smallest hardware designs, on average 0.69$\times$ the size of \VericertHyper{} designs. This can be attributed to the downstream logic synthesis tool being able to save area by optimising chained operations, such as multiply--accumulate, while not having to handle the predicates that are introduced with \VericertHyper{}.
 
 \section{RQ4: Compilation Times of Vericert}
 

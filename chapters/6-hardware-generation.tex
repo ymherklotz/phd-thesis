@@ -215,7 +215,7 @@ should be executed from the $\mathit{datapath}$.  As mentioned before, the
 $\statereg$ register is a physical representation of the virtual program
 counter from \rtlsubpar{} and other intermediate instruction languages.  We then
 also have $\mathit{stack}$ register and an associated $\mathit{stack\_size}$,
-which is a Verilog array storing the contents of the stack.  Initially, this
+which is a Verilog array storing the contents of the stack frame.  Initially, this
 array will be accessed directly by operations in the data path, however,
 \cref{sec:hg:bram-insertion} describes how these direct accesses to the array
 are instead turned into accesses to a \gls{BRAM}.
@@ -269,10 +269,10 @@ translation from \rtlsubpar{} to \htl{} is shown in
   \begin{tikzpicture}[>=Latex,shorten >=1pt,
     label/.style={circle,draw,fill=white,inner sep=0.4mm,font=\footnotesize},
     bb/.style={align=left, draw=white, fill=black!5}]
-    \node[bb] (initial block) {\rtlinline`[ [ r1 := r2 * r3     ] ]; `\\
-                               \rtlinline`[ [ p1 => r4 := r5      ]; `\\
-                               \rtlinline`[ [ p2 => Stack[r6] = 3 ]; `\\
-                               \rtlinline`  [ goto 2              ] ]`};
+    \node[bb] (initial block) {\rtlinline`[ [ r1 := r2 * r3      ] ]; `\\
+                               \rtlinline`[ [ p1 => r4 := r5       ]; `\\
+                               \rtlinline`[ [ p2 => Stack[r6] := 3 ]; `\\
+                               \rtlinline`  [ goto 2               ]]`};
     \node[bb, right=4.2cm of initial block] (transf block)
       {\veriloginline`r2 = r4 * r6;`\\
        \veriloginline`r8 = r3 ? r10 : r8;`\\
@@ -300,9 +300,9 @@ Many of the \compcert{} instructions map well to hardware, but \texttt{Oshrximm}
 if implemented na\"ively. The problem is that in \compcert{} it is specified as
 a signed division:
 
-\begin{equation*}
+\begin{equation}
   \texttt{Oshrximm } x\ y = \text{round\_towards\_zero}\left(\frac{x}{2^{y}}\right)
-\end{equation*}
+\end{equation}
 
 (where $x, y \in \mathbb{Z}$, $0 \leq y < 31$, and $-2^{31} \leq x < 2^{31}$)
 and instantiating divider circuits in hardware is well known to cripple
@@ -329,7 +329,7 @@ Translating memory operations and the memory itself is one of the trickiest part
 of the translation, especially from a correctness point of view, because of the
 large difference in behaviour between CompCert memories and their Verilog
 implementation.  At the stage of \htl{} generation, a Verilog array is used to
-represent the stack of the function in \rtlsubpar{}.  The Verilog array is
+represent the stack frame of the function in \rtlsubpar{}.  The Verilog array is
 defined as the following:
 
 \begin{minted}{systemverilog}
@@ -367,7 +367,7 @@ using a ternary statement:
 
 \begin{center}
   \begin{tikzpicture}[>=Latex,shorten >=1pt]
-    \node [] (rtlstack) {\rtlinline`p2 => Stack[r6] = 3`}; \node [right=3cm of
+    \node [] (rtlstack) {\rtlinline`p2 => Stack[r6] := 3`}; \node [right=3cm of
     rtlstack] (verilogstack)
     {\veriloginline`stack[r12/32'd4] = r5 ? 32'd3 : stack[r12/32'd4]`};
     \draw[->,very thick] ($(rtlstack.east) + (0.5,0)$) --
@@ -422,11 +422,11 @@ which is then the ternary expression condition assigned to the last
     \node[bb] (initial block) {\rtlinline`[ [ p1 => goto 3;    `\\
                                \rtlinline`    p2 => goto 4;    `\\
                                \rtlinline`    goto 5;`\\
-                               \rtlinline`    r1 <= r2 * r3 ] ]`};
+                               \rtlinline`    r1 := r2 * r3 ] ]`};
     \node[bb, right=4.5cm of initial block] (transf block)
       {\veriloginline`state =  r3       ? 32'd3 : state;`\\
        \veriloginline`state = ~r3 & r5  ? 32'd4 : state;`\\
-       \veriloginline`state = ~r3 & ~r5 ? 32'd4 : state;`\\
+       \veriloginline`state = ~r3 & ~r5 ? 32'd5 : state;`\\
        \veriloginline`r2    = ~r3 & ~r5 ? r4 * r6 : r2; `};
     % \node[label] at (initial block.north west) {\texttt{1}};
     % \node[label] at (transf block.north west) {\texttt{1}};
@@ -502,9 +502,9 @@ in this subsection.
 \begin{lemma}[Forward simulation from \rtlsubpar{} to \htl{}]\label{lemma:htl}
   Writing \texttt{tr\_htl} for the translation from \rtlsubpar{} to \htl{}, we
   have:
-  \begin{equation*}
+  {\normalfont\begin{equation}
     \forall c, h, \mathcal{B} \not\in \texttt{Wrong},\quad \yhfunction{tr\_htl} (c) = \ccok{h} \land c \Downarrow \mathcal{B} \implies h \Downarrow \mathcal{B}.
-  \end{equation*}
+  \end{equation}}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -532,9 +532,9 @@ in this subsection.
 %The specification for the translation of \rtlsubpar{} instructions into \htl{} data-path and
 %control logic can be defined by the following predicate:
 %
-%\begin{equation*}
+%\begin{equation}
 %  \yhfunction{spec\_instr}\ \finishreg\ \returnreg\ \sigma\ \stackreg\ i\ \mathit{data}
-%\end{equation*}
+%\end{equation}
 %
 %\noindent Here, the $\mathit{data}$ parameter is the statement that the current
 %\rtlsubpar{} instruction $i$ should translate to. The other parameters are the
@@ -542,9 +542,9 @@ in this subsection.
 %of a rule describing the translation of an arithmetic/logical operation from
 %\rtlsubpar{} is the following:
 %
-%\begin{equation*}
+%\begin{equation}
 %  \inferrule[Iop]{\yhfunction{tr\_op}\ \mathit{op}\ \vec{a} = \yhconstant{OK}\ e}{\yhfunction{spec\_instr}\ \finishreg\ \returnreg\ \sigma\ \stackreg\ (\yhconstant{Iop}\ \mathit{op}\ \vec{a}\ d\ n)\ (d\ \yhkeyword{<=}\ e)\ (\sigma\ \yhkeyword{<=}\ n)}
-%\end{equation*}
+%\end{equation}
 %
 %\noindent Assuming that the translation of the operator $\mathit{op}$ with
 %operands $\vec{a}$ is successful and results in expression $e$, the rule
@@ -560,9 +560,9 @@ in this subsection.
 %\begin{lemma}\label{lemma:specification}
 %  If a \rtlsubpar{} program $c$ is translated correctly to an \htl{} program $h$, then the
 %  specification of the translation holds.
-%  \begin{equation*}
+%  \begin{equation}
 %    \forall c, h,\quad \yhfunction{tr\_htl} (c) = \yhconstant{OK}(h) \implies \yhfunction{spec\_htl}\ c\ h.
-%  \end{equation*}
+%  \end{equation}
 %\end{lemma}
 %
 %%\begin{proof}
@@ -722,8 +722,8 @@ final Verilog implementation is shown in \cref{fig:hg:bram-interface}.  Firstly,
 the memory updates are triggered on the negative (falling) edge of the clock,
 out of phase with the rest of the design which is triggered on the positive
 (rising) edge of the clock.  The advantage of this is that instead of loads and
-stores taking three clock cycles and two clock cycles respectively, they only
-take two clock cycles and one clock cycle instead, greatly improving their
+stores taking three clock cycles and one clock cycles respectively, they only
+take one clock cycle and half a clock cycle instead, greatly improving the
 performance.  Using the negative edge of the clock is supported by synthesis
 tools and FPGAs, but in general it reduces the time that is available for
 arithmetic operations in the positive edge of the clock, making it harder to
@@ -763,8 +763,7 @@ interface in a separate always-block. The translation is performed by going
 through all the instructions and replacing each load and store expression in
 turn.  Stores can be replaced by the necessary wires to the \gls{BRAM}
 directly. Loads are a little more subtle: loads that use the \gls{BRAM}
-interface take two clock cycles where a direct load from an array takes only
-one, so this pass inserts an extra state after each load.  The scheduling
+interface take one clock cycles where a direct load from an array happens instantly, so this pass inserts an extra state after each load.  The scheduling
 algorithm described in \cref{sec:hs:implementing-scheduling} can already take
 this into account as well, and can ensure that the next clock cycle after a load
 does not perform a load or a store, however, this transformation currently does
@@ -898,10 +897,10 @@ signal which inhibits the flip of the $r.\mathrm{u\_en}$ when the condition does
 not hold.  This is implemented by the following logic, where $\mxor$ is the
 \texttt{xor} operation:
 %
-\begin{equation*}
+\begin{equation}
   r.\mathrm{u\_en} \blockasgn
     (c \verilogneq \texttt{32'b0})\mxor r.\mathrm{u\_en}\msemi
-\end{equation*}
+\end{equation}
 %
 If $c$ is $\booleanfalse$, then this means that
 $\texttt{32'b0} \verilogneq \texttt{32'b0}$ evaluates to \texttt{1'b0}, and
@@ -1009,13 +1008,13 @@ independent of any other statement in the data path.
   We need to show that given that the translation succeeded, that the
   specification of the translation holds for every statement in the data path.
 
-  \begin{equation*}
+  {\normalfont\begin{equation}
     \begin{aligned}
       \forall h\ h'\ldotp&\quad\yhfunction{tr\_ram\_ins}(h) = (h') \land
       h'.\mathit{ram} = \some{r} \implies\\
       &\forall i\ldotp \exists n\ldotp\quad\yhfunction{spec\_ram\_tr}\ h.\mathit{st}\ r\ h.\mathit{datapath}\ h'.\mathit{datapath}\ i\ n
     \end{aligned}
-  \end{equation*}
+  \end{equation}}
 \end{lemma}
 
 \subsubsection{From specification to simulation}
@@ -1045,9 +1044,9 @@ the new registers introduced by the \gls{BRAM}.
   Given an \htl{} program, the forward-simulation relation should hold after
   inserting the \gls{BRAM} and wiring the load, store, and control signals.
 
-  \begin{align*}
+  {\normalfont\begin{equation}
     \forall h,\ h',\ \mathcal{B} \not\in \texttt{Wrong}\ldotp\quad \yhfunction{tr\_ram\_ins}(h) = h' \land h \Downarrow \mathcal{B} \implies h' \Downarrow \mathcal{B}.
-  \end{align*}
+  \end{equation}}
 
   \begin{proof}[Proof sketch]
     By using the specification defined earlier, one can handle the five
@@ -1055,7 +1054,7 @@ the new registers introduced by the \gls{BRAM}.
     dealing with the rearrangement of the order in which assignments are
     performed, as well as the different times at which the memory is accessed.
     This transformation requires a \enquote{plus} simulation diagram because the
-    loads require two cycles to complete.
+    loads require one cycle to complete.
   \end{proof}
 \end{lemma}
 
@@ -1361,7 +1360,7 @@ $\interstate{4}{\asgnblockingbefore} \verilogmerge \Delta^{0}_{\mathrm r} =
   the maps $\Gamma''$ and $\Delta''$ after executing $s'$.
 
   {\normalfont
-    \begin{equation*}
+    \begin{equation}
       \begin{aligned}
         &\subststmnt{\substmap}{s} = \some{s', \substmap'}\implies\\
         &((\Gamma, \Delta), s) \downarrow_{\text{stmnt}} (\Gamma', \Delta')
@@ -1370,7 +1369,7 @@ $\interstate{4}{\asgnblockingbefore} \verilogmerge \Delta^{0}_{\mathrm r} =
           \implies\\
         &\Gamma' \verilogmerge \Delta' = \Gamma'' \verilogmerge \Delta''
       \end{aligned}
-    \end{equation*}}
+    \end{equation}}
 
   \begin{proof}[Proof sketch]
     By induction on the definition of a statement, by applying
@@ -1405,14 +1404,14 @@ i.e. $\at{\interstate{2}{\asgnblockingbefore}}{\texttt{r2}}$, which is the case.
   expression $e$ with the initial association map
   $\Gamma^{0}_{\mathrm r}$.
 
-  \begin{equation*}
+  \begin{equation}
     \begin{aligned}
       &\invinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \defeq \\
       &\qquad \forall r\ e\ldotp \at{t}{r} = \some{e} \implies \exists v\ldotp
       ((\Gamma^{0}_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
       \land \at{\Gamma_{\mathrm r}}{r} = \some{v}
     \end{aligned}
-  \end{equation*}
+  \end{equation}
 \end{definition}
 
 \Cref{def:hg:not-in-substitution-map} describes the relationship between the
@@ -1432,14 +1431,14 @@ $\at{\interstate{1}{\asgnblockingbefore}}{\texttt{r2}} =
   initial association map $\Gamma^{0}_{\mathrm r}$ at the start of the execution
   of the statement.
 
-  \begin{equation*}
+  \begin{equation}
     \begin{aligned}
       &\invnotinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\substmap}
       \defeq \\
       &\qquad\forall r\ldotp \at{t}{r} = \cnone \implies \at{\Gamma^{0}_{\mathrm r}}{r} =
       \at{\Gamma_{\mathrm r}}{r}
     \end{aligned}
-  \end{equation*}
+  \end{equation}
 \end{definition}
 
 These invariants are then used to prove the relationship between substituted
@@ -1456,7 +1455,7 @@ of forward substitution of statements.
   with the initial state of all the registers $\Gamma^{0}_{\mathrm r}$.
 
   {\normalfont
-    \begin{equation*}
+    \begin{equation}
       \begin{aligned}
         &\substexpr{\substmap}{e} = \some{e'} \implies \\
         &\invinsubstmap{\Gamma^{0}_{\mathrm r}}{\Gamma_{\mathrm r}}{\Gamma_{\mathrm a}}{\substmap} \implies\\
@@ -1464,7 +1463,7 @@ of forward substitution of statements.
         &\forall v\ldotp ((\Gamma_{\mathrm r}, \Gamma_{\mathrm a}), e) \downarrow_{\text{expr}} v
           \implies ((\Gamma^{0}_{\mathrm r}, \Gamma_{\mathrm a}), e') \downarrow_{\text{expr}} v
       \end{aligned}
-    \end{equation*}}
+    \end{equation}}
 
   \begin{proof}[Proof sketch]
     Using the invariants, one can show that the modified expression $e'$ will
@@ -1582,9 +1581,9 @@ is quite different to that of the case-statement to which it is converted.
   the $\some{\cdot}$ constructor here.)
 
   {\normalfont
-    \begin{align*}
+    \begin{equation}
       \forall h\ V\ \mathcal{B} \not\in \texttt{Wrong}\ldotp\quad \yhfunction{tr\_verilog} (h) = V \land h \Downarrow \mathcal{B} \implies V \Downarrow \mathcal{B}.
-    \end{align*}}
+    \end{equation}}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
