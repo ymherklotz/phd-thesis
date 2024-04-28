@@ -810,7 +810,7 @@ intermediate language for \gls{HLS}~\cite{budiu02_compil_applic_specif_hardw,
   callahan98_instr_level_paral_recon_comput}, as the flexibility of targeting
 hardware directly means that predication can be implemented efficiently.
 
-On the other hand, \glspl{GPU} often have sophisticated support for predication so that the same sequence of instructions (also called warps) can be executed on multiple different threads on the \gls{GPU}, and so that diverging control-flow can still be handled by a single, large warp.
+On the other hand, \glspl{GPU} often have sophisticated support for predication so that the same sequence of instructions (also called warps) can be executed on multiple different threads on the \gls{GPU}, and so that diverging control flow can still be handled by a single, large warp.
 This can be achieved by designing predicates based on the thread identifier~\cite{narasiman11_igplw} and instructions operating on such predicates can be found in the SPIR-V specification~\cite[p.~172]{kessenich18_svs}.
 Trace scheduling methods that are aware of warps produced by the \gls{GPU} have therefore been developed, however, if-conversion is only performed after scheduling instead of using a scheduling algorithm that is aware of predication.
 \textquote[{\textcite{jablin14_watsg}}]{Warp-Aware Trace Scheduling could benefit from trace-enlarging techniques, like Superblock scheduling's tail duplication and Hyperblock scheduling's predication}.
