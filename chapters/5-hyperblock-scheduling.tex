@@ -393,7 +393,7 @@ The overall behaviour $\mathcal{B}$ of an \rtlblock{} or \rtlpar{} program is th
 %          \context']{\cfinstr}{(t, \Sigma)}}{\smallsem{\text{\rtlpar}}{}{\mathtt{State}(\mathit{sf}, f, n, \context)}{\Sigma}{t}}
     \end{mathpar}
     \caption[Semantics of \rtlblock{} and \rtlpar{} hyperblocks.]{Semantics of \rtlblock{} and \rtlpar{} hyperblocks, where $\context$ is a 4-tuple $(\forestenv{\context}, \forestregset{\context}, \forestpredset{\context},
-\forestmem{\context})$}%
+\forestmem{\context})$.}%
     \label{fig:semantics-of-rtlblock-and-rtlpar}
 \end{figure}
 
@@ -571,14 +571,9 @@ threshold (currently
 To prove the top-level end-to-end correctness theorem of Vericert, forward simulations proven for each transformation are composed together.  The following theorem is a forward simulation and states the correctness of if-conversion.
 
 \begin{theorem}[Forward simulation of if-conversion]\label{def:forwardsim}
-  If program $S$ is \texttt{safe} (free from
+  If program $S$ is {\normalfont\texttt{safe}} (free from
   undefined behaviour) and has behaviour
-  $\mathcal{B}$, then $\mathtt{ifconvert}(S)$ should have the same behaviour. That is: $\mathtt{safe}(S) \land S \Downarrow \mathcal{B} \implies \mathtt{ifconvert}(S) \Downarrow \mathcal{B}$.
-
-  {\normalfont\begin{equation}
-    \mathcal{B} \not\in \texttt{Wrong} \land S \Downarrow \mathcal{B} \implies
-    \texttt{ifconvert}(S) \Downarrow \mathcal{B}.
-  \end{equation}}
+  $\mathcal{B}$, then {\normalfont $\texttt{ifconvert}(S)$} should have the same behaviour. That is: {\normalfont $\texttt{safe}(S) \land S \Downarrow \mathcal{B} \implies \texttt{ifconvert}(S) \Downarrow \mathcal{B}$}.
 
   \begin{proof}[Proof sketch]
     Each of the three transformations is verified using the simulation-diagram
@@ -1386,7 +1381,7 @@ of the exit instruction's guard.
     \update\ (\asgninstr[\guard]{\mrtl{r}}{\mrtl{r1} \cadd \mrtl{r2}})\ (q, (\forestregset{\symbstate}, \forestpredset{\symbstate}, \forestmem{\symbstate}, \forestexit{\symbstate}, \constraints{\symbstate})) & \text{\rlabel{arithmetic operation}} \\
     %&\quad\defeq
    %   \text{let}~\phi = \set[(\guard_1 \land \guard_2, v_1 \aadd v_2)]{((\guard_1, v_1), (\guard_2, v_2)) \in (\atforestregs{\symbstate}{r1} \times \atforestregs{\symbstate}{r2}) }~\text{in}\\
-       \quad \defeq \letin{\phi = \set{(\ltrue, (\mathtt{+}))} \applic \atforestregs{\symbstate}{\mrtl{r1}} \applic \atforestregs{\symbstate}{\mrtl{r2}}}\\
+       \quad \defeq \letin{\phi = \set{(\ltrue, (\texttt{+}))} \applic \atforestregs{\symbstate}{\mrtl{r1}} \applic \atforestregs{\symbstate}{\mrtl{r2}}}\\
       \quad \quad \letin{\forestregset{\symbstate}' = \at{\forestregset{\symbstate}}{\mrtl{r} \mapsto (\predicatedappend{\guard \land
       q}{\at{\forestregset{\symbstate}}{\mrtl{r}}}{\phi})}}\\
     \quad \quad  \letin{\constraints{\symbstate}' =

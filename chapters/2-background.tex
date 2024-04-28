@@ -871,7 +871,7 @@ It works by iteratively calculating forces associated with each node and schedul
 
 The main static scheduling algorithm used by \gls{HLS} tools is the
 \glsfirst{SDC}\glsunset{SDC} scheduling algorithm~\cite{cong06_sdc}.  It
-generates an \gls{SDC} that is a subset of an \gls{LP} problem that can be
+generates an \gls{SDC} that is a subset of a \gls{LP} problem that can be
 incrementally modified and checked for feasibility as new constraints are added.
 Then, to solve the \gls{SDC} it can be converted into an \gls{LP} problem
 guaranteeing integer solutions.
@@ -972,7 +972,7 @@ dependencies between iterations.  In addition to that, performance of the
 dynamically scheduled code is improved by careful buffer
 placement~\cite{josipović21_buffer_placem_sizin_high_perfor_dataf_circuit},
 which allows for better parallelisation and pipelining of loops.
-Handel-C and the translation of occam into circuits are also examples of dynamic scheduling, however, less optimisations like automatic buffer placement are explored.
+Handel-C and the translation of occam into circuits are also examples of dynamic scheduling, however, less optimisations like automatic buffer placement have been explored.
 
 \section{Verification}%
 \label{sec:bg:verification}

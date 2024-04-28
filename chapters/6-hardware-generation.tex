@@ -500,7 +500,7 @@ defined for Verilog.  \Cref{lemma:htl} shows the result that needs to be proven
 in this subsection.
 
 \begin{lemma}[Forward simulation from \rtlsubpar{} to \htl{}]\label{lemma:htl}
-  Writing \texttt{tr\_htl} for the translation from \rtlsubpar{} to \htl{}, we
+  Writing {\normalfont $\yhfunction{tr\_htl}$} for the translation from \rtlsubpar{} to \htl{}, we
   have:
   {\normalfont\begin{equation}
     \forall c, h, \mathcal{B} \not\in \texttt{Wrong},\quad \yhfunction{tr\_htl} (c) = \ccok{h} \land c \Downarrow \mathcal{B} \implies h \Downarrow \mathcal{B}.
@@ -623,7 +623,7 @@ that need to hold for the states to match.
   $(\Gamma_{r}, \Gamma_{a})$, assuming one step in the \rtlsubpar{} semantics produces
   state $(R',M',\mathit{pc}')$, there exist one or more steps in the \htl{}
   semantics that result in matching states $(\Gamma_{r}', \Gamma_{a}')$.  This
-  is all under the assumption that the specification $\yhfunction{spec\_{htl}}$
+  is all under the assumption that the specification {\normalfont $\yhfunction{spec\_{htl}}$}
   holds for the translation.
 
   {\normalfont\begin{center}
@@ -1576,7 +1576,7 @@ is quite different to that of the case-statement to which it is converted.
 
 %\YH{Maybe want to split this up into two lemmas?  One which states the proof about the map property of uniqueness of keys, and another proving the final theorem?}
 \begin{lemma}[Forward simulation from \htl{} to Verilog]\label{lemma:verilog}
-  In the following, I write $\yhfunction{tr\_verilog}$ for the translation from
+  In the following, I write {\normalfont $\yhfunction{tr\_verilog}$} for the translation from
   \htl{} to Verilog. (Note that this translation cannot fail, so we do not need
   the $\some{\cdot}$ constructor here.)
 
