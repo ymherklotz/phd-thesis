@@ -4,7 +4,7 @@ module main(reset, clk, reg_2, finish, return_val);
   input [31:0] reg_2;
   input clk, reset;
 
-  logic [31:0] reg_8 = 0, reg_4 = 0, d_in = 0, reg_2 = 0;
+  logic [31:0] reg_8 = 0, reg_4 = 0, d_in = 0;
   logic [31:0] addr = 0, reg_10 = 0, reg_6 = 0, wr_en = 0;
   logic [31:0] d_out = 0, en = 0, u_en = 0;
   logic [31:0] state = 0;

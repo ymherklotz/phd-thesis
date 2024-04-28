@@ -242,8 +242,8 @@ A simple state machine can be implemented as shown in
 \cref{fig:tutorial:state_machine}.  This state machine implements a pulse
 generator that generates a pulse every three clock cycles.  At every positive
 edge of the clock (\texttt{clk}), the always-blocks will trigger.
-First, the \texttt{rst} input is checked, in which case the \texttt{state} variable is set back to \texttt{2'b0}.
-Next, the state machine is implemented by checking the current value of \texttt{state} and defining the next \texttt{state}, including setting a value for the output \texttt{out}.
+First, the \texttt{rst} input is checked, and if it is high the \texttt{state} variable is set back to \texttt{2'b0}.
+Otherwise, the state machine is implemented by checking the current value of \texttt{state} and defining the next \texttt{state}, including setting a value for the output \texttt{out}.
 No explicit value is set for the output in state \texttt{2'd1}, however, as \texttt{out} is a register, it will keep the same value from the last state, which in this case is \texttt{1'b0}.
 Assignments are performed using nonblocking assignment (\texttt{<=}), which assigns registers simultaneously at the end of each clock cycle.
 This state machine has the same general structure as the state machines discussed in this dissertation.
@@ -972,6 +972,7 @@ dependencies between iterations.  In addition to that, performance of the
 dynamically scheduled code is improved by careful buffer
 placement~\cite{josipović21_buffer_placem_sizin_high_perfor_dataf_circuit},
 which allows for better parallelisation and pipelining of loops.
+Handel-C and the translation of occam into circuits are also examples of dynamic scheduling, however, less optimisations like automatic buffer placement are explored.
 
 \section{Verification}%
 \label{sec:bg:verification}
@@ -1373,8 +1374,7 @@ with start and end signals that determine the next construct which will be
 executed.  The circuits themselves are treated as black boxes by the compilation
 algorithm and are chosen based on the current statement in Handel-C which is
 being translated.  One interesting property about these circuits is that the
-control signal is propagated correctly through the circuit, and that it ensures
-that only one hardware construct is active at a time.  This is the property that
+control signal is propagated correctly through the circuit.  This is the property that
 is mechanised in the work for the translation of Handel-C to netlists.  However,
 the final semantic equivalence of the translation was not mechanised.
 

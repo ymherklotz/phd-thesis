@@ -602,10 +602,7 @@ To prove the top-level end-to-end correctness theorem of Vericert, forward simul
     $\diaglabel{$3^\prime$}$ that can mimic the edge from $\diaglabel{$3$}$ to
     $\diaglabel{$4$}$). To resolve this, our simulation relation has to be more
     fine-grained, so that $\diaglabel{$3$}$ can be mapped to the first `part' of
-    $\diaglabel{$3^\prime$}$ and $\diaglabel{$4$}$ can be mapped to the second.
-    This is proven using a \enquote{star} simulation diagram, so that the
-    if-converted block can stutter in the case that the next edge was
-    if-converted.
+    $\diaglabel{$3^\prime$}$ and $\diaglabel{$4$}$ can be mapped to the second, meaning the simulation cannot proceed in lock-step.
   \end{proof}
 \end{theorem}
 
@@ -1470,7 +1467,7 @@ predicate maps, we first attempt to show syntactic equality
 we fall back to using a slow but reliable equivalence check with a three-valued
 solver
 (${\forestpredset{\symbstate}} \approx_{\mathrm{3v}}
-{\forestpredset{\symbstate}'}$). Finally, for the encounted expressions sets, we
+{\forestpredset{\symbstate}'}$). Finally, for the encountered expressions sets, we
 write ${\constraints{\symbstate}}\gtrsim{\constraints{\symbstate}'}$ to mean
 that every expression in $\constraints{\symbstate}'$ has an equivalent in
 $\constraints{\symbstate}$.

@@ -159,7 +159,7 @@ Verilog, this is only a guideline, and in practice the tools may create
 registers for blocking assignments if the synthesis tool sees that they are used
 to store state.  To mitigate this, the formal semantics specify that
 communication between always blocks can only happen through nonblocking
-assigment, and blocking assignment can only be used for local variables, so that
+assignment, and blocking assignment can only be used for local variables, so that
 these likely will result in wires in the final hardware.  These two restrictions
 do not only help produce more predictable hardware that behaves like the
 simulation, but it also simplifies the overall semantics of Verilog.  As
@@ -303,11 +303,11 @@ are fully supported.  This means that the \gls{BRAM} can be faithfully modelled
 as Verilog and it can be reasoned about.
 
 \paragraph{Simplifying representation of bitvectors} Finally, I use 32-bit
-integers to represent bitvectors rather than arrays of booleans. This is because
+integers to represent bitvectors rather than arrays of Booleans. This is because
 \vericert{} (currently) only supports types represented by 32 bits.  However,
 extending Vericert would likely not require the full flexibility of bitvectors
-as arrays of booleans either, as long as fine-grained bit-size optimisations for
-registers are not introduced, because the Verilog subset could be restriced to
+as arrays of Booleans either, as long as fine-grained bit-size optimisations for
+registers are not introduced, because the Verilog subset could be restricted to
 bitvectors of sizes 4, 8, 16, 32 and 64, which are already supported by the
 CompCert integer type.
 
@@ -411,7 +411,7 @@ however it is still present to match the state transitions used in CompCert.  To
 remove this rule, one would have to show that the stack remains empty by
 induction over the semantics.
 
-In addition to these rules, a valid semantics also needs an intial state and a
+In addition to these rules, a valid semantics also needs an initial state and a
 final state.  These are therefore defined as follows:
 %
 \begin{mathpar}

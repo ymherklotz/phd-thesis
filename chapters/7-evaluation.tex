@@ -1,5 +1,8 @@
 \graphicspath{{./figures/5-hyperblock-scheduling/}}
 
+\definecolor{benchcol}{HTML}{264653}
+\newcommand\benchmark[1]{\textcolor{benchcol}{\textsf{#1}}}
+
 \chapter{Evaluation}%
 \label{sec:evaluation}%
 \label{sec:performance-comparison}
@@ -49,8 +52,8 @@ has affine loop bounds, making it attractive for streaming computation on FPGA
 architectures.  It was also used as part of
 \textcite{six22_formal_verif_super_sched} evaluation of their scheduling
 optimisation.  I was able to use 27 of the 30 programs; three had to be
-discarded (\texttt{cor\-re\-la\-tion}, \texttt{gram\-schmi\-dt} and
-\texttt{de\-riche}) because they involve square roots, requiring floats, which
+discarded (\benchmark{cor\-re\-la\-tion}, \benchmark{gram\-schmi\-dt} and
+\benchmark{de\-riche}) because they involve square roots, requiring floats, which
 \vericert{} does not support.  I configured \polybench{}'s parameters so that
 only integer types are used and use \polybench{}'s smallest datasets for each
 program to ensure that data can reside within on-chip memories of the FPGA,
@@ -116,9 +119,6 @@ $\text{total execution time} = \frac{\text{total clock cycles}}{\text{maximum
 \newcommand\VericertHyper{%
 \setul{-1pt}{3pt}\setulcolor{colorVericertHyperLIGHT}%
 {\ul{\textsf{Vericert-hyperblock}}}}
-
-\definecolor{benchcol}{HTML}{264653}
-\newcommand\benchmark[1]{\textcolor{benchcol}{\textsf{#1}}}
 
 \Cref{fig:list-against-hyper-scheduling} visualises the results of simulation and synthesis of the PolyBench/C benchmark. We use default Vericert (\VericertBase), Vericert with list scheduling (\VericertList), and Vericert with hyperblock scheduling (\VericertHyper). We also use the state-of-the-art open-source HLS tool Bambu in two modes: one where all default optimisations are enabled (\BambuDefault{}), and one where as many optimisations as possible are disabled (\BambuNoOpt{}). Several optimisations are built into Bambu though and cannot be disabled, such as list scheduling and loop flattening.
 
